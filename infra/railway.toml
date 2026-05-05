@@ -1,0 +1,22 @@
+# Railway config — https://docs.railway.app/reference/config-as-code
+#
+# Two services are deployed from this repo:
+#   - backend  (root: backend/, Dockerfile build, gunicorn)
+#   - frontend (root: frontend/, Dockerfile build, nginx static)
+#
+# Postgres + Redis are provisioned as Railway plugins and exposed via env.
+#
+# Per-service settings (root directory, env, plugins) are configured in the
+# Railway dashboard. This file documents the deploy contract for the backend
+# service; the frontend uses default Dockerfile build/run.
+
+[build]
+builder = "DOCKERFILE"
+
+[deploy]
+# Backend: run pending migrations, then serve via gunicorn on Railway's $PORT.
+startCommand = "flask db upgrade && gunicorn --bind 0.0.0.0:$PORT --workers 2 --access-logfile - app.wsgi:app"
+healthcheckPath = "/healthz"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
