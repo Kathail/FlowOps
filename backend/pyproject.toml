@@ -15,6 +15,9 @@ dependencies = [
     "pydantic>=2.6",            # request/response schemas (CLAUDE.md mandate)
     "pydantic-settings>=2.2",   # config from env (CLAUDE.md mandate)
     "argon2-cffi>=23.1",        # Argon2id password hashing (S1 use; dep added per kickoff)
+    "flask-login>=0.6",         # session auth (CLAUDE.md mandate)
+    "flask-wtf>=1.2",           # CSRF on state-changing requests (CLAUDE.md mandate)
+    "email-validator>=2.1",     # required for pydantic EmailStr validation
     "gunicorn>=21.2",           # production WSGI server on Railway
     "python-json-logger>=2.0,<3", # structured JSON logs in production
 ]

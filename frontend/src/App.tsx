@@ -1,34 +1,35 @@
-import { useEffect, useState } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { LoginPage } from "./features/auth/LoginPage";
+import { RegisterTenantPage } from "./features/auth/RegisterTenantPage";
+import { RequireAuth } from "./features/auth/RequireAuth";
+import { TenantHomePage } from "./features/auth/TenantHomePage";
 
-type HealthState =
-  | { status: "loading" }
-  | { status: "ok"; db: string; version: string }
-  | { status: "error"; message: string };
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false, refetchOnWindowFocus: false },
+  },
+});
 
 export function App() {
-  const [health, setHealth] = useState<HealthState>({ status: "loading" });
-
-  useEffect(() => {
-    fetch("/healthz")
-      .then(async (res) => {
-        const data = (await res.json()) as { db: string; version: string };
-        setHealth({ status: "ok", db: data.db, version: data.version });
-      })
-      .catch((err: unknown) => {
-        const message = err instanceof Error ? err.message : "unknown error";
-        setHealth({ status: "error", message });
-      });
-  }, []);
-
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-50">
-      <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold text-slate-900">FlowOps</h1>
-        <p className="mt-2 text-sm text-slate-600">Sprint 0 — health check</p>
-        <pre className="mt-4 rounded bg-slate-100 p-3 text-sm text-slate-800">
-          {JSON.stringify(health, null, 2)}
-        </pre>
-      </div>
-    </main>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterTenantPage />} />
+          <Route
+            path="/:slug/*"
+            element={
+              <RequireAuth>
+                <TenantHomePage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
