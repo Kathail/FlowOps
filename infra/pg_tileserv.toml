@@ -1,0 +1,10 @@
+# pg_tileserv config — https://github.com/CrunchyData/pg_tileserv
+# S0: server runs but no layers exist yet. Layer publication arrives in S3 (asset map).
+
+HttpHost = "0.0.0.0"
+HttpPort = 7800
+DefaultMinZoom = 0
+DefaultMaxZoom = 22
+DefaultBuffer = 256
+DefaultResolution = 4096
+CORSOrigins = ["*"]
