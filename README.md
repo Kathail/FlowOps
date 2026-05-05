@@ -2,7 +2,7 @@
 
 Asset & work management for water distribution, wastewater collection, and storm drainage.
 
-This is the project skeleton (Sprint 0). See `CLAUDE.md` for conventions and `docs/SPEC.md` for the functional spec.
+Status: Sprint 1 complete (auth & multi-tenancy). See `CLAUDE.md` for conventions and `docs/SPEC.md` for the functional spec.
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:5173 — the placeholder route fetches `/healthz` and renders the JSON.
+Open http://localhost:5173 — you'll land on the login page. Register a tenant first at `/register`, then sign in. The healthz endpoint is still at http://localhost:5000/healthz.
 
 ## Common commands
 
@@ -69,4 +69,4 @@ docs/       SPEC.md (the contract), KICKOFF.md
 
 ## Next sprint
 
-S1 — Auth & multi-tenancy. See `docs/SPEC.md` §9 for the build order.
+S2 — Asset class catalog + asset CRUD (Epic 2). See `docs/SPEC.md` §9 for the build order.

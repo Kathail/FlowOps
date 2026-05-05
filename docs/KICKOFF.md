@@ -1,6 +1,6 @@
-# KICKOFF.md — paste this into Claude Code as your first prompt
+# KICKOFF.md — sprint kickoff prompts (S0 archive + per-sprint template)
 
-This is the prompt to start the project. It assumes `CLAUDE.md` and `docs/SPEC.md` are already at the repo root and read.
+S0 was bootstrapped from the prompt under "First prompt to Claude Code" below; that section is now historical. For sprints S1+, use the reusable shape under "Subsequent sprint prompts." Both are archival — the active source of truth is `docs/SPEC.md`.
 
 ---
 

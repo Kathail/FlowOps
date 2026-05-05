@@ -65,21 +65,26 @@ Roles are RBAC. Multi-role users are supported. Permissions enforced server-side
 
 ```
 tenant
-  id, name, slug, created_at
+  id, name, slug, created_at, updated_at
   settings JSONB    -- locale, units, projection, branding
 
 user
-  id, tenant_id, email (unique within tenant), password_hash,
-  full_name, phone, is_active, last_login_at, created_at, updated_at
+  id, tenant_id, user_uid (unique, URL-safe slug),
+  email (unique within tenant), password_hash,
+  full_name, phone, is_active, last_login_at,
+  created_at, updated_at, deleted_at
 
 role
   id, tenant_id, code, name      -- 'admin', 'supervisor', 'tech', 'readonly', 'intake'
+  unique (tenant_id, code)
 
 user_role
   user_id, role_id, primary_key (user_id, role_id)
 ```
 
-Slug is used in URLs: `flowops.app/{tenant_slug}/...`
+`tenant.slug` is the URL prefix for the frontend: `flowops.app/{tenant_slug}/...`.
+
+`user.user_uid` is the URL identifier for users (per CLAUDE.md hard rule #3 — internal `id` is never exposed in routes for tenant data). Generated as a 12-character URL-safe slug.
 
 ### 3.2 Asset classes (the spine)
 
@@ -412,7 +417,7 @@ audit_log
   before JSONB, after JSONB, ip TEXT, user_agent TEXT
 ```
 
-Implemented via SQLAlchemy event listener on session flush.
+Implemented via two SQLAlchemy listeners on the `Session` class: `before_flush` captures diffs of `AuditableMixin` rows; `after_flush_postexec` inserts the corresponding `audit_log` entries (so primary keys of newly-created rows are populated). Non-mutation events (login, logout, failed_login, register_tenant) emit explicitly via `emit_event()` in `app/services/audit.py`. The `password_hash` field is unconditionally stripped from `before`/`after` payloads.
 
 ---
 
@@ -433,18 +438,23 @@ Tenant scoping is implicit from session. Slug only appears in URL for human-read
 ### Endpoints
 
 #### Auth
-- `POST /api/v1/auth/login` `{email, password}` → `{user, roles}`, sets cookie
+- `POST /api/v1/auth/register-tenant` `{tenant_name, slug, admin_email, admin_password, full_name, phone?}` → `{tenant, user}`, sets cookie. Public; first registrant becomes the tenant's `admin`.
+- `POST /api/v1/auth/login` `{tenant_slug, email, password}` → `{user, tenant}`, sets cookie. `tenant_slug` is required because email is only unique within a tenant (see §3.1).
 - `POST /api/v1/auth/logout`
-- `GET /api/v1/auth/me`
-- `POST /api/v1/auth/password/change` `{current, new}`
+- `GET /api/v1/auth/me` → `{user, tenant}`
+- `POST /api/v1/auth/password/change` `{current, new}` (new ≥ 12 chars)
 
 #### Tenant
 - `GET /api/v1/tenant` — current tenant info
 - `PATCH /api/v1/tenant` — admin only
 
 #### Users
-- `GET/POST/PATCH/DELETE /api/v1/users` — admin only
-- `POST /api/v1/users/{id}/roles` — admin
+- `GET /api/v1/users` — admin only, paginated list (`?page&page_size&q`)
+- `POST /api/v1/users` — admin only, create
+- `GET /api/v1/users/{user_uid}` — admin only
+- `PATCH /api/v1/users/{user_uid}` — admin only
+- `DELETE /api/v1/users/{user_uid}` — admin only, soft delete
+- `POST /api/v1/users/{user_uid}/roles` `{role_codes: [...]}` — admin only, replaces role assignments
 
 #### Asset classes
 - `GET /api/v1/asset-classes`
@@ -661,7 +671,7 @@ PRs must satisfy these to be merged.
 
 - **Performance:** Asset list endpoint < 200ms p95 for 100k assets. Map viewport < 500ms for 50k assets via tiles.
 - **Availability:** 99.5% target on Railway. Background job retries with backoff.
-- **Security:** OWASP Top 10. CSP headers, HSTS, secure cookies. Rate limit auth endpoints (10/min/IP). Argon2id hashing.
+- **Security:** OWASP Top 10. CSP headers, HSTS, secure cookies. Argon2id hashing + Flask-WTF CSRF (live as of S1). Rate limit auth endpoints (10/min/IP) — wired in S12 hardening.
 - **Privacy:** Audit log retention configurable per tenant, default 7 years. PII (caller info on SRs) is logged minimally.
 - **Backups:** Postgres daily logical dump to S3, 30-day retention. Documented restore procedure.
 - **Observability:** Structured logs, request IDs, healthcheck endpoint at `/healthz`.
@@ -697,7 +707,7 @@ Each sprint is a few days for a solo dev. PRs small.
 | 3 | PDF report library | S9 | ReportLab (matches Candy Dash) |
 | 4 | Basemap source | S3 | OSM raster XYZ; satellite via env |
 | 5 | PACP version target | S7 | PACP 7.0 |
-| 6 | Tenant URL strategy | S1 | Subpath `/{slug}/...` for v1; subdomain in v2 |
+| 6 | Tenant URL strategy | S1 | ~~Subpath `/{slug}/...` for v1; subdomain in v2~~ — resolved in S1: subpath `/{slug}/...` |
 | 7 | Pricing model details | post-v1 | Out of scope |
 
 ---

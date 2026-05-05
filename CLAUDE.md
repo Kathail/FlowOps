@@ -38,7 +38,7 @@ Conventions and constraints for working on this repo. Read this before any task.
 
 - `strict: true` in tsconfig. No `any` without an `// eslint-disable-next-line` and a reason.
 - Components: function components only, named exports, one component per file.
-- API client generated from OpenAPI spec via `openapi-typescript`. Do not hand-write request types.
+- API client types generated from the OpenAPI spec via `openapi-typescript` from S2 onwards (the auth surface in S1 was small enough to hand-write in `frontend/src/features/auth/api.ts`; subsequent sprints' endpoints are codegen).
 - Tailwind only. No CSS modules, no styled-components, no inline styles except dynamic values.
 
 ### Database
@@ -144,7 +144,7 @@ flowops/
 This is a sellable product. Multi-tenancy is built in from day one.
 
 - Every domain table has `tenant_id BIGINT NOT NULL REFERENCES tenant(id)`.
-- Every query filters by `tenant_id`. This is enforced via a SQLAlchemy session-level event listener (`app/extensions.py::tenant_filter`).
+- Every query filters by `tenant_id`. This is enforced via a SQLAlchemy session-level event listener (`app/services/tenancy.py::_apply_tenant_filter`, registered against `Session.do_orm_execute`).
 - Cross-tenant data leaks are P0 bugs.
 - Row-level security in Postgres is set up but the application layer is the primary enforcement.
 
