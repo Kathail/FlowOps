@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ApiError } from "../../lib/apiClient";
+import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
+import { translateApiError } from "../../lib/translateApiError";
 import { useAssetClasses } from "../assets/hooks";
 import { createAsset, type AssetOut } from "../assets/api";
 
@@ -34,9 +36,7 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
       queryClient.invalidateQueries({ queryKey: ["tile-layers"] });
       onCreated(asset);
     },
-    onError: (err) => {
-      setErrorMessage(err instanceof ApiError ? err.message : err.message);
-    },
+    onError: (err) => setErrorMessage(translateApiError(err)),
   });
 
   function onSubmit(e: FormEvent) {
@@ -108,27 +108,15 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
           />
         </label>
 
-        {errorMessage && (
-          <p role="alert" className="text-sm text-red-400">
-            {errorMessage}
-          </p>
-        )}
+        {errorMessage && <Alert>{errorMessage}</Alert>}
 
         <div className="flex justify-end gap-2 pt-1">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
-          >
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={create.isPending}
-            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-          >
+          </Button>
+          <Button type="submit" disabled={create.isPending}>
             {create.isPending ? "Creating…" : "Create asset"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
