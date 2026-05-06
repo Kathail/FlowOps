@@ -58,13 +58,13 @@ export function HydrantFlowForm({ onChange }: Props) {
   function field(key: keyof typeof v, label: string, type = "number") {
     return (
       <label className="block">
-        <span className="text-xs text-slate-600">{label}</span>
+        <span className="text-xs text-slate-300">{label}</span>
         <input
           type={type}
           step={key === "coefficient" ? "0.01" : "1"}
           value={v[key]}
           onChange={(e) => setV({ ...v, [key]: e.target.value })}
-          className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
         />
       </label>
     );
@@ -81,8 +81,8 @@ export function HydrantFlowForm({ onChange }: Props) {
         {field("coefficient", "Coefficient")}
       </div>
       {preview && (
-        <div className="rounded border border-slate-200 bg-slate-50 p-3 text-sm">
-          <p className="text-xs uppercase text-slate-500">Server will compute</p>
+        <div className="rounded border border-slate-800 bg-slate-800/50 p-3 text-sm">
+          <p className="text-xs uppercase text-slate-400">Server will compute</p>
           <p className="mt-1">
             <span className="font-mono">calc_gpm_at_20psi</span> = {preview.gpm20 ?? "—"}
           </p>
@@ -90,7 +90,7 @@ export function HydrantFlowForm({ onChange }: Props) {
             <span className="font-mono">color_class</span> = {preview.color ?? "—"}
             {preview.color && (
               <span
-                className="inline-block w-4 h-4 rounded-sm border border-slate-300"
+                className="inline-block w-4 h-4 rounded-sm border border-slate-700"
                 style={{ backgroundColor: SWATCH[preview.color] ?? "#888" }}
                 aria-hidden="true"
               />

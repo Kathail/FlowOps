@@ -34,11 +34,11 @@ export function AssetListPage() {
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Assets</h1>
+        <h1 className="text-2xl font-semibold text-slate-100">Assets</h1>
         <div className="flex gap-2">
           <button
             onClick={() => setImportOpen(true)}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Import…
           </button>
@@ -50,11 +50,11 @@ export function AssetListPage() {
 
       <div className="flex gap-3 items-end flex-wrap">
         <label className="block">
-          <span className="text-xs text-slate-600">Class</span>
+          <span className="text-xs text-slate-300">Class</span>
           <select
             value={params.class ?? ""}
             onChange={(e) => setParam("class", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">All classes</option>
             {classesQuery.data?.map((c) => (
@@ -65,11 +65,11 @@ export function AssetListPage() {
           </select>
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Status</span>
+          <span className="text-xs text-slate-300">Status</span>
           <select
             value={params.status ?? ""}
             onChange={(e) => setParam("status", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">Any</option>
             {STATUSES.map((s) => (
@@ -87,23 +87,23 @@ export function AssetListPage() {
           className="flex items-end gap-2"
         >
           <label className="block">
-            <span className="text-xs text-slate-600">Search</span>
+            <span className="text-xs text-slate-300">Search</span>
             <input
               value={pendingQ}
               onChange={(e) => setPendingQ(e.target.value)}
               placeholder="uid, material, manufacturer…"
-              className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm w-64"
+              className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
             />
           </label>
-          <button type="submit" className="rounded bg-slate-900 px-3 py-1 text-sm text-white">
+          <button type="submit" className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-400">
             Search
           </button>
         </form>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white">
+      <div className="rounded-lg border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+          <thead className="bg-slate-800/50 text-slate-300">
             <tr>
               <th className="px-3 py-2 text-left">UID</th>
               <th className="px-3 py-2 text-left">Class</th>
@@ -116,14 +116,14 @@ export function AssetListPage() {
           <tbody>
             {assetsQuery.isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-slate-500 text-center">
+                <td colSpan={6} className="px-3 py-6 text-slate-400 text-center">
                   Loading…
                 </td>
               </tr>
             )}
             {assetsQuery.data?.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-slate-500 text-center">
+                <td colSpan={6} className="px-3 py-6 text-slate-400 text-center">
                   No assets match these filters.
                 </td>
               </tr>
@@ -131,7 +131,7 @@ export function AssetListPage() {
             {assetsQuery.data?.items.map((a) => (
               <tr key={a.asset_uid} className="border-t border-slate-100">
                 <td className="px-3 py-2 font-mono text-xs">
-                  <Link to={`./${a.asset_uid}`} className="text-slate-900 hover:underline">
+                  <Link to={`./${a.asset_uid}`} className="text-slate-100 hover:underline">
                     {a.asset_uid}
                   </Link>
                 </td>
@@ -147,7 +147,7 @@ export function AssetListPage() {
       </div>
 
       {assetsQuery.data && (
-        <div className="flex items-center justify-between text-sm text-slate-600">
+        <div className="flex items-center justify-between text-sm text-slate-300">
           <span>
             Page {assetsQuery.data.page} · {assetsQuery.data.total} total
           </span>
@@ -155,7 +155,7 @@ export function AssetListPage() {
             <button
               onClick={() => setParam("page", String(Math.max(1, params.page! - 1)))}
               disabled={params.page! <= 1}
-              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-50"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
             >
               Prev
             </button>
@@ -164,7 +164,7 @@ export function AssetListPage() {
               disabled={
                 assetsQuery.data.page * assetsQuery.data.page_size >= assetsQuery.data.total
               }
-              className="rounded border border-slate-300 px-2 py-1 disabled:opacity-50"
+              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
             >
               Next
             </button>

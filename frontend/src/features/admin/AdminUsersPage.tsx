@@ -22,13 +22,13 @@ export function AdminUsersPage() {
 
   return (
     <div>
-      {query.isLoading && <p className="text-sm text-slate-500">Loading…</p>}
+      {query.isLoading && <p className="text-sm text-slate-400">Loading…</p>}
       {query.isError && (
-        <p className="text-sm text-red-600">Failed to load users.</p>
+        <p className="text-sm text-red-400">Failed to load users.</p>
       )}
       {query.data && (
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Email</th>
@@ -37,7 +37,7 @@ export function AdminUsersPage() {
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-800">
             {query.data.items.map((u) => (
               <UserRow
                 key={u.user_uid}
@@ -83,7 +83,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
   return (
     <tr className="align-top">
       <td className="px-3 py-2">{user.full_name}</td>
-      <td className="px-3 py-2 text-slate-600">{user.email}</td>
+      <td className="px-3 py-2 text-slate-300">{user.email}</td>
       <td className="px-3 py-2">
         {editing ? (
           <div className="flex flex-wrap gap-2">
@@ -106,7 +106,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
             {user.roles.map((r) => (
               <span
                 key={r.code}
-                className="rounded bg-slate-100 px-1.5 py-0.5 text-xs"
+                className="rounded bg-slate-800 px-1.5 py-0.5 text-xs"
               >
                 {r.code}
               </span>
@@ -117,12 +117,12 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
           </div>
         )}
         {errorMessage && (
-          <p className="mt-1 text-xs text-red-600">{errorMessage}</p>
+          <p className="mt-1 text-xs text-red-400">{errorMessage}</p>
         )}
       </td>
       <td className="px-3 py-2">
         {user.is_active ? (
-          <span className="text-emerald-700">yes</span>
+          <span className="text-emerald-300">yes</span>
         ) : (
           <span className="text-slate-400">no</span>
         )}
@@ -133,7 +133,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
             <button
               onClick={() => saveRoles.mutate()}
               disabled={saveRoles.isPending}
-              className="rounded bg-slate-900 px-2 py-1 text-xs text-white disabled:opacity-50"
+              className="rounded bg-blue-500 px-2 py-1 text-xs text-white hover:bg-blue-400 disabled:opacity-50"
             >
               Save
             </button>
@@ -143,7 +143,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
                 setEditing(false);
                 setErrorMessage(null);
               }}
-              className="rounded border border-slate-300 px-2 py-1 text-xs"
+              className="rounded border border-slate-700 px-2 py-1 text-xs"
             >
               Cancel
             </button>
@@ -152,7 +152,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(true)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+              className="rounded border border-slate-700 px-2 py-1 text-xs hover:bg-slate-800"
             >
               Edit roles
             </button>
@@ -163,7 +163,7 @@ function UserRow({ user, onChanged }: { user: UserRead; onChanged: () => void })
                     deactivate.mutate();
                 }}
                 disabled={deactivate.isPending}
-                className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
+                className="rounded border border-red-300 px-2 py-1 text-xs text-red-300 hover:bg-red-50 disabled:opacity-50"
               >
                 Deactivate
               </button>

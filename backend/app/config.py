@@ -29,5 +29,5 @@ class Settings(BaseSettings):
     # Email driver: "stdout" (logs the URL) or "resend".
     email_provider: str = Field(default="stdout")
     resend_api_key: str = Field(default="")
-    email_from: str = Field(default="FlowOps <noreply@flowops.local>")
+    email_from: str = Field(default="CityWater <noreply@citywater.local>")
     public_base_url: str = Field(default="")

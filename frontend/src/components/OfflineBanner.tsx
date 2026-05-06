@@ -46,20 +46,20 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 px-4 py-2 text-sm ${
+      className={`flex items-center justify-between gap-3 border-b px-4 py-2 text-sm ${
         online
-          ? "bg-amber-100 text-amber-900"
-          : "bg-slate-900 text-slate-100"
+          ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
+          : "border-red-500/30 bg-red-500/10 text-red-200"
       }`}
     >
       <div className="flex items-center gap-3">
         <span
           className={`inline-block h-2 w-2 rounded-full ${
-            online ? "bg-amber-500" : "bg-red-500"
+            online ? "bg-amber-400 animate-pulse" : "bg-red-400 animate-pulse"
           }`}
         />
         <span>
-          {online ? "Online" : "Offline"}
+          {online ? "Pending sync" : "Offline"}
           {counts.queued > 0 && ` · ${counts.queued} queued`}
           {counts.conflict > 0 && ` · ${counts.conflict} conflict${counts.conflict === 1 ? "" : "s"}`}
           {counts.failed > 0 && ` · ${counts.failed} failed`}
@@ -69,7 +69,7 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
         {counts.conflict + counts.failed > 0 && (
           <button
             onClick={onOpenConflicts}
-            className="rounded border border-current px-2 py-0.5 text-xs hover:bg-current/10"
+            className="rounded border border-current/40 px-2 py-0.5 text-xs hover:bg-current/10"
           >
             Review
           </button>
@@ -78,7 +78,7 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
           <button
             onClick={syncNow}
             disabled={draining}
-            className="rounded bg-amber-600 px-2 py-0.5 text-xs font-medium text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {draining ? "Syncing…" : "Sync now"}
           </button>

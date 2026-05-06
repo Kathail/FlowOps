@@ -53,46 +53,46 @@ export function ConflictDrawer({ onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex">
-      <div className="flex-1 bg-slate-900/30" onClick={onClose} />
-      <aside className="w-full max-w-md overflow-auto bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-slate-200 p-4">
-          <h2 className="text-lg font-semibold text-slate-900">Offline queue</h2>
+      <div className="flex-1 bg-slate-950/70 backdrop-blur-sm" onClick={onClose} />
+      <aside className="w-full max-w-md overflow-auto border-l border-slate-800 bg-slate-900 text-slate-100 shadow-2xl shadow-blue-500/10">
+        <header className="flex items-center justify-between border-b border-slate-800 p-4">
+          <h2 className="text-lg font-semibold text-slate-100">Offline queue</h2>
           <button
             onClick={onClose}
-            className="text-sm text-slate-500 hover:underline"
+            className="text-sm text-slate-400 hover:text-blue-300 hover:underline"
           >
             Close
           </button>
         </header>
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-slate-800">
           {items.length === 0 && (
-            <li className="p-6 text-center text-sm text-slate-500">
+            <li className="p-6 text-center text-sm text-slate-400">
               Nothing pending. You're caught up.
             </li>
           )}
           {items.map((m) => (
             <li key={m.id} className="space-y-2 p-4 text-sm">
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-slate-500">
+                <span className="font-mono text-xs text-slate-400">
                   {m.method} {m.url}
                 </span>
                 <span
-                  className={`rounded px-1.5 py-0.5 text-xs ${
+                  className={`rounded px-1.5 py-0.5 text-xs ring-1 ${
                     m.status === "conflict"
-                      ? "bg-red-100 text-red-800"
+                      ? "bg-red-500/15 text-red-300 ring-red-500/30"
                       : m.status === "failed"
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-slate-100 text-slate-700"
+                        ? "bg-amber-500/15 text-amber-300 ring-amber-500/30"
+                        : "bg-blue-500/15 text-blue-300 ring-blue-500/30"
                   }`}
                 >
                   {m.status}
                 </span>
               </div>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 Enqueued {new Date(m.enqueuedAt).toLocaleString()} · attempts: {m.attempts}
               </p>
               {m.errorStatus && (
-                <p className="text-xs text-red-700">
+                <p className="text-xs text-red-400">
                   Server returned {m.errorStatus}
                   {m.errorMessage ? `: ${m.errorMessage}` : ""}
                 </p>
@@ -103,14 +103,14 @@ export function ConflictDrawer({ onClose }: Props) {
                     <button
                       onClick={() => retry(m.id!)}
                       disabled={busyId === m.id}
-                      className="rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100 disabled:opacity-50"
+                      className="btn-ghost px-2 py-1 text-xs"
                     >
                       Retry
                     </button>
                     <button
                       onClick={() => discard(m.id!)}
                       disabled={busyId === m.id}
-                      className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50 disabled:opacity-50"
+                      className="btn-danger px-2 py-1 text-xs"
                     >
                       Discard
                     </button>

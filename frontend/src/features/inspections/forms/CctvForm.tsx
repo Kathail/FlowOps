@@ -80,11 +80,11 @@ export function CctvForm({ onChange }: Props) {
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         <label className="block">
-          <span className="text-xs text-slate-600">Standard</span>
+          <span className="text-xs text-slate-300">Standard</span>
           <select
             value={survey.standard}
             onChange={(e) => setSurvey({ ...survey, standard: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="PACP">PACP</option>
             <option value="MACP">MACP</option>
@@ -92,15 +92,15 @@ export function CctvForm({ onChange }: Props) {
           </select>
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Version</span>
+          <span className="text-xs text-slate-300">Version</span>
           <input
             value={survey.version}
             onChange={(e) => setSurvey({ ...survey, version: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Direction</span>
+          <span className="text-xs text-slate-300">Direction</span>
           <select
             value={survey.direction}
             onChange={(e) =>
@@ -109,7 +109,7 @@ export function CctvForm({ onChange }: Props) {
                 direction: e.target.value as "" | "upstream" | "downstream",
               })
             }
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">—</option>
             <option value="upstream">Upstream</option>
@@ -117,57 +117,57 @@ export function CctvForm({ onChange }: Props) {
           </select>
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Upstream MH</span>
+          <span className="text-xs text-slate-300">Upstream MH</span>
           <input
             value={survey.upstream_mh}
             onChange={(e) => setSurvey({ ...survey, upstream_mh: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Downstream MH</span>
+          <span className="text-xs text-slate-300">Downstream MH</span>
           <input
             value={survey.downstream_mh}
             onChange={(e) => setSurvey({ ...survey, downstream_mh: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Length surveyed (m)</span>
+          <span className="text-xs text-slate-300">Length surveyed (m)</span>
           <input
             type="number"
             step="0.1"
             value={survey.length_surveyed_m}
             onChange={(e) => setSurvey({ ...survey, length_surveyed_m: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
       </div>
 
       <fieldset className="space-y-2">
-        <legend className="text-xs uppercase text-slate-500 mb-1">Observations</legend>
+        <legend className="text-xs uppercase text-slate-400 mb-1">Observations</legend>
         <div className="space-y-2">
           {observations.map((o, i) => (
             <div
               key={i}
-              className="grid grid-cols-12 gap-1 items-end border border-slate-200 rounded p-2 bg-white"
+              className="grid grid-cols-12 gap-1 items-end border border-slate-800 rounded p-2 bg-slate-900"
             >
               <label className="block col-span-2">
-                <span className="text-xs text-slate-600">Distance (m)</span>
+                <span className="text-xs text-slate-300">Distance (m)</span>
                 <input
                   type="number"
                   step="0.1"
                   value={o.distance_m}
                   onChange={(e) => setObs(i, "distance_m", e.target.value)}
-                  className="mt-1 block w-full rounded border border-slate-300 px-1 py-0.5 text-sm"
+                  className="mt-1 block w-full rounded border border-slate-700 px-1 py-0.5 text-sm"
                 />
               </label>
               <label className="block col-span-3">
-                <span className="text-xs text-slate-600">Code</span>
+                <span className="text-xs text-slate-300">Code</span>
                 <select
                   value={o.code}
                   onChange={(e) => setObs(i, "code", e.target.value)}
-                  className="mt-1 block w-full rounded border border-slate-300 px-1 py-0.5 text-sm bg-white"
+                  className="mt-1 block w-full rounded border border-slate-700 px-1 py-0.5 text-sm bg-slate-900"
                 >
                   <option value="">—</option>
                   {codesQuery.data?.map((c) => (
@@ -178,33 +178,33 @@ export function CctvForm({ onChange }: Props) {
                 </select>
               </label>
               <label className="block col-span-1">
-                <span className="text-xs text-slate-600">From</span>
+                <span className="text-xs text-slate-300">From</span>
                 <input
                   type="number"
                   min={1}
                   max={12}
                   value={o.clock_from}
                   onChange={(e) => setObs(i, "clock_from", e.target.value)}
-                  className="mt-1 block w-full rounded border border-slate-300 px-1 py-0.5 text-sm"
+                  className="mt-1 block w-full rounded border border-slate-700 px-1 py-0.5 text-sm"
                 />
               </label>
               <label className="block col-span-1">
-                <span className="text-xs text-slate-600">To</span>
+                <span className="text-xs text-slate-300">To</span>
                 <input
                   type="number"
                   min={1}
                   max={12}
                   value={o.clock_to}
                   onChange={(e) => setObs(i, "clock_to", e.target.value)}
-                  className="mt-1 block w-full rounded border border-slate-300 px-1 py-0.5 text-sm"
+                  className="mt-1 block w-full rounded border border-slate-700 px-1 py-0.5 text-sm"
                 />
               </label>
               <label className="block col-span-3">
-                <span className="text-xs text-slate-600">Remarks</span>
+                <span className="text-xs text-slate-300">Remarks</span>
                 <input
                   value={o.remarks}
                   onChange={(e) => setObs(i, "remarks", e.target.value)}
-                  className="mt-1 block w-full rounded border border-slate-300 px-1 py-0.5 text-sm"
+                  className="mt-1 block w-full rounded border border-slate-700 px-1 py-0.5 text-sm"
                 />
               </label>
               <div className="col-span-1 flex flex-col items-center gap-1 text-xs">
@@ -228,7 +228,7 @@ export function CctvForm({ onChange }: Props) {
               <button
                 type="button"
                 onClick={() => setObservations((prev) => prev.filter((_, idx) => idx !== i))}
-                className="col-span-1 text-xs text-red-600 hover:underline"
+                className="col-span-1 text-xs text-red-400 hover:underline"
               >
                 Remove
               </button>
@@ -238,7 +238,7 @@ export function CctvForm({ onChange }: Props) {
         <button
           type="button"
           onClick={() => setObservations((prev) => [...prev, { ...EMPTY_OBS }])}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
+          className="rounded border border-slate-700 px-2 py-1 text-xs text-slate-200 hover:bg-slate-800"
         >
           + Observation
         </button>

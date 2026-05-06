@@ -28,11 +28,11 @@ export function CatchBasinForm({ onChange }: Props) {
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-2">
         <label className="block">
-          <span className="text-xs text-slate-600">Grate condition</span>
+          <span className="text-xs text-slate-300">Grate condition</span>
           <select
             value={v.grate_condition}
             onChange={(e) => setV({ ...v, grate_condition: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             {[1, 2, 3, 4, 5].map((n) => (
               <option key={n} value={n}>
@@ -42,23 +42,23 @@ export function CatchBasinForm({ onChange }: Props) {
           </select>
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Sump depth (m)</span>
+          <span className="text-xs text-slate-300">Sump depth (m)</span>
           <input
             type="number"
             step="0.1"
             value={v.sump_depth_m}
             onChange={(e) => setV({ ...v, sump_depth_m: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Sediment (m)</span>
+          <span className="text-xs text-slate-300">Sediment (m)</span>
           <input
             type="number"
             step="0.1"
             value={v.sediment_depth_m}
             onChange={(e) => setV({ ...v, sediment_depth_m: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
       </div>

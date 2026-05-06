@@ -1,4 +1,4 @@
-# SPEC.md — FlowOps v1
+# SPEC.md — CityWater v1
 
 Source of truth for what to build. Every PR references a section here.
 
@@ -6,7 +6,7 @@ Source of truth for what to build. Every PR references a section here.
 
 ## 1. Product summary
 
-FlowOps is an asset management and work management platform for municipal water utilities. It covers three asset domains:
+CityWater is an asset management and work management platform for municipal water utilities. It covers three asset domains:
 
 - **Water distribution** (potable water mains, hydrants, valves, services, meters, pumps, reservoirs, PRV stations)
 - **Wastewater collection** (gravity mains, force mains, manholes, lift stations, cleanouts, laterals, grease traps)

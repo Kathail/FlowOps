@@ -88,15 +88,15 @@ function Column({
     <section
       ref={setNodeRef}
       aria-labelledby={`col-${id}-heading`}
-      className={`flex flex-col w-72 shrink-0 rounded-lg border ${
-        isOver ? "border-slate-900 bg-slate-100" : "border-slate-200 bg-white"
+      className={`flex flex-col w-72 shrink-0 rounded-lg border transition-colors ${
+        isOver ? "border-blue-500/60 bg-blue-500/5" : "border-slate-800 bg-slate-900"
       }`}
     >
-      <header className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
-        <h3 id={`col-${id}-heading`} className="text-sm font-medium text-slate-700">
+      <header className="px-3 py-2 border-b border-slate-800 flex items-center justify-between">
+        <h3 id={`col-${id}-heading`} className="text-sm font-medium text-slate-200">
           {label}
         </h3>
-        <span className="text-xs text-slate-500">{items.length}</span>
+        <span className="text-xs text-slate-400">{items.length}</span>
       </header>
       <ul className="flex-1 p-2 space-y-2 min-h-32">
         {items.map((wo) => (
@@ -121,19 +121,19 @@ function Card({ wo, slug }: { wo: WorkOrderListItem; slug: string }) {
       style={style}
       {...attributes}
       {...listeners}
-      className={`rounded border bg-white px-2 py-1.5 text-sm cursor-grab active:cursor-grabbing ${
-        isDragging ? "opacity-50 shadow-md" : "border-slate-200 hover:border-slate-300"
+      className={`rounded border bg-slate-900 px-2 py-1.5 text-sm cursor-grab active:cursor-grabbing ${
+        isDragging ? "opacity-50 shadow-md" : "border-slate-800 hover:border-slate-700"
       }`}
     >
       <Link
         to={`/${slug}/work-orders/${wo.wo_number}`}
-        className="font-mono text-xs text-slate-500 hover:underline block"
+        className="font-mono text-xs text-slate-400 hover:underline block"
         onClick={(e) => e.stopPropagation()}
       >
         {wo.wo_number}
       </Link>
-      <p className="mt-0.5 text-slate-800 line-clamp-2">{wo.title}</p>
-      <p className="mt-1 text-xs text-slate-500">
+      <p className="mt-0.5 text-slate-100 line-clamp-2">{wo.title}</p>
+      <p className="mt-1 text-xs text-slate-400">
         {wo.priority} · {wo.category}
       </p>
     </li>

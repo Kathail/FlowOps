@@ -1,7 +1,7 @@
 # Handoff — v1 complete (post-Sprint 12)
 
 Last commit on `main`: the upcoming `feat: sprint 12 hardening` once squash-merged.
-Pushed to: `https://github.com/Kathail/FlowOps`
+Pushed to: `https://github.com/Kathail/CityWater`
 
 All 13 planned sprints (S0–S12) are shipped. From here it's bug fixes, real
 deployments, and v2 scope.

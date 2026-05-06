@@ -81,14 +81,14 @@ def _driver() -> EmailDriver:
 
 
 def send_invitation_email(*, to: str, accept_url: str, tenant_name: str) -> None:
-    subject = f"You're invited to {tenant_name} on FlowOps"
+    subject = f"You're invited to {tenant_name} on CityWater"
     text = (
-        f"You've been invited to join {tenant_name} on FlowOps.\n\n"
+        f"You've been invited to join {tenant_name} on CityWater.\n\n"
         f"Accept your invitation:\n{accept_url}\n\n"
         f"This link expires soon. If you didn't expect this, ignore this email."
     )
     html = (
-        f"<p>You've been invited to join <strong>{tenant_name}</strong> on FlowOps.</p>"
+        f"<p>You've been invited to join <strong>{tenant_name}</strong> on CityWater.</p>"
         f'<p><a href="{accept_url}">Accept your invitation</a></p>'
         f"<p>If you didn't expect this, ignore this email.</p>"
     )

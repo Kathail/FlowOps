@@ -43,15 +43,15 @@ export function ReportDetailPage() {
         <div>
           <Link
             to={`/${slug}/reports`}
-            className="text-xs uppercase text-slate-500 hover:underline"
+            className="text-xs uppercase text-slate-400 hover:underline"
           >
             ← All reports
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+          <h1 className="mt-1 text-2xl font-semibold text-slate-100">
             {report.data?.title ?? meta?.title ?? reportSlug}
           </h1>
           {report.data && (
-            <p className="text-sm text-slate-500">{report.data.subtitle}</p>
+            <p className="text-sm text-slate-400">{report.data.subtitle}</p>
           )}
         </div>
         <div className="flex gap-2">
@@ -59,14 +59,14 @@ export function ReportDetailPage() {
             <>
               <a
                 href={downloadUrl(reportSlug, "csv", params)}
-                className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+                className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
                 download
               >
                 Download CSV
               </a>
               <a
                 href={downloadUrl(reportSlug, "pdf", params)}
-                className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
+                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
                 download
               >
                 Download PDF
@@ -90,15 +90,15 @@ export function ReportDetailPage() {
         </div>
       )}
 
-      {report.isLoading && <div className="text-slate-500">Running…</div>}
+      {report.isLoading && <div className="text-slate-400">Running…</div>}
       {report.isError && (
-        <div className="text-red-600">{report.error.message}</div>
+        <div className="text-red-400">{report.error.message}</div>
       )}
 
       {report.data && (
-        <div className="overflow-auto rounded border border-slate-200 bg-white">
+        <div className="overflow-auto rounded border border-slate-800 bg-slate-900">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
               <tr>
                 {report.data.headers.map((h) => (
                   <th key={h} className="px-3 py-2">
@@ -107,9 +107,9 @@ export function ReportDetailPage() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-800">
               {report.data.rows.map((row, i) => (
-                <tr key={i} className="hover:bg-slate-50">
+                <tr key={i} className="hover:bg-slate-800/50">
                   {row.map((cell, j) => (
                     <td key={j} className="px-3 py-2">
                       {cell === null || cell === "" ? "—" : String(cell)}
@@ -121,7 +121,7 @@ export function ReportDetailPage() {
                 <tr>
                   <td
                     colSpan={report.data.headers.length}
-                    className="p-6 text-center text-slate-500"
+                    className="p-6 text-center text-slate-400"
                   >
                     No data for the selected filters.
                   </td>
@@ -146,11 +146,11 @@ function FilterField({
   value: string;
   onChange: (v: string) => void;
 }) {
-  const inputClass = "mt-1 rounded border border-slate-300 px-2 py-1 text-sm";
+  const inputClass = "mt-1 rounded border border-slate-700 px-2 py-1 text-sm";
   if (type === "date") {
     return (
       <label>
-        <span className="block text-slate-600">{name}</span>
+        <span className="block text-slate-300">{name}</span>
         <input
           type="date"
           value={value}
@@ -163,7 +163,7 @@ function FilterField({
   if (type === "domain") {
     return (
       <label>
-        <span className="block text-slate-600">{name}</span>
+        <span className="block text-slate-300">{name}</span>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -182,7 +182,7 @@ function FilterField({
   if (type === "inspection_kind") {
     return (
       <label>
-        <span className="block text-slate-600">{name}</span>
+        <span className="block text-slate-300">{name}</span>
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
@@ -201,7 +201,7 @@ function FilterField({
   // asset_class_code or unknown — free text
   return (
     <label>
-      <span className="block text-slate-600">{name}</span>
+      <span className="block text-slate-300">{name}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}

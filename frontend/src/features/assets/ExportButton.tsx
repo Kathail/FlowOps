@@ -21,7 +21,7 @@ export function ExportButton() {
     <div className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+        className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
         aria-expanded={open}
         aria-haspopup="menu"
       >
@@ -30,10 +30,10 @@ export function ExportButton() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-1 w-64 rounded-md border border-slate-200 bg-white shadow-lg z-20 p-3 space-y-2"
+          className="absolute right-0 mt-1 w-64 rounded-md border border-slate-800 bg-slate-900 shadow-lg z-20 p-3 space-y-2"
           onMouseLeave={() => setOpen(false)}
         >
-          <label className="flex items-center gap-2 text-xs text-slate-700">
+          <label className="flex items-center gap-2 text-xs text-slate-200">
             <input
               type="checkbox"
               checked={includeFilters}
@@ -45,7 +45,7 @@ export function ExportButton() {
             <a
               href={exportAssetsUrl("csv", filters)}
               download
-              className="flex-1 text-center rounded bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
+              className="flex-1 text-center rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 hover:bg-slate-700"
               role="menuitem"
             >
               CSV
@@ -53,13 +53,13 @@ export function ExportButton() {
             <a
               href={exportAssetsUrl("geojson", filters)}
               download
-              className="flex-1 text-center rounded bg-slate-900 px-3 py-1.5 text-sm text-white hover:bg-slate-700"
+              className="flex-1 text-center rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 hover:bg-slate-700"
               role="menuitem"
             >
               GeoJSON
             </a>
           </div>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             CSV is Point-only. Lines/polygons round-trip via GeoJSON.
           </p>
         </div>

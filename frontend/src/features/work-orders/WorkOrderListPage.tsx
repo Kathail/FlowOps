@@ -42,13 +42,13 @@ export function WorkOrderListPage() {
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Work orders</h1>
+        <h1 className="text-2xl font-semibold text-slate-100">Work orders</h1>
         <div className="flex gap-2">
-          <div className="rounded border border-slate-300 bg-white p-0.5 flex">
+          <div className="rounded border border-slate-700 bg-slate-900 p-0.5 flex">
             <button
               onClick={() => setParam("view", null)}
               className={`px-2.5 py-1 text-xs rounded ${
-                view === "list" ? "bg-slate-900 text-white" : "text-slate-700"
+                view === "list" ? "bg-slate-900 text-white" : "text-slate-200"
               }`}
             >
               List
@@ -56,7 +56,7 @@ export function WorkOrderListPage() {
             <button
               onClick={() => setParam("view", "kanban")}
               className={`px-2.5 py-1 text-xs rounded ${
-                view === "kanban" ? "bg-slate-900 text-white" : "text-slate-700"
+                view === "kanban" ? "bg-slate-900 text-white" : "text-slate-200"
               }`}
             >
               Kanban
@@ -64,7 +64,7 @@ export function WorkOrderListPage() {
           </div>
           <button
             onClick={() => setCreateOpen(true)}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
           >
             New work order
           </button>
@@ -77,11 +77,11 @@ export function WorkOrderListPage() {
         <>
           <div className="flex gap-3 items-end flex-wrap">
             <label className="block">
-              <span className="text-xs text-slate-600">Status</span>
+              <span className="text-xs text-slate-300">Status</span>
               <select
                 value={params.status ?? ""}
                 onChange={(e) => setParam("status", e.target.value || null)}
-                className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+                className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
               >
                 <option value="">Any</option>
                 {STATUSES.map((s) => (
@@ -100,18 +100,18 @@ export function WorkOrderListPage() {
               <span>Assigned to me</span>
             </label>
             <label className="block">
-              <span className="text-xs text-slate-600">Search</span>
+              <span className="text-xs text-slate-300">Search</span>
               <input
                 defaultValue={search.get("q") ?? ""}
                 onBlur={(e) => setParam("q", e.target.value || null)}
-                className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm w-64"
+                className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
               />
             </label>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white">
+          <div className="rounded-lg border border-slate-800 bg-slate-900">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-slate-600">
+              <thead className="bg-slate-800/50 text-slate-300">
                 <tr>
                   <th className="px-3 py-2 text-left">Number</th>
                   <th className="px-3 py-2 text-left">Title</th>
@@ -124,14 +124,14 @@ export function WorkOrderListPage() {
               <tbody>
                 {woQuery.isLoading && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
                       Loading…
                     </td>
                   </tr>
                 )}
                 {woQuery.data?.items.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                    <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
                       No work orders match these filters.
                     </td>
                   </tr>
@@ -139,7 +139,7 @@ export function WorkOrderListPage() {
                 {woQuery.data?.items.map((w) => (
                   <tr key={w.wo_number} className="border-t border-slate-100">
                     <td className="px-3 py-2 font-mono text-xs">
-                      <Link to={`./${w.wo_number}`} className="text-slate-900 hover:underline">
+                      <Link to={`./${w.wo_number}`} className="text-slate-100 hover:underline">
                         {w.wo_number}
                       </Link>
                     </td>

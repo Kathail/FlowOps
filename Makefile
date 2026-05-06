@@ -1,7 +1,7 @@
 .PHONY: help dev dev-stop test lint fmt db-upgrade db-revision seed clean
 
 help:
-	@echo "FlowOps make targets:"
+	@echo "CityWater make targets:"
 	@echo "  dev          Start the local stack (postgres, redis, minio, pg_tileserv) in the background."
 	@echo "  dev-stop     Stop the local stack."
 	@echo "  test         Run backend + frontend tests."

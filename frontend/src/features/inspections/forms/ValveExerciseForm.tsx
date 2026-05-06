@@ -27,21 +27,21 @@ export function ValveExerciseForm({ onChange }: Props) {
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
-          <span className="text-xs text-slate-600">Turns to close</span>
+          <span className="text-xs text-slate-300">Turns to close</span>
           <input
             type="number"
             value={v.turns_to_close}
             onChange={(e) => setV({ ...v, turns_to_close: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Expected turns</span>
+          <span className="text-xs text-slate-300">Expected turns</span>
           <input
             type="number"
             value={v.expected_turns}
             onChange={(e) => setV({ ...v, expected_turns: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
       </div>

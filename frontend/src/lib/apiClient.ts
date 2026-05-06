@@ -27,7 +27,7 @@ export class ApiError extends Error {
 /**
  * Sentinel response returned when a mutation is enqueued instead of sent.
  * Status 202 mirrors the HTTP semantic: "accepted, processing later". The
- * `X-FlowOps-Queued` header lets callers detect the offline path so they
+ * `X-CityWater-Queued` header lets callers detect the offline path so they
  * can render an optimistic state.
  */
 function queuedResponse(): Response {
@@ -40,7 +40,7 @@ function queuedResponse(): Response {
       status: 202,
       headers: {
         "Content-Type": "application/json",
-        "X-FlowOps-Queued": "1",
+        "X-CityWater-Queued": "1",
       },
     },
   );
@@ -108,7 +108,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
           status: 200,
           headers: {
             "Content-Type": "application/json",
-            "X-FlowOps-Cache": "idb",
+            "X-CityWater-Cache": "idb",
           },
         });
       }

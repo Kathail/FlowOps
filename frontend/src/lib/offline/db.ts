@@ -31,7 +31,7 @@ export interface AssetCacheEntry {
   payload: unknown;
 }
 
-interface FlowOpsDB extends DBSchema {
+interface CityWaterDB extends DBSchema {
   mutations: {
     key: number;
     value: QueuedMutation;
@@ -47,14 +47,14 @@ interface FlowOpsDB extends DBSchema {
   };
 }
 
-const DB_NAME = "flowops-offline";
+const DB_NAME = "citywater-offline";
 const DB_VERSION = 1;
 
-let dbPromise: Promise<IDBPDatabase<FlowOpsDB>> | null = null;
+let dbPromise: Promise<IDBPDatabase<CityWaterDB>> | null = null;
 
-export function getDB(): Promise<IDBPDatabase<FlowOpsDB>> {
+export function getDB(): Promise<IDBPDatabase<CityWaterDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<FlowOpsDB>(DB_NAME, DB_VERSION, {
+    dbPromise = openDB<CityWaterDB>(DB_NAME, DB_VERSION, {
       upgrade(db) {
         if (!db.objectStoreNames.contains("mutations")) {
           const store = db.createObjectStore("mutations", {

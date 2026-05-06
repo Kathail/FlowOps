@@ -63,6 +63,9 @@ class Inspection(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, Audit
     work_order_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("work_order.id", ondelete="SET NULL"), nullable=True
     )
+    schedule_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("schedule.id", ondelete="SET NULL"), nullable=True
+    )
     performed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     performed_by: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("user.id", ondelete="SET NULL"), nullable=True

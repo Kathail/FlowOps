@@ -42,11 +42,11 @@ export function ManholeForm({ onChange }: Props) {
       <div className="grid grid-cols-5 gap-2">
         {CONDITION_FIELDS.map((f) => (
           <label key={f.key} className="block">
-            <span className="text-xs text-slate-600">{f.label}</span>
+            <span className="text-xs text-slate-300">{f.label}</span>
             <select
               value={v[f.key]}
               onChange={(e) => setV({ ...v, [f.key]: e.target.value })}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
             >
               {[1, 2, 3, 4, 5].map((n) => (
                 <option key={n} value={n}>
@@ -59,32 +59,32 @@ export function ManholeForm({ onChange }: Props) {
       </div>
       <div className="grid grid-cols-3 gap-2">
         <label className="block">
-          <span className="text-xs text-slate-600">Infiltration (LPM)</span>
+          <span className="text-xs text-slate-300">Infiltration (LPM)</span>
           <input
             type="number"
             step="0.1"
             value={v.infiltration_lpm}
             onChange={(e) => setV({ ...v, infiltration_lpm: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Depth (m)</span>
+          <span className="text-xs text-slate-300">Depth (m)</span>
           <input
             type="number"
             step="0.1"
             value={v.depth_m}
             onChange={(e) => setV({ ...v, depth_m: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">H₂S (ppm)</span>
+          <span className="text-xs text-slate-300">H₂S (ppm)</span>
           <input
             type="number"
             value={v.h2s_ppm}
             onChange={(e) => setV({ ...v, h2s_ppm: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
       </div>

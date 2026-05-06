@@ -48,11 +48,11 @@ LAT = 38.97
 
 DEMO_SLUG = "demo"
 DEMO_NAME = "Bayside Water Authority"
-ADMIN_EMAIL = "admin@demo.flowops.io"
+ADMIN_EMAIL = "admin@demo.citywater.io"
 ADMIN_PASSWORD = "DemoPassword123!"
-TECH_EMAIL = "tech@demo.flowops.io"
-SUP_EMAIL = "supervisor@demo.flowops.io"
-INTAKE_EMAIL = "intake@demo.flowops.io"
+TECH_EMAIL = "tech@demo.citywater.io"
+SUP_EMAIL = "supervisor@demo.citywater.io"
+INTAKE_EMAIL = "intake@demo.citywater.io"
 
 ROLE_DEFS = [
     ("admin", "Administrator"),
@@ -137,6 +137,12 @@ def _wipe_demo() -> None:
     db.session.execute(
         ServiceRequest.__table__.delete().where(ServiceRequest.tenant_id == tenant_id)
     )
+    # New in S11+: invitations, entity_links, schedules. All FK→tenant.
+    from app.models import EntityLink, Invitation, Schedule
+
+    db.session.execute(Invitation.__table__.delete().where(Invitation.tenant_id == tenant_id))
+    db.session.execute(EntityLink.__table__.delete().where(EntityLink.tenant_id == tenant_id))
+    db.session.execute(Schedule.__table__.delete().where(Schedule.tenant_id == tenant_id))
     db.session.execute(WoTemplate.__table__.delete().where(WoTemplate.tenant_id == tenant_id))
     db.session.execute(Asset.__table__.delete().where(Asset.tenant_id == tenant_id))
     db.session.execute(Crew.__table__.delete().where(Crew.tenant_id == tenant_id))

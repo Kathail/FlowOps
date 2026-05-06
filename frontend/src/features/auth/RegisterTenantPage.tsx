@@ -47,71 +47,63 @@ export function RegisterTenantPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-50">
+    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4"
+        className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
       >
-        <h1 className="text-xl font-semibold text-slate-900">Register a new tenant</h1>
+        <div>
+          <h1 className="text-xl font-semibold text-slate-100">Register a tenant</h1>
+          <p className="mt-1 text-sm text-slate-400">
+            You'll be the first administrator of this organization.
+          </p>
+        </div>
         <label className="block">
-          <span className="text-sm text-slate-700">Organization name</span>
-          <input
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
-            {...field("tenant_name")}
-            required
-          />
+          <span className="text-sm text-slate-300">Organization name</span>
+          <input className="input mt-1" {...field("tenant_name")} required />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Slug (lowercase URL identifier)</span>
+          <span className="text-sm text-slate-300">Slug (lowercase URL identifier)</span>
           <input
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
+            className="input mt-1"
             pattern="[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+            placeholder="acme-water"
             {...field("slug")}
             required
           />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Your name</span>
-          <input
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
-            {...field("full_name")}
-            required
-          />
+          <span className="text-sm text-slate-300">Your name</span>
+          <input className="input mt-1" {...field("full_name")} required />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Email</span>
-          <input
-            type="email"
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
-            {...field("admin_email")}
-            required
-          />
+          <span className="text-sm text-slate-300">Email</span>
+          <input type="email" className="input mt-1" {...field("admin_email")} required />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Password (12+ characters)</span>
+          <span className="text-sm text-slate-300">Password (12+ characters)</span>
           <input
             type="password"
             minLength={12}
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
+            className="input mt-1"
             {...field("admin_password")}
             required
           />
         </label>
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p
+            role="alert"
+            className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+          >
             {errorMessage}
           </p>
         )}
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="w-full rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50"
-        >
+        <button type="submit" disabled={mutation.isPending} className="btn-primary w-full">
           {mutation.isPending ? "Creating…" : "Create tenant"}
         </button>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           Already have an account?{" "}
-          <Link to="/login" className="text-slate-900 underline">
+          <Link to="/login" className="text-blue-400 hover:text-blue-300 hover:underline">
             Sign in
           </Link>
         </p>

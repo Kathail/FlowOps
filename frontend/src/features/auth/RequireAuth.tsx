@@ -7,7 +7,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
   if (isLoading || !isFetched) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>
+      <div className="min-h-screen flex items-center justify-center text-slate-400">Loading…</div>
     );
   }
 

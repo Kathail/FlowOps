@@ -3,6 +3,13 @@ from app.models.asset import Asset
 from app.models.asset_class import AssetClass
 from app.models.audit import AuditLog
 from app.models.crew import Crew, CrewMember
+from app.models.entity_link import (
+    ENTITY_TYPES as LINK_ENTITY_TYPES,
+)
+from app.models.entity_link import (
+    LINK_KINDS,
+    EntityLink,
+)
 from app.models.inspection import VALID_KINDS as INSPECTION_VALID_KINDS
 from app.models.inspection import Inspection
 from app.models.invitation import Invitation
@@ -13,6 +20,7 @@ from app.models.mixins import (
     TimestampMixin,
 )
 from app.models.pacp_code import PacpCode
+from app.models.schedule import SCHEDULE_KINDS, Schedule
 from app.models.service_request import ServiceRequest
 from app.models.tenant import Tenant
 from app.models.user import Role, User, UserRole
@@ -33,6 +41,9 @@ from app.models.work_order import (
 __all__ = [
     "ASSET_VALID_STATUSES",
     "INSPECTION_VALID_KINDS",
+    "LINK_ENTITY_TYPES",
+    "LINK_KINDS",
+    "SCHEDULE_KINDS",
     "VALID_ATTACHMENT_KINDS",
     "VALID_CATEGORIES",
     "VALID_PRIORITIES",
@@ -44,10 +55,12 @@ __all__ = [
     "AuditableMixin",
     "Crew",
     "CrewMember",
+    "EntityLink",
     "Inspection",
     "Invitation",
     "PacpCode",
     "Role",
+    "Schedule",
     "ServiceRequest",
     "SoftDeleteMixin",
     "Tenant",

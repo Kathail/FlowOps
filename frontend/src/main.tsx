@@ -13,7 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 registerServiceWorker((apply) => {
   // Minimal update prompt — confirm() is acceptable for v1; a styled
   // toast lands in S11 polish.
-  if (window.confirm("A new version of FlowOps is available. Reload now?")) {
+  if (window.confirm("A new version of CityWater is available. Reload now?")) {
     apply();
   }
 });

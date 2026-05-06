@@ -12,8 +12,8 @@ export default defineConfig({
       devOptions: { enabled: false },
       includeAssets: ["favicon.svg"],
       manifest: {
-        name: "FlowOps",
-        short_name: "FlowOps",
+        name: "CityWater",
+        short_name: "CityWater",
         description: "Asset & work management for water utilities",
         theme_color: "#0f172a",
         background_color: "#f8fafc",
@@ -41,6 +41,8 @@ export default defineConfig({
         // Don't precache MapLibre worker chunks — they're huge and only the
         // /map route needs them; let runtime caching handle on-demand.
         globIgnores: ["**/maplibre-*.js"],
+        // Each rebrand bumps cache names so old SWs purge cleanly.
+        cacheId: "citywater",
         // Read-only catalog endpoints rarely change — fast offline reads.
         runtimeCaching: [
           {

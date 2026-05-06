@@ -4,7 +4,7 @@ Conventions and constraints for working on this repo. Read this before any task.
 
 ## Project
 
-**Name:** FlowOps (working title)
+**Name:** CityWater (working title)
 **Purpose:** Asset management platform for water distribution, wastewater collection, and storm drainage. Cityworks alternative — focused, modern, open standards.
 **Status:** Greenfield. No existing code to preserve.
 **Owner:** Kyle Cahill (kathail). Solo dev, sellable product target.
@@ -60,7 +60,7 @@ Conventions and constraints for working on this repo. Read this before any task.
 ## Repo layout
 
 ```
-flowops/
+citywater/
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py          # create_app factory

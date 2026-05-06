@@ -88,10 +88,10 @@ export function AssetDetailPage() {
   });
 
   if (assetQuery.isLoading || !form) {
-    return <div className="text-slate-500">Loading…</div>;
+    return <div className="text-slate-400">Loading…</div>;
   }
   if (assetQuery.error) {
-    return <div className="text-red-600">{assetQuery.error.message}</div>;
+    return <div className="text-red-400">{assetQuery.error.message}</div>;
   }
   const asset = assetQuery.data!;
 
@@ -111,11 +111,11 @@ export function AssetDetailPage() {
     <div className="p-8 max-w-2xl space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <Link to={`/${params.slug}/assets`} className="text-sm text-slate-500 hover:underline">
+          <Link to={`/${params.slug}/assets`} className="text-sm text-slate-400 hover:underline">
             ← Back to assets
           </Link>
-          <h1 className="text-2xl font-semibold text-slate-900 mt-1">{asset.asset_uid}</h1>
-          <p className="text-sm text-slate-600">
+          <h1 className="text-2xl font-semibold text-slate-100 mt-1">{asset.asset_uid}</h1>
+          <p className="text-sm text-slate-300">
             {asset.class_code} · {asset.domain}
           </p>
         </div>
@@ -124,7 +124,7 @@ export function AssetDetailPage() {
             if (confirm(`Soft-delete ${asset.asset_uid}?`)) remove.mutate();
           }}
           disabled={remove.isPending}
-          className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+          className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-300 hover:bg-red-50"
         >
           Delete
         </button>
@@ -132,10 +132,10 @@ export function AssetDetailPage() {
 
       <form
         onSubmit={onSubmit}
-        className="rounded-lg border border-slate-200 bg-white p-4 space-y-3"
+        className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3"
       >
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-400">
             {errorMessage}
           </p>
         )}
@@ -144,7 +144,7 @@ export function AssetDetailPage() {
             <input
               value={form.material}
               onChange={(e) => update("material", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Diameter (mm)">
@@ -152,21 +152,21 @@ export function AssetDetailPage() {
               type="number"
               value={form.diameter_mm}
               onChange={(e) => update("diameter_mm", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Manufacturer">
             <input
               value={form.manufacturer}
               onChange={(e) => update("manufacturer", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Model">
             <input
               value={form.model}
               onChange={(e) => update("model", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Install date">
@@ -174,14 +174,14 @@ export function AssetDetailPage() {
               type="date"
               value={form.install_date}
               onChange={(e) => update("install_date", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Status">
             <select
               value={form.status}
               onChange={(e) => update("status", e.target.value as FormState["status"])}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
@@ -197,7 +197,7 @@ export function AssetDetailPage() {
               max={5}
               value={form.condition}
               onChange={(e) => update("condition", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
           <Field label="Criticality (1–5)">
@@ -207,7 +207,7 @@ export function AssetDetailPage() {
               max={5}
               value={form.criticality}
               onChange={(e) => update("criticality", e.target.value)}
-              className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </Field>
         </div>
@@ -216,23 +216,23 @@ export function AssetDetailPage() {
             value={form.notes}
             onChange={(e) => update("notes", e.target.value)}
             rows={3}
-            className="block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </Field>
         <button
           type="submit"
           disabled={save.isPending}
-          className="rounded bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-50"
+          className="rounded bg-blue-500 px-4 py-2 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           {save.isPending ? "Saving…" : "Save changes"}
         </button>
       </form>
 
-      <details className="rounded-lg border border-slate-200 bg-white p-4">
-        <summary className="text-sm font-medium text-slate-700 cursor-pointer">
+      <details className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+        <summary className="text-sm font-medium text-slate-200 cursor-pointer">
           Geometry (raw GeoJSON)
         </summary>
-        <pre className="mt-3 overflow-x-auto text-xs text-slate-700">
+        <pre className="mt-3 overflow-x-auto text-xs text-slate-200">
           {JSON.stringify(asset.geometry, null, 2)}
         </pre>
       </details>
@@ -243,7 +243,7 @@ export function AssetDetailPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block">
-      <span className="text-xs text-slate-600">{label}</span>
+      <span className="text-xs text-slate-300">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );

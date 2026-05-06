@@ -4,7 +4,7 @@ import { ApiError } from "../../lib/apiClient";
 import { type TenantRead, getTenant, updateTenant } from "./api";
 
 const inputClass =
-  "mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm";
+  "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
 
 const UNITS_OPTIONS = ["imperial", "metric"];
 const LOCALES = ["en-US", "en-CA", "en-GB", "es-ES", "fr-FR"];
@@ -50,9 +50,9 @@ export function AdminTenantPage() {
       setErrorMessage(e instanceof ApiError ? e.message : String(e)),
   });
 
-  if (query.isLoading) return <p className="text-sm text-slate-500">Loading…</p>;
+  if (query.isLoading) return <p className="text-sm text-slate-400">Loading…</p>;
   if (query.isError)
-    return <p className="text-sm text-red-600">Failed to load tenant.</p>;
+    return <p className="text-sm text-red-400">Failed to load tenant.</p>;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -63,10 +63,10 @@ export function AdminTenantPage() {
   return (
     <form
       onSubmit={onSubmit}
-      className="max-w-xl space-y-4 rounded border border-slate-200 bg-white p-4 text-sm"
+      className="max-w-xl space-y-4 rounded border border-slate-800 bg-slate-900 p-4 text-sm"
     >
       <label className="block">
-        <span className="text-slate-700">Tenant name</span>
+        <span className="text-slate-200">Tenant name</span>
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
@@ -77,7 +77,7 @@ export function AdminTenantPage() {
 
       <div className="grid grid-cols-2 gap-3">
         <label>
-          <span className="text-slate-700">Locale</span>
+          <span className="text-slate-200">Locale</span>
           <select
             value={locale}
             onChange={(e) => setLocale(e.target.value)}
@@ -91,7 +91,7 @@ export function AdminTenantPage() {
           </select>
         </label>
         <label>
-          <span className="text-slate-700">Units</span>
+          <span className="text-slate-200">Units</span>
           <select
             value={units}
             onChange={(e) => setUnits(e.target.value)}
@@ -107,7 +107,7 @@ export function AdminTenantPage() {
       </div>
 
       <label className="block">
-        <span className="text-slate-700">Logo URL (optional)</span>
+        <span className="text-slate-200">Logo URL (optional)</span>
         <input
           type="url"
           value={logoUrl}
@@ -117,21 +117,21 @@ export function AdminTenantPage() {
         />
       </label>
 
-      <p className="text-xs text-slate-500">
-        Slug <code className="rounded bg-slate-100 px-1">/{query.data?.slug}</code>{" "}
+      <p className="text-xs text-slate-400">
+        Slug <code className="rounded bg-slate-800 px-1">/{query.data?.slug}</code>{" "}
         is fixed for v1. Reach out to support to rename.
       </p>
 
-      {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
       {savedAt && (
-        <p className="text-xs text-emerald-700">Saved at {savedAt}.</p>
+        <p className="text-xs text-emerald-300">Saved at {savedAt}.</p>
       )}
 
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={save.isPending}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           {save.isPending ? "Saving…" : "Save"}
         </button>

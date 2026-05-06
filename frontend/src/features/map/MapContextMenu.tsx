@@ -13,12 +13,12 @@ export function MapContextMenu({ pixelX, pixelY, coords, onAddAsset, onClose }: 
     <ul
       role="menu"
       aria-label="Map actions"
-      className="absolute z-20 min-w-44 rounded-md border border-slate-200 bg-white shadow-lg py-1 text-sm"
+      className="absolute z-20 min-w-44 rounded-md border border-slate-800 bg-slate-900 shadow-lg py-1 text-sm"
       style={{ left: pixelX, top: pixelY }}
       onMouseLeave={onClose}
     >
       <li
-        className="px-3 py-1 text-xs text-slate-400 font-mono border-b border-slate-100"
+        className="px-3 py-1 text-xs text-slate-400 font-mono border-b border-slate-800"
         aria-hidden="true"
       >
         {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
@@ -30,7 +30,7 @@ export function MapContextMenu({ pixelX, pixelY, coords, onAddAsset, onClose }: 
             onAddAsset(coords);
             onClose();
           }}
-          className="w-full text-left px-3 py-1.5 hover:bg-slate-100 text-slate-800"
+          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/10 text-slate-100"
         >
           Add asset here…
         </button>

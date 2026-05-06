@@ -58,21 +58,21 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
     >
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl space-y-3"
+        className="w-full max-w-md rounded-lg bg-slate-900 p-5 shadow-xl space-y-3"
       >
         <header className="flex items-start justify-between">
           <div>
-            <h2 id="add-asset-title" className="text-lg font-semibold text-slate-900">
+            <h2 id="add-asset-title" className="text-lg font-semibold text-slate-100">
               Add asset here
             </h2>
-            <p className="text-xs text-slate-500 font-mono mt-1">
+            <p className="text-xs text-slate-400 font-mono mt-1">
               {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-slate-400 hover:text-slate-200"
             aria-label="Close"
           >
             ✕
@@ -80,12 +80,12 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
         </header>
 
         <label className="block">
-          <span className="text-xs text-slate-600">Asset class</span>
+          <span className="text-xs text-slate-300">Asset class</span>
           <select
             value={classCode}
             onChange={(e) => setClassCode(e.target.value)}
             required
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">Pick a class…</option>
             {pointClasses.map((c) => (
@@ -94,22 +94,22 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
               </option>
             ))}
           </select>
-          <span className="text-xs text-slate-500 mt-1 block">
+          <span className="text-xs text-slate-400 mt-1 block">
             Map creates Point assets only. Lines/polygons via API for now.
           </span>
         </label>
 
         <label className="block">
-          <span className="text-xs text-slate-600">Material (optional)</span>
+          <span className="text-xs text-slate-300">Material (optional)</span>
           <input
             value={material}
             onChange={(e) => setMaterial(e.target.value)}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
 
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-400">
             {errorMessage}
           </p>
         )}
@@ -118,14 +118,14 @@ export function AddAssetDialog({ coords, onClose, onCreated }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={create.isPending}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {create.isPending ? "Creating…" : "Create asset"}
           </button>

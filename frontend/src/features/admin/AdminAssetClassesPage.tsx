@@ -48,25 +48,25 @@ export function AdminAssetClassesPage() {
   });
 
   if (query.isLoading)
-    return <p className="text-sm text-slate-500">Loading…</p>;
+    return <p className="text-sm text-slate-400">Loading…</p>;
   if (query.isError)
-    return <p className="text-sm text-red-600">Failed to load asset classes.</p>;
+    return <p className="text-sm text-red-400">Failed to load asset classes.</p>;
 
   return (
     <div className="grid grid-cols-12 gap-4">
-      <aside className="col-span-4 max-h-[70vh] overflow-auto rounded border border-slate-200 bg-white">
-        <ul className="divide-y divide-slate-100 text-sm">
+      <aside className="col-span-4 max-h-[70vh] overflow-auto rounded border border-slate-800 bg-slate-900">
+        <ul className="divide-y divide-slate-800 text-sm">
           {query.data?.map((ac) => (
             <li key={ac.code}>
               <button
                 onClick={() => setSelected(ac.code)}
-                className={`w-full px-3 py-2 text-left ${
+                className={`w-full px-3 py-2 text-left transition-colors ${
                   selected === ac.code
-                    ? "bg-slate-100 font-medium"
-                    : "hover:bg-slate-50"
+                    ? "bg-blue-500/15 font-medium ring-1 ring-blue-500/30"
+                    : "hover:bg-slate-800/60"
                 }`}
               >
-                <div className="font-mono text-xs text-slate-500">
+                <div className="font-mono text-xs text-slate-400">
                   {ac.code}
                 </div>
                 <div>{ac.name}</div>
@@ -77,42 +77,42 @@ export function AdminAssetClassesPage() {
         </ul>
       </aside>
 
-      <section className="col-span-8 space-y-3 rounded border border-slate-200 bg-white p-4">
+      <section className="col-span-8 space-y-3 rounded border border-slate-800 bg-slate-900 p-4">
         {!current ? (
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             Pick an asset class on the left to edit its attribute schema.
           </p>
         ) : (
           <>
             <header>
               <h2 className="text-lg font-medium">{current.name}</h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-400">
                 {current.code} · {current.domain} · {current.geometry_type}
               </p>
             </header>
 
             <label className="block text-sm">
-              <span className="text-slate-700">attribute_schema (JSON Schema)</span>
+              <span className="text-slate-200">attribute_schema (JSON Schema)</span>
               <textarea
                 value={schemaText}
                 onChange={(e) => setSchemaText(e.target.value)}
                 rows={18}
                 spellCheck={false}
-                className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 font-mono text-xs"
+                className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 font-mono text-xs"
               />
             </label>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               The server validates against the JSON Schema 2020-12 meta-schema.
               Existing assets are <em>not</em> re-validated; conformance for new
               assets only.
             </p>
 
             {errorMessage && (
-              <p className="text-sm text-red-600">{errorMessage}</p>
+              <p className="text-sm text-red-400">{errorMessage}</p>
             )}
             {savedAt && (
-              <p className="text-xs text-emerald-700">Saved at {savedAt}.</p>
+              <p className="text-xs text-emerald-300">Saved at {savedAt}.</p>
             )}
 
             <div className="flex justify-end gap-2">
@@ -122,14 +122,14 @@ export function AdminAssetClassesPage() {
                     setSchemaText(JSON.stringify(current.attribute_schema, null, 2));
                   setErrorMessage(null);
                 }}
-                className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+                className="rounded border border-slate-700 px-3 py-1.5 text-sm"
               >
                 Reset
               </button>
               <button
                 onClick={() => save.mutate()}
                 disabled={save.isPending}
-                className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
               >
                 {save.isPending ? "Saving…" : "Save"}
               </button>

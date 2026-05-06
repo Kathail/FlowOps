@@ -49,21 +49,21 @@ export function ImportPacpDialog({ onClose }: Props) {
     >
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg bg-white p-5 shadow-xl space-y-3"
+        className="w-full max-w-md rounded-lg bg-slate-900 p-5 shadow-xl space-y-3"
       >
         <header className="flex items-start justify-between">
           <div>
-            <h2 id="import-pacp-title" className="text-lg font-semibold text-slate-900">
+            <h2 id="import-pacp-title" className="text-lg font-semibold text-slate-100">
               Import PACP survey
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               WinCan-style XML or JSON. Validated against the PACP code catalog.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-slate-400 hover:text-slate-200"
             aria-label="Close"
           >
             ✕
@@ -71,7 +71,7 @@ export function ImportPacpDialog({ onClose }: Props) {
         </header>
 
         <label className="block">
-          <span className="text-xs text-slate-600">File</span>
+          <span className="text-xs text-slate-300">File</span>
           <input
             type="file"
             accept=".xml,.json,application/xml,text/xml,application/json"
@@ -82,27 +82,27 @@ export function ImportPacpDialog({ onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-xs text-slate-600">Asset UID (optional)</span>
+            <span className="text-xs text-slate-300">Asset UID (optional)</span>
             <input
               value={assetUid}
               onChange={(e) => setAssetUid(e.target.value)}
               placeholder="MH-00001"
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
           <label className="block">
-            <span className="text-xs text-slate-600">Linked WO (optional)</span>
+            <span className="text-xs text-slate-300">Linked WO (optional)</span>
             <input
               value={woNumber}
               onChange={(e) => setWoNumber(e.target.value)}
               placeholder="WO-2026-00001"
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
         </div>
 
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-400">
             {errorMessage}
           </p>
         )}
@@ -111,14 +111,14 @@ export function ImportPacpDialog({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={!file || upload.isPending}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {upload.isPending ? "Importing…" : "Import"}
           </button>

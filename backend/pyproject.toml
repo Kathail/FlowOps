@@ -1,7 +1,7 @@
 [project]
-name = "flowops-backend"
+name = "citywater-backend"
 version = "0.1.0"
-description = "FlowOps backend — asset & work management for water utilities."
+description = "CityWater backend — asset & work management for water utilities."
 requires-python = ">=3.12,<3.13"
 
 # Every dependency justified per CLAUDE.md hard rule #6.

@@ -52,24 +52,24 @@ export function LiftStationForm({ onChange }: Props) {
           ] as const
         ).map(([k, label]) => (
           <label key={k} className="block">
-            <span className="text-xs text-slate-600">{label}</span>
+            <span className="text-xs text-slate-300">{label}</span>
             <input
               type="number"
               step="0.1"
               value={v[k]}
               onChange={(e) => setV({ ...v, [k]: e.target.value })}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
         ))}
       </div>
       <label className="block">
-        <span className="text-xs text-slate-600">Alarms (comma-separated)</span>
+        <span className="text-xs text-slate-300">Alarms (comma-separated)</span>
         <input
           value={v.alarms}
           onChange={(e) => setV({ ...v, alarms: e.target.value })}
           placeholder="high_level, motor_overload"
-          className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
         />
       </label>
       <fieldset className="flex gap-4 text-sm">

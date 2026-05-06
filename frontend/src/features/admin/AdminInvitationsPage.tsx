@@ -19,7 +19,7 @@ const ROLE_OPTIONS = [
 ];
 
 const inputClass =
-  "mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm";
+  "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
 
 export function AdminInvitationsPage() {
   const qc = useQueryClient();
@@ -74,8 +74,8 @@ export function AdminInvitationsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded border border-slate-200 bg-white p-4">
-        <h2 className="text-lg font-medium text-slate-900">Invite a user</h2>
+      <section className="rounded border border-slate-800 bg-slate-900 p-4">
+        <h2 className="text-lg font-medium text-slate-100">Invite a user</h2>
         <form onSubmit={onSubmit} className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <label>
             Email
@@ -96,7 +96,7 @@ export function AdminInvitationsPage() {
             />
           </label>
           <div className="col-span-2">
-            <span className="text-slate-700">Roles</span>
+            <span className="text-slate-200">Roles</span>
             <div className="mt-1 flex flex-wrap gap-3">
               {ROLE_OPTIONS.map((r) => (
                 <label key={r.code} className="flex items-center gap-1 text-xs">
@@ -125,33 +125,33 @@ export function AdminInvitationsPage() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
             >
               {create.isPending ? "Inviting…" : "Send invitation"}
             </button>
           </div>
         </form>
         {errorMessage && (
-          <p className="mt-2 text-sm text-red-600">{errorMessage}</p>
+          <p className="mt-2 text-sm text-red-400">{errorMessage}</p>
         )}
         {created && (
-          <div className="mt-4 rounded border border-emerald-200 bg-emerald-50 p-3 text-sm">
-            <p className="font-medium text-emerald-800">
+          <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
+            <p className="font-medium text-emerald-300">
               Invitation created for {created.invitation.email}.
             </p>
-            <p className="mt-1 text-xs text-emerald-700">
+            <p className="mt-1 text-xs text-emerald-300">
               Send this link — it's only shown once:
             </p>
-            <code className="mt-1 block break-all rounded bg-white p-2 text-xs">
+            <code className="mt-1 block break-all rounded bg-slate-900 p-2 text-xs">
               {created.accept_url}
             </code>
           </div>
         )}
       </section>
 
-      <section className="rounded border border-slate-200 bg-white">
+      <section className="rounded border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
             <tr>
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">Roles</th>
@@ -160,13 +160,13 @@ export function AdminInvitationsPage() {
               <th className="px-3 py-2"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-800">
             {query.data?.items.map((inv) => (
               <tr key={inv.id}>
                 <td className="px-3 py-2">
                   <div>{inv.email}</div>
                   {inv.full_name && (
-                    <div className="text-xs text-slate-500">{inv.full_name}</div>
+                    <div className="text-xs text-slate-400">{inv.full_name}</div>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -179,14 +179,14 @@ export function AdminInvitationsPage() {
                 <td className="px-3 py-2">
                   <StatusPill inv={inv} />
                 </td>
-                <td className="px-3 py-2 text-xs text-slate-500">
+                <td className="px-3 py-2 text-xs text-slate-400">
                   {new Date(inv.expires_at).toLocaleString()}
                 </td>
                 <td className="px-3 py-2 text-right">
                   {inv.accepted_at === null && inv.revoked_at === null && (
                     <button
                       onClick={() => revoke.mutate(inv.id)}
-                      className="rounded border border-red-300 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+                      className="rounded border border-red-300 px-2 py-1 text-xs text-red-300 hover:bg-red-50"
                     >
                       Revoke
                     </button>
@@ -196,7 +196,7 @@ export function AdminInvitationsPage() {
             ))}
             {query.data && query.data.items.length === 0 && (
               <tr>
-                <td colSpan={5} className="p-6 text-center text-sm text-slate-500">
+                <td colSpan={5} className="p-6 text-center text-sm text-slate-400">
                   No invitations yet.
                 </td>
               </tr>
@@ -211,27 +211,27 @@ export function AdminInvitationsPage() {
 function StatusPill({ inv }: { inv: InvitationRead }) {
   if (inv.accepted_at) {
     return (
-      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-800">
+      <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-xs text-emerald-300">
         accepted
       </span>
     );
   }
   if (inv.revoked_at) {
     return (
-      <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-300">
         revoked
       </span>
     );
   }
   if (new Date(inv.expires_at) < new Date()) {
     return (
-      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-800">
+      <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-xs text-amber-200 ring-1 ring-amber-500/30">
         expired
       </span>
     );
   }
   return (
-    <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-800">
+    <span className="rounded bg-blue-500/15 px-1.5 py-0.5 text-xs text-blue-200 ring-1 ring-blue-500/30">
       pending
     </span>
   );

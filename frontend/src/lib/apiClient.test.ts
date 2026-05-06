@@ -86,7 +86,7 @@ describe("apiClient", () => {
         body: JSON.stringify({ title: "Field-logged" }),
       });
       expect(resp.status).toBe(202);
-      expect(resp.headers.get("X-FlowOps-Queued")).toBe("1");
+      expect(resp.headers.get("X-CityWater-Queued")).toBe("1");
       const queued = await listMutations();
       expect(queued).toHaveLength(1);
       expect(queued[0].url).toBe("/api/v1/work-orders");
@@ -103,7 +103,7 @@ describe("apiClient", () => {
 
       const resp = await apiFetch(url);
       expect(resp.status).toBe(200);
-      expect(resp.headers.get("X-FlowOps-Cache")).toBe("idb");
+      expect(resp.headers.get("X-CityWater-Cache")).toBe("idb");
       const body = await resp.json();
       expect(body.items[0].asset_uid).toBe("HYD-1");
     });

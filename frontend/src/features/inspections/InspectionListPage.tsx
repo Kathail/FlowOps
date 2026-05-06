@@ -41,24 +41,24 @@ export function InspectionListPage() {
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Inspections</h1>
+        <h1 className="text-2xl font-semibold text-slate-100">Inspections</h1>
         <div className="flex gap-2">
           <a
             href={exportInspectionsUrl(params.kind)}
             download
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Export CSV
           </a>
           <button
             onClick={() => setImportOpen(true)}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Import PACP…
           </button>
           <button
             onClick={() => setCreateOpen(true)}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
           >
             New inspection
           </button>
@@ -70,11 +70,11 @@ export function InspectionListPage() {
 
       <div className="flex gap-3 items-end flex-wrap">
         <label className="block">
-          <span className="text-xs text-slate-600">Kind</span>
+          <span className="text-xs text-slate-300">Kind</span>
           <select
             value={params.kind ?? ""}
             onChange={(e) => setParam("kind", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">All kinds</option>
             {KINDS.map((k) => (
@@ -85,20 +85,20 @@ export function InspectionListPage() {
           </select>
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Asset UID</span>
+          <span className="text-xs text-slate-300">Asset UID</span>
           <input
             defaultValue={search.get("asset_uid") ?? ""}
             onBlur={(e) => setParam("asset_uid", e.target.value || null)}
             placeholder="HYD-00001"
-            className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm w-40"
+            className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-40"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Pass</span>
+          <span className="text-xs text-slate-300">Pass</span>
           <select
             value={params.pass ?? ""}
             onChange={(e) => setParam("pass", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+            className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">Any</option>
             <option value="true">Pass</option>
@@ -107,9 +107,9 @@ export function InspectionListPage() {
         </label>
       </div>
 
-      <div className="rounded-lg border border-slate-200 bg-white">
+      <div className="rounded-lg border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
+          <thead className="bg-slate-800/50 text-slate-300">
             <tr>
               <th className="px-3 py-2 text-left">Number</th>
               <th className="px-3 py-2 text-left">Kind</th>
@@ -122,14 +122,14 @@ export function InspectionListPage() {
           <tbody>
             {insQuery.isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
                   Loading…
                 </td>
               </tr>
             )}
             {insQuery.data?.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
                   No inspections match these filters.
                 </td>
               </tr>
@@ -137,7 +137,7 @@ export function InspectionListPage() {
             {insQuery.data?.items.map((i) => (
               <tr key={i.inspection_number} className="border-t border-slate-100">
                 <td className="px-3 py-2 font-mono text-xs">
-                  <Link to={`./${i.inspection_number}`} className="text-slate-900 hover:underline">
+                  <Link to={`./${i.inspection_number}`} className="text-slate-100 hover:underline">
                     {i.inspection_number}
                   </Link>
                 </td>

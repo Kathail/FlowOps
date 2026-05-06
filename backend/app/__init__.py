@@ -17,9 +17,11 @@ from app.api.crews import crews_bp
 from app.api.health import health_bp
 from app.api.inspections import inspections_bp
 from app.api.invitations import invitations_bp
+from app.api.links import links_bp
 from app.api.openapi import openapi_bp
 from app.api.pacp_codes import pacp_codes_bp
 from app.api.reports import reports_bp
+from app.api.schedules import schedules_bp
 from app.api.service_requests import service_requests_bp
 from app.api.tenant import tenant_bp
 from app.api.tiles import tiles_bp
@@ -126,12 +128,16 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(inspections_bp)
     app.register_blueprint(invitations_bp)
     app.register_blueprint(pacp_codes_bp)
+    app.register_blueprint(links_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(schedules_bp)
     app.register_blueprint(service_requests_bp)
     app.register_blueprint(admin_audit_bp)
 
+    from app.cli.schedules_tick import register as register_schedules_tick
     from app.cli.seed_demo import register as register_seed_demo
 
     register_seed_demo(app)
+    register_schedules_tick(app)
 
     return app

@@ -55,24 +55,24 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
   }
 
   const inputClass =
-    "mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm";
+    "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-lg space-y-3 rounded-lg bg-white p-6 shadow-lg"
+        className="w-full max-w-lg space-y-3 rounded-lg bg-slate-900 p-6 shadow-lg"
       >
-        <h2 className="text-lg font-semibold text-slate-900">
+        <h2 className="text-lg font-semibold text-slate-100">
           Dispatch as work order
         </h2>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-400">
           Creates a new WO linked to {srNumber} and moves the SR to{" "}
           <span className="font-medium">dispatched</span>.
         </p>
 
         <label className="block text-sm">
-          <span className="text-slate-700">Title</span>
+          <span className="text-slate-200">Title</span>
           <input
             value={form.title}
             onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
@@ -83,7 +83,7 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
 
         <div className="grid grid-cols-2 gap-3">
           <label className="block text-sm">
-            <span className="text-slate-700">Category</span>
+            <span className="text-slate-200">Category</span>
             <select
               value={form.category}
               onChange={(e) =>
@@ -102,7 +102,7 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
             </select>
           </label>
           <label className="block text-sm">
-            <span className="text-slate-700">Priority</span>
+            <span className="text-slate-200">Priority</span>
             <select
               value={form.priority}
               onChange={(e) =>
@@ -120,7 +120,7 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
         </div>
 
         <label className="block text-sm">
-          <span className="text-slate-700">Asset UID (optional)</span>
+          <span className="text-slate-200">Asset UID (optional)</span>
           <input
             value={form.asset_uid}
             onChange={(e) =>
@@ -132,7 +132,7 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
         </label>
 
         <label className="block text-sm">
-          <span className="text-slate-700">Description</span>
+          <span className="text-slate-200">Description</span>
           <textarea
             rows={3}
             value={form.description}
@@ -143,20 +143,20 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
           />
         </label>
 
-        {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+        {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
 
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={dispatch.isPending}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {dispatch.isPending ? "Dispatching…" : "Dispatch"}
           </button>

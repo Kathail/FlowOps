@@ -36,21 +36,21 @@ export function WorkOrderDetailPage() {
     },
   });
 
-  if (woQuery.isLoading) return <div className="p-8 text-slate-500">Loading…</div>;
-  if (woQuery.error) return <div className="p-8 text-red-600">{woQuery.error.message}</div>;
+  if (woQuery.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
+  if (woQuery.error) return <div className="p-8 text-red-400">{woQuery.error.message}</div>;
   const wo = woQuery.data!;
 
   return (
     <div className="p-8 space-y-6 max-w-4xl">
       <header className="space-y-1">
-        <Link to={`/${slug}/work-orders`} className="text-sm text-slate-500 hover:underline">
+        <Link to={`/${slug}/work-orders`} className="text-sm text-slate-400 hover:underline">
           ← Back to work orders
         </Link>
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">{wo.wo_number}</h1>
-            <p className="mt-1 text-base text-slate-700">{wo.title}</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <h1 className="text-2xl font-semibold text-slate-100">{wo.wo_number}</h1>
+            <p className="mt-1 text-base text-slate-200">{wo.title}</p>
+            <p className="mt-1 text-xs text-slate-400">
               {wo.type} · {wo.category} · {wo.priority}
             </p>
           </div>
@@ -62,7 +62,7 @@ export function WorkOrderDetailPage() {
                   key={to}
                   onClick={() => transition.mutate(to)}
                   disabled={transition.isPending}
-                  className="rounded border border-slate-300 px-2 py-0.5 text-xs text-slate-700 hover:bg-slate-100"
+                  className="rounded border border-slate-700 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-800"
                 >
                   → {to}
                 </button>
@@ -74,7 +74,7 @@ export function WorkOrderDetailPage() {
 
       <Section title="Details">
         <dl className="grid grid-cols-2 gap-y-1 text-sm">
-          <dt className="text-slate-500">Asset</dt>
+          <dt className="text-slate-400">Asset</dt>
           <dd>
             {wo.asset_uid ? (
               <Link
@@ -87,15 +87,15 @@ export function WorkOrderDetailPage() {
               "—"
             )}
           </dd>
-          <dt className="text-slate-500">Due</dt>
+          <dt className="text-slate-400">Due</dt>
           <dd>{wo.due_by?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
-          <dt className="text-slate-500">Started</dt>
+          <dt className="text-slate-400">Started</dt>
           <dd>{wo.started_at?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
-          <dt className="text-slate-500">Completed</dt>
+          <dt className="text-slate-400">Completed</dt>
           <dd>{wo.completed_at?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
         </dl>
         {wo.description && (
-          <p className="mt-3 text-sm text-slate-700 whitespace-pre-wrap">{wo.description}</p>
+          <p className="mt-3 text-sm text-slate-200 whitespace-pre-wrap">{wo.description}</p>
         )}
       </Section>
 
@@ -109,8 +109,8 @@ export function WorkOrderDetailPage() {
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-slate-500 mb-2">{title}</h2>
+    <section className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+      <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">{title}</h2>
       {children}
     </section>
   );
@@ -118,13 +118,13 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function StatusPill({ status }: { status: WoStatus }) {
   const colors: Record<WoStatus, string> = {
-    draft: "bg-slate-200 text-slate-700",
-    open: "bg-blue-100 text-blue-800",
-    assigned: "bg-purple-100 text-purple-800",
-    in_progress: "bg-amber-100 text-amber-800",
-    on_hold: "bg-orange-100 text-orange-800",
-    completed: "bg-green-100 text-green-800",
-    cancelled: "bg-slate-200 text-slate-500 line-through",
+    draft: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
+    open: "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30",
+    assigned: "bg-purple-500/15 text-purple-200 ring-1 ring-purple-500/30",
+    in_progress: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30",
+    on_hold: "bg-orange-500/15 text-orange-200 ring-1 ring-orange-500/30",
+    completed: "bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/30",
+    cancelled: "bg-slate-800 text-slate-500 ring-1 ring-slate-700 line-through",
   };
   return (
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[status]}`}>{status}</span>
@@ -174,12 +174,12 @@ function TasksSection({ wo }: { wo: WorkOrderDetail }) {
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="Add a task…"
-          className="flex-1 rounded border border-slate-300 px-2 py-1 text-sm"
+          className="flex-1 rounded border border-slate-700 px-2 py-1 text-sm"
         />
         <button
           type="submit"
           disabled={!newTitle.trim() || add.isPending}
-          className="rounded bg-slate-900 px-3 py-1 text-sm text-white disabled:opacity-50"
+          className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           Add
         </button>
@@ -214,10 +214,10 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
       {wo.time_logs.length > 0 && (
         <ul className="text-sm space-y-1 mb-3">
           {wo.time_logs.map((t) => (
-            <li key={t.id} className="text-slate-700">
+            <li key={t.id} className="text-slate-200">
               {t.started_at.slice(0, 16).replace("T", " ")} →{" "}
               {t.ended_at.slice(0, 16).replace("T", " ")}
-              <span className="text-slate-500 ml-2">{t.hours_decimal} h</span>
+              <span className="text-slate-400 ml-2">{t.hours_decimal} h</span>
             </li>
           ))}
         </ul>
@@ -230,27 +230,27 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
         className="flex gap-2 items-end"
       >
         <label className="block">
-          <span className="text-xs text-slate-600">Start</span>
+          <span className="text-xs text-slate-300">Start</span>
           <input
             type="datetime-local"
             value={start}
             onChange={(e) => setStart(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">End</span>
+          <span className="text-xs text-slate-300">End</span>
           <input
             type="datetime-local"
             value={end}
             onChange={(e) => setEnd(e.target.value)}
-            className="mt-1 block rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <button
           type="submit"
           disabled={!start || !end || log.isPending}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           Log time
         </button>
@@ -280,10 +280,10 @@ function MaterialsSection({ wo }: { wo: WorkOrderDetail }) {
       {wo.materials.length > 0 && (
         <ul className="text-sm space-y-1 mb-3">
           {wo.materials.map((m) => (
-            <li key={m.id} className="text-slate-700 flex justify-between">
+            <li key={m.id} className="text-slate-200 flex justify-between">
               <span>
                 {m.quantity} × {m.description}
-                {m.unit_cost && <span className="ml-2 text-slate-500">@ ${m.unit_cost}</span>}
+                {m.unit_cost && <span className="ml-2 text-slate-400">@ ${m.unit_cost}</span>}
               </span>
             </li>
           ))}
@@ -297,37 +297,37 @@ function MaterialsSection({ wo }: { wo: WorkOrderDetail }) {
         className="flex flex-wrap gap-2 items-end"
       >
         <label className="block flex-1 min-w-48">
-          <span className="text-xs text-slate-600">Description</span>
+          <span className="text-xs text-slate-300">Description</span>
           <input
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Qty</span>
+          <span className="text-xs text-slate-300">Qty</span>
           <input
             type="number"
             step="0.1"
             value={form.quantity}
             onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-            className="mt-1 block w-20 rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-20 rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <label className="block">
-          <span className="text-xs text-slate-600">Unit cost</span>
+          <span className="text-xs text-slate-300">Unit cost</span>
           <input
             type="number"
             step="0.01"
             value={form.unit_cost}
             onChange={(e) => setForm({ ...form, unit_cost: e.target.value })}
-            className="mt-1 block w-24 rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-24 rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
         <button
           type="submit"
           disabled={!form.description || !form.quantity || log.isPending}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           Add
         </button>
@@ -350,10 +350,10 @@ function AttachmentsSection({ wo }: { wo: WorkOrderDetail }) {
       {wo.attachments.length > 0 && (
         <ul className="text-sm space-y-1 mb-3">
           {wo.attachments.map((a) => (
-            <li key={a.id} className="text-slate-700">
-              <span className="font-mono text-xs text-slate-500">{a.kind}</span>{" "}
+            <li key={a.id} className="text-slate-200">
+              <span className="font-mono text-xs text-slate-400">{a.kind}</span>{" "}
               {a.original_filename}{" "}
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-400">
                 ({(a.size_bytes / 1024).toFixed(1)} KB)
               </span>
             </li>
@@ -368,7 +368,7 @@ function AttachmentsSection({ wo }: { wo: WorkOrderDetail }) {
         }}
         className="text-sm"
       />
-      {upload.isPending && <p className="mt-2 text-xs text-slate-500">Uploading…</p>}
+      {upload.isPending && <p className="mt-2 text-xs text-slate-400">Uploading…</p>}
     </Section>
   );
 }

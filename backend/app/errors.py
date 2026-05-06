@@ -4,7 +4,7 @@ from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException
 
 
-class FlowOpsError(Exception):
+class CityWaterError(Exception):
     status_code: int = 500
     code: str = "internal_error"
 
@@ -22,34 +22,34 @@ class FlowOpsError(Exception):
             self.code = code
 
 
-class NotFoundError(FlowOpsError):
+class NotFoundError(CityWaterError):
     status_code = 404
     code = "not_found"
 
 
-class ValidationError(FlowOpsError):
+class ValidationError(CityWaterError):
     status_code = 422
     code = "validation_error"
 
 
-class ConflictError(FlowOpsError):
+class ConflictError(CityWaterError):
     status_code = 409
     code = "conflict"
 
 
-class AuthError(FlowOpsError):
+class AuthError(CityWaterError):
     status_code = 401
     code = "unauthorized"
 
 
-class ForbiddenError(FlowOpsError):
+class ForbiddenError(CityWaterError):
     status_code = 403
     code = "forbidden"
 
 
 def register_error_handlers(app: Flask) -> None:
-    @app.errorhandler(FlowOpsError)
-    def _flowops(err: FlowOpsError):
+    @app.errorhandler(CityWaterError)
+    def _handle_app_error(err: CityWaterError):
         return (
             jsonify({"error": {"code": err.code, "message": str(err)}}),
             err.status_code,

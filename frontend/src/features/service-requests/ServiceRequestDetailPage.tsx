@@ -24,8 +24,8 @@ export function ServiceRequestDetailPage() {
   const [closeNotes, setCloseNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  if (query.isLoading) return <div className="p-8 text-slate-500">Loading…</div>;
-  if (query.isError) return <div className="p-8 text-red-600">Failed to load.</div>;
+  if (query.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
+  if (query.isError) return <div className="p-8 text-red-400">Failed to load.</div>;
   if (!query.data) return null;
 
   const data = query.data;
@@ -53,10 +53,10 @@ export function ServiceRequestDetailPage() {
     <div className="p-8 space-y-6">
       <header className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-slate-100">
             {data.sr_number}
           </h1>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-400">
             {data.category} · {data.domain} ·{" "}
             <span className="font-medium">{data.status}</span> · priority {data.priority}
           </p>
@@ -66,7 +66,7 @@ export function ServiceRequestDetailPage() {
             <button
               onClick={() => transition("triaged")}
               disabled={update.isPending}
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50"
+              className="rounded border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800/50 disabled:opacity-50"
             >
               Mark triaged
             </button>
@@ -74,7 +74,7 @@ export function ServiceRequestDetailPage() {
           {!["closed", "duplicate", "dispatched"].includes(data.status) && (
             <button
               onClick={() => setDispatchOpen(true)}
-              className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
+              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
             >
               Dispatch as work order
             </button>
@@ -82,7 +82,7 @@ export function ServiceRequestDetailPage() {
           {!["closed", "duplicate"].includes(data.status) && (
             <button
               onClick={() => setCloseOpen(true)}
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+              className="rounded border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800/50"
             >
               Close
             </button>
@@ -90,31 +90,31 @@ export function ServiceRequestDetailPage() {
         </div>
       </header>
 
-      {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+      {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
 
       <section className="grid grid-cols-2 gap-6">
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">Caller</h2>
+          <h2 className="text-sm font-semibold uppercase text-slate-400">Caller</h2>
           <Field label="Name" value={data.caller_name} />
           <Field label="Phone" value={data.caller_phone} />
           <Field label="Email" value={data.caller_email} />
           <Field label="Reported" value={new Date(data.reported_at).toLocaleString()} />
         </div>
         <div className="space-y-3">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">Location</h2>
+          <h2 className="text-sm font-semibold uppercase text-slate-400">Location</h2>
           <Field label="Address" value={data.address} />
           {data.location && (
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-slate-200">
               {data.location.coordinates[0].toFixed(5)},{" "}
               {data.location.coordinates[1].toFixed(5)}
             </p>
           )}
           {data.work_order_number && (
             <p className="text-sm">
-              <span className="text-slate-500">Linked WO: </span>
+              <span className="text-slate-400">Linked WO: </span>
               <Link
                 to={`/${slug}/work-orders/${data.work_order_number}`}
-                className="text-slate-900 hover:underline"
+                className="text-slate-100 hover:underline"
               >
                 {data.work_order_number}
               </Link>
@@ -124,26 +124,26 @@ export function ServiceRequestDetailPage() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold uppercase text-slate-500">Description</h2>
-        <p className="whitespace-pre-line text-sm text-slate-800">
+        <h2 className="text-sm font-semibold uppercase text-slate-400">Description</h2>
+        <p className="whitespace-pre-line text-sm text-slate-100">
           {data.description ?? <span className="text-slate-400">none</span>}
         </p>
       </section>
 
       {data.closure_reason && (
-        <section className="space-y-2 rounded border border-slate-200 bg-slate-50 p-4">
-          <h2 className="text-sm font-semibold uppercase text-slate-500">Closure</h2>
-          <p className="text-sm text-slate-800">
+        <section className="space-y-2 rounded border border-slate-800 bg-slate-800/50 p-4">
+          <h2 className="text-sm font-semibold uppercase text-slate-400">Closure</h2>
+          <p className="text-sm text-slate-100">
             <span className="font-medium">{data.closure_reason}</span>
             {data.closed_at && (
-              <span className="text-slate-500">
+              <span className="text-slate-400">
                 {" — "}
                 {new Date(data.closed_at).toLocaleString()}
               </span>
             )}
           </p>
           {data.closure_notes && (
-            <p className="whitespace-pre-line text-sm text-slate-700">
+            <p className="whitespace-pre-line text-sm text-slate-200">
               {data.closure_notes}
             </p>
           )}
@@ -163,15 +163,15 @@ export function ServiceRequestDetailPage() {
       )}
 
       {closeOpen && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/40 p-4">
-          <div className="w-full max-w-md space-y-3 rounded-lg bg-white p-6 shadow-lg">
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md space-y-3 rounded-lg bg-slate-900 p-6 shadow-lg">
             <h3 className="text-lg font-semibold">Close service request</h3>
             <label className="block text-sm">
-              <span className="text-slate-700">Reason</span>
+              <span className="text-slate-200">Reason</span>
               <select
                 value={closeReason}
                 onChange={(e) => setCloseReason(e.target.value as SrClosureReason)}
-                className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               >
                 {CLOSURE_REASONS.map((r) => (
                   <option key={r} value={r}>
@@ -181,25 +181,25 @@ export function ServiceRequestDetailPage() {
               </select>
             </label>
             <label className="block text-sm">
-              <span className="text-slate-700">Notes</span>
+              <span className="text-slate-200">Notes</span>
               <textarea
                 rows={3}
                 value={closeNotes}
                 onChange={(e) => setCloseNotes(e.target.value)}
-                className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               />
             </label>
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => setCloseOpen(false)}
-                className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+                className="rounded border border-slate-700 px-3 py-1.5 text-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={() => transition("closed")}
                 disabled={update.isPending}
-                className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
               >
                 Close SR
               </button>
@@ -214,7 +214,7 @@ export function ServiceRequestDetailPage() {
 function Field({ label, value }: { label: string; value: string | null }) {
   return (
     <p className="text-sm">
-      <span className="block text-xs uppercase text-slate-500">{label}</span>
+      <span className="block text-xs uppercase text-slate-400">{label}</span>
       {value ?? <span className="text-slate-400">—</span>}
     </p>
   );

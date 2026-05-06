@@ -93,30 +93,30 @@ export function IntakeDialog({ onClose }: Props) {
 
   if (createdSrNumber && duplicates.length > 0) {
     return (
-      <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/40 p-4">
-        <div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-lg">
-          <h2 className="text-lg font-semibold text-slate-900">
+      <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+        <div className="w-full max-w-xl rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/10">
+          <h2 className="text-lg font-semibold text-slate-100">
             Created {createdSrNumber}
           </h2>
-          <p className="mt-2 text-sm text-amber-700">
+          <p className="mt-2 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
             Found {duplicates.length} possible duplicate
             {duplicates.length === 1 ? "" : "s"} within 100 m / 7 days. Review before
             dispatching.
           </p>
-          <ul className="mt-3 max-h-64 divide-y divide-slate-100 overflow-auto rounded border border-slate-200">
+          <ul className="mt-3 max-h-64 divide-y divide-slate-800 overflow-auto rounded border border-slate-800">
             {duplicates.map((d) => (
               <li key={d.sr_number} className="p-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{d.sr_number}</span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-400">
                     {Math.round(d.distance_m)} m · {d.status}
                   </span>
                 </div>
-                <p className="text-xs text-slate-600">
+                <p className="text-xs text-slate-300">
                   {new Date(d.reported_at).toLocaleString()} · {d.category}
                 </p>
                 {d.description && (
-                  <p className="mt-1 text-xs text-slate-700 line-clamp-2">
+                  <p className="mt-1 text-xs text-slate-200 line-clamp-2">
                     {d.description}
                   </p>
                 )}
@@ -126,7 +126,7 @@ export function IntakeDialog({ onClose }: Props) {
           <div className="mt-4 flex justify-end gap-2">
             <button
               onClick={onClose}
-              className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+              className="rounded border border-slate-700 px-3 py-1.5 text-sm"
             >
               Close
             </button>
@@ -134,7 +134,7 @@ export function IntakeDialog({ onClose }: Props) {
               onClick={() =>
                 navigate(`/${slug}/service-requests/${createdSrNumber}`)
               }
-              className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
+              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
             >
               Open new SR
             </button>
@@ -145,17 +145,17 @@ export function IntakeDialog({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/40 p-4">
+    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-xl space-y-3 rounded-lg bg-white p-6 shadow-lg"
+        className="w-full max-w-xl space-y-3 rounded-lg bg-slate-900 p-6 shadow-lg"
       >
-        <h2 className="text-lg font-semibold text-slate-900">New service request</h2>
+        <h2 className="text-lg font-semibold text-slate-100">New service request</h2>
 
         <div className="grid grid-cols-3 gap-3">
           <Field label="Category">
             <select
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.category}
               onChange={(e) => update("category", e.target.value as SrCategory)}
             >
@@ -168,7 +168,7 @@ export function IntakeDialog({ onClose }: Props) {
           </Field>
           <Field label="Domain">
             <select
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.domain}
               onChange={(e) => update("domain", e.target.value as SrDomain)}
             >
@@ -181,7 +181,7 @@ export function IntakeDialog({ onClose }: Props) {
           </Field>
           <Field label="Priority">
             <select
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.priority}
               onChange={(e) => update("priority", e.target.value as SrPriority)}
             >
@@ -197,14 +197,14 @@ export function IntakeDialog({ onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Caller name">
             <input
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.caller_name}
               onChange={(e) => update("caller_name", e.target.value)}
             />
           </Field>
           <Field label="Caller phone">
             <input
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.caller_phone}
               onChange={(e) => update("caller_phone", e.target.value)}
             />
@@ -214,7 +214,7 @@ export function IntakeDialog({ onClose }: Props) {
         <Field label="Caller email">
           <input
             type="email"
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             value={form.caller_email}
             onChange={(e) => update("caller_email", e.target.value)}
           />
@@ -222,7 +222,7 @@ export function IntakeDialog({ onClose }: Props) {
 
         <Field label="Address">
           <input
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             value={form.address}
             onChange={(e) => update("address", e.target.value)}
           />
@@ -231,7 +231,7 @@ export function IntakeDialog({ onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <Field label="Longitude">
             <input
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.lon}
               placeholder="-76.5"
               onChange={(e) => update("lon", e.target.value)}
@@ -239,7 +239,7 @@ export function IntakeDialog({ onClose }: Props) {
           </Field>
           <Field label="Latitude">
             <input
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.lat}
               placeholder="39.3"
               onChange={(e) => update("lat", e.target.value)}
@@ -249,27 +249,27 @@ export function IntakeDialog({ onClose }: Props) {
 
         <Field label="Description">
           <textarea
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             rows={3}
             value={form.description}
             onChange={(e) => update("description", e.target.value)}
           />
         </Field>
 
-        {errorMessage && <p className="text-sm text-red-600">{errorMessage}</p>}
+        {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
 
         <div className="flex justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={create.isPending}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {create.isPending ? "Saving…" : "Create"}
           </button>
@@ -282,7 +282,7 @@ export function IntakeDialog({ onClose }: Props) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm">
-      <span className="text-slate-700">{label}</span>
+      <span className="text-slate-200">{label}</span>
       <div className="mt-1">{children}</div>
     </label>
   );

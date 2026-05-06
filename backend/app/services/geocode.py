@@ -10,7 +10,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 _TIMEOUT_S = 5.0
-_USER_AGENT = "FlowOps/0.1 (+https://github.com/Kathail/CityWater)"
+_USER_AGENT = "CityWater/0.1 (+https://github.com/Kathail/CityWater)"
 
 
 def reverse_geocode(address: str) -> tuple[float, float] | None:

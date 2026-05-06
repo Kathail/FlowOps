@@ -37,27 +37,33 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-50">
+    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-6 shadow-sm space-y-4"
+        className="w-full max-w-sm rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
       >
-        <h1 className="text-xl font-semibold text-slate-900">Sign in to FlowOps</h1>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-blue-400">
+            CityWater
+          </p>
+          <h1 className="mt-1 text-xl font-semibold text-slate-100">Sign in</h1>
+        </div>
         <label className="block">
-          <span className="text-sm text-slate-700">Company slug</span>
+          <span className="text-sm text-slate-300">Company slug</span>
           <input
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
+            className="input mt-1"
             value={tenantSlug}
             onChange={(e) => setTenantSlug(e.target.value)}
             autoComplete="organization"
+            placeholder="acme"
             required
           />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Email</span>
+          <span className="text-sm text-slate-300">Email</span>
           <input
             type="email"
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
+            className="input mt-1"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
@@ -65,10 +71,10 @@ export function LoginPage() {
           />
         </label>
         <label className="block">
-          <span className="text-sm text-slate-700">Password</span>
+          <span className="text-sm text-slate-300">Password</span>
           <input
             type="password"
-            className="mt-1 block w-full rounded border border-slate-300 px-3 py-2"
+            className="input mt-1"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
@@ -76,20 +82,20 @@ export function LoginPage() {
           />
         </label>
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
             {errorMessage}
           </p>
         )}
         <button
           type="submit"
           disabled={mutation.isPending}
-          className="w-full rounded bg-slate-900 px-4 py-2 text-white disabled:opacity-50"
+          className="btn-primary w-full"
         >
           {mutation.isPending ? "Signing in…" : "Sign in"}
         </button>
-        <p className="text-sm text-slate-500">
+        <p className="text-sm text-slate-400">
           Need an account?{" "}
-          <Link to="/register" className="text-slate-900 underline">
+          <Link to="/register" className="text-blue-400 hover:text-blue-300 hover:underline">
             Register a tenant
           </Link>
         </p>

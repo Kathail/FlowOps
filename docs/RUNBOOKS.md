@@ -1,6 +1,6 @@
 # Runbooks
 
-Operational procedures for FlowOps in production. Each runbook is named for
+Operational procedures for CityWater in production. Each runbook is named for
 the moment you'll reach for it.
 
 ---
@@ -152,7 +152,7 @@ instead of sending email. To turn on real email delivery:
 # 2. Set on the deploy:
 RESEND_API_KEY="rs_xxx"
 EMAIL_PROVIDER="resend"
-EMAIL_FROM="FlowOps <noreply@your-domain.com>"
+EMAIL_FROM="CityWater <noreply@your-domain.com>"
 
 # 3. Restart. From the next invitation create, the recipient should receive
 #    mail and the server log should contain a single "email[resend]" line

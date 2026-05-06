@@ -43,21 +43,21 @@ export function ImportDialog({ onClose }: Props) {
     >
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-lg rounded-lg bg-white p-5 shadow-xl space-y-3"
+        className="w-full max-w-lg rounded-lg bg-slate-900 p-5 shadow-xl space-y-3"
       >
         <header className="flex items-start justify-between">
           <div>
-            <h2 id="import-title" className="text-lg font-semibold text-slate-900">
+            <h2 id="import-title" className="text-lg font-semibold text-slate-100">
               Import assets
             </h2>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-400 mt-1">
               CSV (Point-only) or GeoJSON FeatureCollection. Max 10 MB.
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-slate-400 hover:text-slate-200"
             aria-label="Close"
           >
             ✕
@@ -65,7 +65,7 @@ export function ImportDialog({ onClose }: Props) {
         </header>
 
         <label className="block">
-          <span className="text-xs text-slate-600">File</span>
+          <span className="text-xs text-slate-300">File</span>
           <input
             type="file"
             accept=".csv,.json,.geojson,application/geo+json,text/csv"
@@ -76,11 +76,11 @@ export function ImportDialog({ onClose }: Props) {
 
         <div className="flex gap-4">
           <label className="block flex-1">
-            <span className="text-xs text-slate-600">If asset_uid already exists</span>
+            <span className="text-xs text-slate-300">If asset_uid already exists</span>
             <select
               value={onConflict}
               onChange={(e) => setOnConflict(e.target.value as "skip" | "update")}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
             >
               <option value="skip">Skip (default)</option>
               <option value="update">Update existing</option>
@@ -93,17 +93,17 @@ export function ImportDialog({ onClose }: Props) {
         </div>
 
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-400">
             {errorMessage}
           </p>
         )}
 
         {upload.data && (
-          <div className="rounded border border-slate-200 bg-slate-50 p-3 space-y-2">
-            <p className="text-sm font-medium text-slate-800">
+          <div className="rounded border border-slate-800 bg-slate-800/50 p-3 space-y-2">
+            <p className="text-sm font-medium text-slate-100">
               {dryRun ? "Dry-run result" : "Import complete"}
             </p>
-            <ul className="text-sm text-slate-700">
+            <ul className="text-sm text-slate-200">
               <li>Created: {upload.data.summary.created}</li>
               <li>Updated: {upload.data.summary.updated}</li>
               <li>Skipped: {upload.data.summary.skipped}</li>
@@ -111,14 +111,14 @@ export function ImportDialog({ onClose }: Props) {
             </ul>
             {upload.data.errors.length > 0 && (
               <details className="text-xs">
-                <summary className="cursor-pointer text-slate-600 hover:text-slate-900">
+                <summary className="cursor-pointer text-slate-300 hover:text-slate-100">
                   {upload.data.errors.length} error
                   {upload.data.errors.length === 1 ? "" : "s"} — show
                 </summary>
                 <ul className="mt-2 space-y-1 max-h-40 overflow-auto">
                   {upload.data.errors.map((e, i) => (
-                    <li key={i} className="text-slate-700">
-                      <span className="font-mono text-slate-500">row {e.row}</span> —{" "}
+                    <li key={i} className="text-slate-200">
+                      <span className="font-mono text-slate-400">row {e.row}</span> —{" "}
                       <span className="font-mono">{e.code}</span>: {e.message}
                     </li>
                   ))}
@@ -132,7 +132,7 @@ export function ImportDialog({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             {upload.data ? "Close" : "Cancel"}
           </button>
@@ -140,7 +140,7 @@ export function ImportDialog({ onClose }: Props) {
             <button
               type="submit"
               disabled={!file || upload.isPending}
-              className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
             >
               {upload.isPending ? "Uploading…" : "Import"}
             </button>

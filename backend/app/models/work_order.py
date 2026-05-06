@@ -89,6 +89,11 @@ class WorkOrder(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, Audita
         ForeignKey("service_request.id", ondelete="SET NULL"),
         nullable=True,
     )
+    schedule_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("schedule.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     scheduled_for: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     due_by: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

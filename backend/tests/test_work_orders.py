@@ -293,7 +293,7 @@ def test_attachment_upload_minio_or_skip(admin_client):
                 "S3_ACCESS_KEY_ID": "test",
                 "S3_SECRET_ACCESS_KEY": "test",
                 "S3_REGION": "us-east-1",
-                "S3_BUCKET": "flowops-test",
+                "S3_BUCKET": "citywater-test",
             }
         )
         os.environ.pop("S3_ENDPOINT_URL", None)

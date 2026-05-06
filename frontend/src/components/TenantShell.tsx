@@ -30,8 +30,10 @@ export function TenantShell() {
       to={to}
       end={to === ""}
       className={({ isActive }) =>
-        `block rounded px-3 py-2 text-sm ${
-          isActive ? "bg-slate-900 text-white" : "text-slate-700 hover:bg-slate-100"
+        `block rounded px-3 py-2 text-sm transition-colors ${
+          isActive
+            ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30"
+            : "text-slate-300 hover:bg-slate-800 hover:text-slate-100"
         }`
       }
     >
@@ -40,11 +42,11 @@ export function TenantShell() {
   );
 
   return (
-    <div className="min-h-screen flex bg-slate-50">
-      <aside className="w-56 border-r border-slate-200 bg-white p-4 flex flex-col">
+    <div className="min-h-screen flex bg-slate-950 text-slate-100">
+      <aside className="w-56 border-r border-slate-800 bg-slate-900 p-4 flex flex-col">
         <Link to={`/${slug}/`} className="mb-6 block">
-          <h1 className="text-lg font-semibold text-slate-900">{tenant.name}</h1>
-          <p className="text-xs text-slate-500">/{slug}</p>
+          <h1 className="text-lg font-semibold text-slate-100">{tenant.name}</h1>
+          <p className="text-xs text-blue-400">/{slug}</p>
         </Link>
         <nav className="flex flex-col gap-1">
           {navLink(`/${slug}/`, "Home")}
@@ -57,19 +59,19 @@ export function TenantShell() {
           {user.roles.some((r) => r.code === "admin") &&
             navLink(`/${slug}/admin`, "Admin")}
         </nav>
-        <div className="mt-auto pt-4 border-t border-slate-200">
-          <p className="text-xs text-slate-600">{user.full_name}</p>
-          <p className="text-xs text-slate-500 truncate">{user.email}</p>
+        <div className="mt-auto pt-4 border-t border-slate-800">
+          <p className="text-xs text-slate-300">{user.full_name}</p>
+          <p className="text-xs text-slate-400 truncate">{user.email}</p>
           <button
             onClick={() => signOut.mutate()}
             disabled={signOut.isPending}
-            className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+            className="mt-2 w-full rounded border border-slate-700 px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-slate-100 disabled:opacity-50"
           >
             {signOut.isPending ? "Signing out…" : "Sign out"}
           </button>
         </div>
       </aside>
-      <main className="flex-1 relative overflow-auto">
+      <main className="flex-1 relative overflow-auto bg-slate-950">
         <OfflineBanner onOpenConflicts={() => setConflictsOpen(true)} />
         <Outlet />
       </main>

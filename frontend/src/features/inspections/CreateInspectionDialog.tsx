@@ -73,16 +73,16 @@ export function CreateInspectionDialog({ onClose }: Props) {
     >
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-2xl rounded-lg bg-white p-5 shadow-xl space-y-3 max-h-[90vh] overflow-y-auto"
+        className="w-full max-w-2xl rounded-lg bg-slate-900 p-5 shadow-xl space-y-3 max-h-[90vh] overflow-y-auto"
       >
         <header className="flex items-start justify-between">
-          <h2 id="new-inspection-title" className="text-lg font-semibold text-slate-900">
+          <h2 id="new-inspection-title" className="text-lg font-semibold text-slate-100">
             New inspection
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700"
+            className="text-slate-400 hover:text-slate-200"
             aria-label="Close"
           >
             ✕
@@ -91,14 +91,14 @@ export function CreateInspectionDialog({ onClose }: Props) {
 
         <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="text-xs text-slate-600">Kind</span>
+            <span className="text-xs text-slate-300">Kind</span>
             <select
               value={kind}
               onChange={(e) => {
                 setKind(e.target.value as InspectionKind);
                 setData({});
               }}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
             >
               {KINDS.map((k) => (
                 <option key={k.value} value={k.value}>
@@ -108,16 +108,16 @@ export function CreateInspectionDialog({ onClose }: Props) {
             </select>
           </label>
           <label className="block">
-            <span className="text-xs text-slate-600">Asset UID (optional)</span>
+            <span className="text-xs text-slate-300">Asset UID (optional)</span>
             <input
               value={assetUid}
               onChange={(e) => setAssetUid(e.target.value)}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
         </div>
 
-        <div className="rounded border border-slate-200 bg-slate-50 p-3">
+        <div className="rounded border border-slate-800 bg-slate-800/50 p-3">
           {kind === "hydrant_flow" && <HydrantFlowForm onChange={setData} />}
           {kind === "valve_exercise" && <ValveExerciseForm onChange={setData} />}
           {kind === "manhole" && <ManholeForm onChange={setData} />}
@@ -128,22 +128,22 @@ export function CreateInspectionDialog({ onClose }: Props) {
 
         <div className="grid grid-cols-3 gap-2">
           <label className="block">
-            <span className="text-xs text-slate-600">Overall (1-5)</span>
+            <span className="text-xs text-slate-300">Overall (1-5)</span>
             <input
               type="number"
               min={1}
               max={5}
               value={overallCondition}
               onChange={(e) => setOverallCondition(e.target.value)}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
           <label className="block">
-            <span className="text-xs text-slate-600">Pass?</span>
+            <span className="text-xs text-slate-300">Pass?</span>
             <select
               value={pass}
               onChange={(e) => setPass(e.target.value as "" | "true" | "false")}
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm bg-white"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
             >
               <option value="">—</option>
               <option value="true">Pass</option>
@@ -151,28 +151,28 @@ export function CreateInspectionDialog({ onClose }: Props) {
             </select>
           </label>
           <label className="block">
-            <span className="text-xs text-slate-600">Linked WO (optional)</span>
+            <span className="text-xs text-slate-300">Linked WO (optional)</span>
             <input
               value={woNumber}
               onChange={(e) => setWoNumber(e.target.value)}
               placeholder="WO-2026-00001"
-              className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+              className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
         </div>
 
         <label className="block">
-          <span className="text-xs text-slate-600">Notes</span>
+          <span className="text-xs text-slate-300">Notes</span>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 block w-full rounded border border-slate-300 px-2 py-1 text-sm"
+            className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
 
         {errorMessage && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-400">
             {errorMessage}
           </p>
         )}
@@ -181,14 +181,14 @@ export function CreateInspectionDialog({ onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={create.isPending}
-            className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
           >
             {create.isPending ? "Creating…" : "Create"}
           </button>

@@ -48,10 +48,10 @@ export function ServiceRequestListPage() {
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Service requests</h1>
+        <h1 className="text-2xl font-semibold text-slate-100">Service requests</h1>
         <button
           onClick={() => setIntakeOpen(true)}
-          className="rounded bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
+          className="rounded bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-400"
         >
           New intake
         </button>
@@ -59,11 +59,11 @@ export function ServiceRequestListPage() {
 
       <div className="flex flex-wrap items-end gap-3 text-sm">
         <label>
-          <span className="block text-slate-600">Status</span>
+          <span className="block text-slate-300">Status</span>
           <select
             value={params.status ?? ""}
             onChange={(e) => setParam("status", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1"
+            className="mt-1 rounded border border-slate-700 px-2 py-1"
           >
             <option value="">Any</option>
             {STATUSES.map((s) => (
@@ -74,11 +74,11 @@ export function ServiceRequestListPage() {
           </select>
         </label>
         <label>
-          <span className="block text-slate-600">Domain</span>
+          <span className="block text-slate-300">Domain</span>
           <select
             value={params.domain ?? ""}
             onChange={(e) => setParam("domain", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1"
+            className="mt-1 rounded border border-slate-700 px-2 py-1"
           >
             <option value="">Any</option>
             {DOMAINS.map((d) => (
@@ -89,11 +89,11 @@ export function ServiceRequestListPage() {
           </select>
         </label>
         <label>
-          <span className="block text-slate-600">Category</span>
+          <span className="block text-slate-300">Category</span>
           <select
             value={params.category ?? ""}
             onChange={(e) => setParam("category", e.target.value || null)}
-            className="mt-1 rounded border border-slate-300 px-2 py-1"
+            className="mt-1 rounded border border-slate-700 px-2 py-1"
           >
             <option value="">Any</option>
             {CATEGORIES.map((c) => (
@@ -104,19 +104,19 @@ export function ServiceRequestListPage() {
           </select>
         </label>
         <label className="flex-1 max-w-xs">
-          <span className="block text-slate-600">Search</span>
+          <span className="block text-slate-300">Search</span>
           <input
             value={params.q ?? ""}
             onChange={(e) => setParam("q", e.target.value || null)}
             placeholder="number, caller, address, description"
-            className="mt-1 w-full rounded border border-slate-300 px-2 py-1"
+            className="mt-1 w-full rounded border border-slate-700 px-2 py-1"
           />
         </label>
       </div>
 
-      <div className="overflow-hidden rounded border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+          <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
             <tr>
               <th className="px-3 py-2">Number</th>
               <th className="px-3 py-2">Status</th>
@@ -129,13 +129,13 @@ export function ServiceRequestListPage() {
               <th className="px-3 py-2">WO</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-800">
             {query.data?.items.map((sr) => (
-              <tr key={sr.sr_number} className="hover:bg-slate-50">
+              <tr key={sr.sr_number} className="hover:bg-slate-800/50">
                 <td className="px-3 py-2 font-medium">
                   <Link
                     to={`/${slug}/service-requests/${sr.sr_number}`}
-                    className="text-slate-900 hover:underline"
+                    className="text-slate-100 hover:underline"
                   >
                     {sr.sr_number}
                   </Link>
@@ -148,14 +148,14 @@ export function ServiceRequestListPage() {
                 <td className="px-3 py-2">{sr.priority}</td>
                 <td className="px-3 py-2">{sr.caller_name ?? "—"}</td>
                 <td className="px-3 py-2 max-w-xs truncate">{sr.address ?? "—"}</td>
-                <td className="px-3 py-2 text-slate-500">
+                <td className="px-3 py-2 text-slate-400">
                   {new Date(sr.reported_at).toLocaleString()}
                 </td>
                 <td className="px-3 py-2">
                   {sr.work_order_number ? (
                     <Link
                       to={`/${slug}/work-orders/${sr.work_order_number}`}
-                      className="text-slate-700 hover:underline"
+                      className="text-slate-200 hover:underline"
                     >
                       {sr.work_order_number}
                     </Link>
@@ -167,7 +167,7 @@ export function ServiceRequestListPage() {
             ))}
             {query.data && query.data.items.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-6 text-center text-slate-500">
+                <td colSpan={9} className="p-6 text-center text-slate-400">
                   No service requests match these filters.
                 </td>
               </tr>
@@ -183,11 +183,11 @@ export function ServiceRequestListPage() {
 
 function StatusPill({ status }: { status: SrStatus }) {
   const cls: Record<SrStatus, string> = {
-    new: "bg-blue-100 text-blue-800",
-    triaged: "bg-amber-100 text-amber-800",
-    dispatched: "bg-violet-100 text-violet-800",
-    closed: "bg-slate-200 text-slate-700",
-    duplicate: "bg-slate-100 text-slate-500",
+    new: "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30",
+    triaged: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30",
+    dispatched: "bg-violet-500/15 text-violet-200 ring-1 ring-violet-500/30",
+    closed: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
+    duplicate: "bg-slate-800 text-slate-500 ring-1 ring-slate-700",
   };
   return (
     <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${cls[status]}`}>

@@ -150,7 +150,7 @@ def create_invitation():
         send_invitation_email(
             to=inv.email,
             accept_url=accept_url,
-            tenant_name=tenant_obj.name if tenant_obj else "FlowOps",
+            tenant_name=tenant_obj.name if tenant_obj else "CityWater",
         )
     except Exception:
         logger.exception(
