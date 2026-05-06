@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Button } from "../../components/Button";
 import { exportAssetsUrl } from "./api";
 
 export function ExportButton() {
@@ -19,14 +20,14 @@ export function ExportButton() {
 
   return (
     <div className="relative">
-      <button
+      <Button
+        variant="ghost"
         onClick={() => setOpen((v) => !v)}
-        className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
         aria-expanded={open}
         aria-haspopup="menu"
       >
         Export…
-      </button>
+      </Button>
       {open && (
         <div
           role="menu"
@@ -41,11 +42,16 @@ export function ExportButton() {
             />
             Apply current filters
           </label>
+          {/* Anchors (not <Button>) so the browser's download handler runs.
+              .btn-primary keeps them visually consistent with the rest of
+              the app. The earlier `hover:bg-blue-400 hover:bg-slate-700`
+              had two conflicting hover backgrounds — Tailwind's last-rule
+              wins, so the slate hover always defeated blue. Both gone now. */}
           <div className="flex gap-2">
             <a
               href={exportAssetsUrl("csv", filters)}
               download
-              className="flex-1 text-center rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 hover:bg-slate-700"
+              className="btn-primary flex-1 text-center"
               role="menuitem"
             >
               CSV
@@ -53,7 +59,7 @@ export function ExportButton() {
             <a
               href={exportAssetsUrl("geojson", filters)}
               download
-              className="flex-1 text-center rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 hover:bg-slate-700"
+              className="btn-primary flex-1 text-center"
               role="menuitem"
             >
               GeoJSON

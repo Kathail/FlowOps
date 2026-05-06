@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { Button } from "../../components/Button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { translateApiError } from "../../lib/translateApiError";
 import { useAssets } from "../assets/hooks";
@@ -60,13 +61,7 @@ export function RouteSection({ wo, slug }: { wo: WorkOrderDetail; slug: string |
         <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
           Assets ({completed}/{total})
         </h2>
-        <button
-          type="button"
-          onClick={() => setPickerOpen(true)}
-          className="rounded-md bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
-        >
-          + Add assets
-        </button>
+        <Button onClick={() => setPickerOpen(true)}>+ Add assets</Button>
       </div>
 
       {wo.assets.length === 0 ? (
