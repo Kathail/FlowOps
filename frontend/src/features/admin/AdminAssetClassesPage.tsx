@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ApiError } from "../../lib/apiClient";
+import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
+import { ErrorState, LoadingState } from "../../components/States";
+import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
+import { translateApiError } from "../../lib/translateApiError";
 import { type AssetClassRead, listAssetClasses, updateAssetClass } from "./api";
 
 export function AdminAssetClassesPage() {
@@ -16,6 +20,8 @@ export function AdminAssetClassesPage() {
   const [savedAt, setSavedAt] = useState<string | null>(null);
 
   const current = query.data?.find((ac) => ac.code === selected) ?? null;
+  const baseline = current ? JSON.stringify(current.attribute_schema, null, 2) : "";
+  const dirty = !!current && schemaText !== baseline;
 
   useEffect(() => {
     if (current) {
@@ -32,9 +38,7 @@ export function AdminAssetClassesPage() {
       try {
         parsed = JSON.parse(schemaText);
       } catch (e) {
-        throw new Error(
-          `JSON parse error: ${e instanceof Error ? e.message : String(e)}`,
-        );
+        throw new Error(`JSON parse error: ${e instanceof Error ? e.message : String(e)}`);
       }
       return updateAssetClass(current.code, { attribute_schema: parsed });
     },
@@ -43,22 +47,26 @@ export function AdminAssetClassesPage() {
       setSavedAt(new Date().toLocaleTimeString());
       setErrorMessage(null);
     },
-    onError: (e) =>
-      setErrorMessage(e instanceof ApiError ? e.message : String(e)),
+    onError: (e) => setErrorMessage(translateApiError(e)),
   });
 
-  if (query.isLoading)
-    return <p className="text-sm text-slate-400">Loading…</p>;
+  if (query.isLoading) return <LoadingState />;
   if (query.isError)
-    return <p className="text-sm text-red-400">Failed to load asset classes.</p>;
+    return <ErrorState message="Failed to load asset classes." retry={() => query.refetch()} />;
 
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+      <UnsavedChangesGuard
+        dirty={dirty}
+        title="Discard schema edits?"
+        message="You have unsaved changes to this asset class's attribute schema. Leave the page and lose them?"
+      />
       <aside className="md:col-span-4 max-h-[70vh] overflow-auto rounded border border-slate-800 bg-slate-900">
         <ul className="divide-y divide-slate-800 text-sm">
           {query.data?.map((ac) => (
             <li key={ac.code}>
               <button
+                type="button"
                 onClick={() => setSelected(ac.code)}
                 className={`w-full px-3 py-2 text-left transition-colors ${
                   selected === ac.code
@@ -66,9 +74,7 @@ export function AdminAssetClassesPage() {
                     : "hover:bg-slate-800/60"
                 }`}
               >
-                <div className="font-mono text-xs text-slate-400">
-                  {ac.code}
-                </div>
+                <div className="font-mono text-xs text-slate-400">{ac.code}</div>
                 <div>{ac.name}</div>
                 <div className="text-xs text-slate-400">{ac.domain}</div>
               </button>
@@ -103,36 +109,27 @@ export function AdminAssetClassesPage() {
             </label>
 
             <p className="text-xs text-slate-400">
-              The server validates against the JSON Schema 2020-12 meta-schema.
-              Existing assets are <em>not</em> re-validated; conformance for new
-              assets only.
+              The server validates against the JSON Schema 2020-12 meta-schema. Existing assets are{" "}
+              <em>not</em> re-validated; conformance for new assets only.
             </p>
 
-            {errorMessage && (
-              <p className="text-sm text-red-400">{errorMessage}</p>
-            )}
-            {savedAt && (
-              <p className="text-xs text-emerald-300">Saved at {savedAt}.</p>
-            )}
+            {errorMessage && <Alert>{errorMessage}</Alert>}
+            {savedAt && <Alert variant="success">Saved at {savedAt}.</Alert>}
 
             <div className="flex justify-end gap-2">
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
-                  if (current)
-                    setSchemaText(JSON.stringify(current.attribute_schema, null, 2));
+                  setSchemaText(baseline);
                   setErrorMessage(null);
                 }}
-                className="rounded border border-slate-700 px-3 py-1.5 text-sm"
+                disabled={!dirty}
               >
                 Reset
-              </button>
-              <button
-                onClick={() => save.mutate()}
-                disabled={save.isPending}
-                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-              >
+              </Button>
+              <Button onClick={() => save.mutate()} disabled={save.isPending || !dirty}>
                 {save.isPending ? "Saving…" : "Save"}
-              </button>
+              </Button>
             </div>
           </>
         )}

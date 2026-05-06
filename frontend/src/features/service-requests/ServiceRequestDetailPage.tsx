@@ -5,6 +5,7 @@ import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { DetailHeader } from "../../components/DetailHeader";
 import { ErrorState, LoadingState } from "../../components/States";
+import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { translateApiError } from "../../lib/translateApiError";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
@@ -45,6 +46,9 @@ export function ServiceRequestDetailPage() {
   const queryClient = useQueryClient();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  // Tracks "user edited but server hasn't acknowledged yet" — covers both
+  // the 600 ms debounce window and the in-flight PATCH.
+  const [pendingSave, setPendingSave] = useState(false);
 
   if (query.isLoading) return <LoadingState />;
   if (query.isError) return <ErrorState message="Failed to load." retry={() => query.refetch()} />;
@@ -60,9 +64,19 @@ export function ServiceRequestDetailPage() {
     queryClient.setQueryData<ServiceRequestRead>([SR_DETAIL_KEY, sr], (prev) =>
       prev ? { ...prev, task_data: next } : prev,
     );
+    setPendingSave(true);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      update.mutate({ task_data: next }, { onSuccess: () => setSavedAt(new Date()) });
+      update.mutate(
+        { task_data: next },
+        {
+          onSuccess: () => {
+            setSavedAt(new Date());
+            setPendingSave(false);
+          },
+          onError: () => setPendingSave(false),
+        },
+      );
     }, 600);
   }
 
@@ -86,6 +100,11 @@ export function ServiceRequestDetailPage() {
 
   return (
     <div className="p-8 space-y-6">
+      <UnsavedChangesGuard
+        dirty={pendingSave || update.isPending}
+        title="Leave with unsaved service-request edits?"
+        message="Your last edit hasn't synced to the server yet. Leave anyway and lose it?"
+      />
       <DetailHeader
         backTo={`/${slug}/service-requests`}
         backLabel="Back to service requests"

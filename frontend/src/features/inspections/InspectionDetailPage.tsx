@@ -5,6 +5,7 @@ import { Dash } from "../../components/Dash";
 import { DetailHeader } from "../../components/DetailHeader";
 import { ErrorState, LoadingState } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
+import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { formatDateTime } from "../../lib/format";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
@@ -28,6 +29,9 @@ export function InspectionDetailPage() {
   });
 
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  // Tracks "user edited but server hasn't acknowledged yet" — covers
+  // both the 600 ms debounce window and the in-flight PATCH.
+  const [pendingSave, setPendingSave] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (insQuery.isLoading) return <LoadingState />;
@@ -41,14 +45,29 @@ export function InspectionDetailPage() {
     queryClient.setQueryData<InspectionRead>(["inspection", n], (prev) =>
       prev ? { ...prev, task_data: next } : prev,
     );
+    setPendingSave(true);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      update.mutate({ task_data: next }, { onSuccess: () => setSavedAt(new Date()) });
+      update.mutate(
+        { task_data: next },
+        {
+          onSuccess: () => {
+            setSavedAt(new Date());
+            setPendingSave(false);
+          },
+          onError: () => setPendingSave(false),
+        },
+      );
     }, 600);
   }
 
   return (
     <div className="p-8 max-w-3xl space-y-6">
+      <UnsavedChangesGuard
+        dirty={pendingSave || update.isPending}
+        title="Leave with unsaved inspection edits?"
+        message="Your last edit hasn't synced to the server yet. Leave anyway and lose it?"
+      />
       <DetailHeader
         backTo={`/${slug}/inspections`}
         backLabel="Back to inspections"

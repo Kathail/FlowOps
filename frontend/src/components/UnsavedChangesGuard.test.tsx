@@ -22,7 +22,7 @@ let mockBlocker: Blocker = { state: "unblocked" };
 // Hook signature is (predicate) => blocker. Tests reach into
 // `useBlockerSpy.mock.calls.at(-1)?.[0]` to assert the registered
 // predicate behaves correctly.
-const useBlockerSpy = vi.fn((_shouldBlock: () => boolean) => mockBlocker);
+const useBlockerSpy = vi.fn(() => mockBlocker);
 
 vi.mock("react-router-dom", () => ({
   useBlocker: (fn: Parameters<typeof useBlockerSpy>[0]) => useBlockerSpy(fn),

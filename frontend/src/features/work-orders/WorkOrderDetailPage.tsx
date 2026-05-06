@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "../../components/States";
+import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { AreaChips } from "../tasks/AreaChips";
@@ -166,6 +167,11 @@ function TaskSection({
   const queryClient = useQueryClient();
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Tracks "user edited but server hasn't acknowledged yet" — covers both
+  // the 600 ms debounce window and the in-flight save. The
+  // UnsavedChangesGuard reads this so navigation away during either
+  // window prompts before discarding.
+  const [pendingSave, setPendingSave] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const save = useMutation({
@@ -174,8 +180,12 @@ function TaskSection({
       queryClient.setQueryData(["work-order", wo.wo_number], updated);
       setSavedAt(new Date());
       setError(null);
+      setPendingSave(false);
     },
-    onError: (e: Error) => setError(e.message),
+    onError: (e: Error) => {
+      setError(e.message);
+      setPendingSave(false);
+    },
   });
 
   function handleChange(next: TaskData) {
@@ -185,12 +195,18 @@ function TaskSection({
     queryClient.setQueryData<WorkOrderDetail>(["work-order", wo.wo_number], (prev) =>
       prev ? { ...prev, task_data: next } : prev,
     );
+    setPendingSave(true);
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => save.mutate(next), 600);
   }
 
   return (
     <Section title="Task">
+      <UnsavedChangesGuard
+        dirty={pendingSave || save.isPending}
+        title="Leave with unsaved task edits?"
+        message="Your last task edit hasn't synced to the server yet. Leave anyway and lose it?"
+      />
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="text-base text-slate-100">{task.title}</p>
