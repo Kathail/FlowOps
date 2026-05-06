@@ -1,5 +1,5 @@
-import { safeEvaluate } from "../../lib/expr";
 import { type Procedure, type ProcedureStep, type TaskDefinitionRead } from "./api";
+import { autoChecked, getStepState, isStepChecked, type StepState } from "./stepState";
 
 /**
  * Renders the task definition's procedure as a checklist.
@@ -18,30 +18,13 @@ interface Props {
   onChange: (next: Record<string, unknown>) => void;
 }
 
-type StepState = Record<number, boolean | null>;
-
 export function ProcedureRunner({ task, taskData, onChange }: Props) {
   const proc = task.procedure ?? ({} as Procedure);
   const steps = proc.steps ?? [];
-  const stepState: StepState = (taskData._steps as StepState) ?? {};
-
-  function autoChecked(step: ProcedureStep): boolean {
-    if (!step.auto_complete_when) return false;
-    return safeEvaluate(step.auto_complete_when, taskData, false);
-  }
-
-  function isStepChecked(step: ProcedureStep): boolean {
-    // Manual override (true/false) always wins; otherwise fall back to the
-    // auto-complete rule. This lets operators tick a step without filling
-    // the underlying form field, and lets them un-tick a step that the
-    // auto-rule has marked.
-    const override = stepState[step.n];
-    if (override === true || override === false) return override;
-    return autoChecked(step);
-  }
+  const stepState = getStepState(taskData);
 
   function toggleManual(step: ProcedureStep) {
-    const currentlyChecked = isStepChecked(step);
+    const currentlyChecked = isStepChecked(step, taskData);
     const nextState: StepState = {
       ...stepState,
       [step.n]: !currentlyChecked,
@@ -94,9 +77,9 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
           </p>
           <ol className="space-y-2">
             {steps.map((step) => {
-              const checked = isStepChecked(step);
+              const checked = isStepChecked(step, taskData);
               const overridden = stepState[step.n] !== undefined && stepState[step.n] !== null;
-              const wouldAuto = autoChecked(step);
+              const wouldAuto = autoChecked(step, taskData);
               return (
                 <li key={step.n}>
                   <button

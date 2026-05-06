@@ -1,6 +1,7 @@
 import { useMemo } from "react";
-import { interpolate, safeEvaluate } from "../../lib/expr";
-import type { ProcedureStep, TaskDefinitionRead } from "./api";
+import { interpolate } from "../../lib/expr";
+import type { TaskDefinitionRead } from "./api";
+import { isStepChecked } from "./stepState";
 
 /**
  * Aggregates the `comment_when_checked` templates of every ticked
@@ -15,25 +16,13 @@ interface Props {
   onPick: (text: string) => void;
 }
 
-type StepState = Record<number, boolean | null>;
-
-function isChecked(step: ProcedureStep, taskData: Record<string, unknown>): boolean {
-  // Mirrors ProcedureRunner: auto-rule wins, otherwise manual flag in
-  // task_data._steps drives.
-  if (step.auto_complete_when) {
-    return safeEvaluate(step.auto_complete_when, taskData, false);
-  }
-  const state = (taskData._steps as StepState | undefined) ?? {};
-  return state[step.n] === true;
-}
-
 export function ChecklistDraft({ task, taskData, onPick }: Props) {
   const lines = useMemo<string[]>(() => {
     const steps = task.procedure?.steps ?? [];
     const out: string[] = [];
     for (const step of steps) {
       if (!step.comment_when_checked) continue;
-      if (!isChecked(step, taskData)) continue;
+      if (!isStepChecked(step, taskData)) continue;
       out.push(interpolate(step.comment_when_checked, taskData));
     }
     return out;
