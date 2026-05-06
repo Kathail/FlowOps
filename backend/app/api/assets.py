@@ -202,7 +202,11 @@ def create_asset():
 @login_required
 def get_asset(asset_uid: str):
     asset = _get_asset(asset_uid)
-    return jsonify(_payload(asset))
+    from app.api.service_areas import areas_for_asset
+
+    payload = _payload(asset)
+    payload["areas"] = areas_for_asset(asset.id)
+    return jsonify(payload)
 
 
 @assets_bp.patch("/<string:asset_uid>")

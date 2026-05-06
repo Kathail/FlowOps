@@ -1,4 +1,4 @@
-import type { TileLayerDescriptor } from "./api";
+import type { ServiceAreaFeatureProps, TileLayerDescriptor } from "./api";
 import { BASEMAP_OPTIONS, type BasemapId } from "./basemap";
 
 interface Props {
@@ -13,6 +13,12 @@ interface Props {
   onToggleSrs?: (v: boolean) => void;
   woCount?: number;
   srCount?: number;
+  serviceAreas?: GeoJSON.Feature<
+    GeoJSON.MultiPolygon | GeoJSON.Polygon,
+    ServiceAreaFeatureProps
+  >[];
+  areaKindsVisible?: Set<string>;
+  onToggleAreaKind?: (kind: string, on: boolean) => void;
 }
 
 export function LayerPanel({
@@ -27,7 +33,23 @@ export function LayerPanel({
   onToggleSrs,
   woCount = 0,
   srCount = 0,
+  serviceAreas = [],
+  areaKindsVisible,
+  onToggleAreaKind,
 }: Props) {
+  const areasByKind = serviceAreas.reduce<
+    Record<string, GeoJSON.Feature<GeoJSON.MultiPolygon | GeoJSON.Polygon, ServiceAreaFeatureProps>[]>
+  >((acc, f) => {
+    const k = f.properties.area_kind;
+    (acc[k] ??= []).push(f);
+    return acc;
+  }, {});
+  const AREA_KIND_LABELS: Record<string, string> = {
+    maintenance: "Maintenance districts",
+    water_system: "Water systems",
+    sewer_system: "Wastewater systems",
+    storm_system: "Storm drainage",
+  };
   const byDomain = layers.reduce<Record<string, TileLayerDescriptor[]>>((acc, l) => {
     (acc[l.domain] ??= []).push(l);
     return acc;
@@ -101,6 +123,59 @@ export function LayerPanel({
           </li>
         </ul>
       </section>
+
+      {Object.keys(areasByKind).length > 0 && areaKindsVisible !== undefined && (
+        <section aria-labelledby="areas-heading" className="mb-4">
+          <h2 id="areas-heading" className="text-xs font-medium uppercase text-slate-400 mb-1">
+            Service areas
+          </h2>
+          <ul className="space-y-1">
+            {Object.entries(areasByKind).map(([kind, features]) => {
+              const checked = areaKindsVisible.has(kind);
+              const sample = features[0]?.properties.color ?? "#475569";
+              return (
+                <li key={kind}>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm hover:bg-slate-800/50 rounded px-1 py-0.5">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => onToggleAreaKind?.(kind, e.target.checked)}
+                      aria-label={`Toggle ${AREA_KIND_LABELS[kind] ?? kind}`}
+                    />
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm border-2 border-dashed"
+                      style={{ borderColor: sample, backgroundColor: `${sample}33` }}
+                      aria-hidden="true"
+                    />
+                    <span className="text-slate-200">
+                      {AREA_KIND_LABELS[kind] ?? kind}
+                    </span>
+                    <span className="ml-auto text-xs tabular-nums text-slate-400">
+                      {features.length}
+                    </span>
+                  </label>
+                  {checked && features.length > 1 && (
+                    <ul className="ml-6 mt-0.5 space-y-0.5">
+                      {features.map((f) => (
+                        <li
+                          key={f.properties.id}
+                          className="flex items-center gap-1.5 text-[11px] text-slate-400"
+                        >
+                          <span
+                            className="inline-block h-2 w-2 rounded-full"
+                            style={{ backgroundColor: f.properties.color ?? "#475569" }}
+                          />
+                          {f.properties.name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {domains.map((d) => {
         const ls = byDomain[d.id] ?? [];

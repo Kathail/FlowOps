@@ -24,6 +24,8 @@ from app.models.mixins import (
 )
 from app.models.pacp_code import PacpCode
 from app.models.schedule import SCHEDULE_KINDS, Schedule
+from app.models.service_area import VALID_KINDS as SERVICE_AREA_VALID_KINDS
+from app.models.service_area import ServiceArea
 from app.models.service_request import ServiceRequest
 from app.models.task_definition import TaskDefinition
 from app.models.tenant import Tenant
@@ -50,6 +52,7 @@ __all__ = [
     "LINK_ENTITY_TYPES",
     "LINK_KINDS",
     "SCHEDULE_KINDS",
+    "SERVICE_AREA_VALID_KINDS",
     "VALID_ATTACHMENT_KINDS",
     "VALID_CATEGORIES",
     "VALID_PRIORITIES",
@@ -70,6 +73,7 @@ __all__ = [
     "PacpCode",
     "Role",
     "Schedule",
+    "ServiceArea",
     "ServiceRequest",
     "SoftDeleteMixin",
     "TaskDefinition",

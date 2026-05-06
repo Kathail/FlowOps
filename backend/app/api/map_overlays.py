@@ -15,7 +15,7 @@ from flask_login import login_required
 from sqlalchemy import case, func, select
 
 from app.extensions import db
-from app.models import Asset, ServiceRequest, WorkOrder
+from app.models import Asset, ServiceArea, ServiceRequest, WorkOrder
 
 map_overlays_bp = Blueprint("map_overlays", __name__, url_prefix="/api/v1/map")
 
@@ -30,7 +30,41 @@ def get_overlays():
     return jsonify({
         "open_wos": _wo_features(),
         "active_srs": _sr_features(),
+        "service_areas": _service_area_features(),
     })
+
+
+def _service_area_features() -> dict[str, Any]:
+    import json
+
+    rows = db.session.execute(
+        select(
+            ServiceArea.id,
+            ServiceArea.code,
+            ServiceArea.name,
+            ServiceArea.kind,
+            ServiceArea.color,
+            func.ST_AsGeoJSON(ServiceArea.geom).label("geom_json"),
+        ).where(ServiceArea.deleted_at.is_(None))
+    ).all()
+
+    features: list[dict[str, Any]] = []
+    for r in rows:
+        if not r.geom_json:
+            continue
+        features.append({
+            "type": "Feature",
+            "geometry": json.loads(r.geom_json),
+            "properties": {
+                "kind": "service_area",
+                "id": r.id,
+                "code": r.code,
+                "name": r.name,
+                "area_kind": r.kind,
+                "color": r.color,
+            },
+        })
+    return {"type": "FeatureCollection", "features": features}
 
 
 def _wo_features() -> dict[str, Any]:

@@ -39,6 +39,15 @@ export interface AssetOut {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  /** Containing service areas — only populated on the detail (GET single)
+   * endpoint, not on the list. Computed from PostGIS spatial intersect. */
+  areas?: Array<{
+    id: number;
+    code: string;
+    name: string;
+    kind: "maintenance" | "water_system" | "sewer_system" | "storm_system";
+    color: string | null;
+  }>;
 }
 
 export interface AssetListResponse {

@@ -70,6 +70,10 @@ export function MapPage() {
   const [visibleClasses, setVisibleClasses] = useState<Set<string>>(new Set());
   const [showWos, setShowWos] = useState(true);
   const [showSrs, setShowSrs] = useState(true);
+  const [areaKindsVisible, setAreaKindsVisible] = useState<Set<string>>(
+    new Set(),
+  );
+  const areaKindsInited = useRef(false);
   const [selected, setSelected] = useState<ClickedFeature | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     pixel: [number, number];
@@ -129,12 +133,38 @@ export function MapPage() {
         type: "geojson",
         data: { type: "FeatureCollection", features: [] },
       });
+      map.addSource("op-areas", {
+        type: "geojson",
+        data: { type: "FeatureCollection", features: [] },
+      });
       map.addSource("assets", {
         type: "vector",
         tiles: [`${window.location.origin}/api/v1/tiles/assets/{z}/{x}/{y}.pbf`],
         minzoom: 0,
         maxzoom: 22,
         promoteId: "asset_uid",
+      });
+
+      // Service area polygons render BEFORE asset/op layers so they
+      // sit underneath everything else and don't block clicks.
+      map.addLayer({
+        id: "op-areas-fill",
+        type: "fill",
+        source: "op-areas",
+        paint: {
+          "fill-color": ["coalesce", ["get", "color"], "#475569"],
+          "fill-opacity": 0.15,
+        },
+      });
+      map.addLayer({
+        id: "op-areas-line",
+        type: "line",
+        source: "op-areas",
+        paint: {
+          "line-color": ["coalesce", ["get", "color"], "#475569"],
+          "line-width": 2,
+          "line-dasharray": [3, 2],
+        },
       });
       for (const layer of layers) {
         const color = layer.color ?? "#475569";
@@ -243,14 +273,40 @@ export function MapPage() {
     if (!map || !overlays) return;
     function update() {
       if (!map || !overlays) return;
-      const wos = map.getSource("op-wos") as maplibregl.GeoJSONSource | undefined;
-      const srs = map.getSource("op-srs") as maplibregl.GeoJSONSource | undefined;
-      wos?.setData(overlays.open_wos);
-      srs?.setData(overlays.active_srs);
+      (map.getSource("op-wos") as maplibregl.GeoJSONSource | undefined)?.setData(
+        overlays.open_wos,
+      );
+      (map.getSource("op-srs") as maplibregl.GeoJSONSource | undefined)?.setData(
+        overlays.active_srs,
+      );
+      (map.getSource("op-areas") as maplibregl.GeoJSONSource | undefined)?.setData(
+        overlays.service_areas,
+      );
     }
     if (map.isStyleLoaded() && map.getSource("op-wos")) update();
     else map.once("idle", update);
   }, [overlaysQuery.data, basemap]);
+
+  // Initialize area visibility — start with everything OFF (less noise);
+  // user toggles on the kinds they care about.
+  useEffect(() => {
+    if (overlaysQuery.data && areaKindsVisible.size === 0 && !areaKindsInited.current) {
+      areaKindsInited.current = true;
+      // start empty by intent; could pre-select 'maintenance' if desired.
+    }
+  }, [overlaysQuery.data, areaKindsVisible.size]);
+
+  // Apply area visibility (filter expression).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const visible = Array.from(areaKindsVisible);
+    const filter: maplibregl.FilterSpecification = visible.length
+      ? ["in", ["get", "area_kind"], ["literal", visible]]
+      : ["==", ["get", "area_kind"], "__NONE__"];
+    if (map.getLayer("op-areas-fill")) map.setFilter("op-areas-fill", filter);
+    if (map.getLayer("op-areas-line")) map.setFilter("op-areas-line", filter);
+  }, [areaKindsVisible, tileLayersQuery.data, basemap]);
 
   // WO / SR overlay visibility
   useEffect(() => {
@@ -411,6 +467,16 @@ export function MapPage() {
         onToggleSrs={setShowSrs}
         woCount={overlaysQuery.data?.open_wos.features.length ?? 0}
         srCount={overlaysQuery.data?.active_srs.features.length ?? 0}
+        serviceAreas={overlaysQuery.data?.service_areas.features ?? []}
+        areaKindsVisible={areaKindsVisible}
+        onToggleAreaKind={(kind, on) =>
+          setAreaKindsVisible((prev) => {
+            const next = new Set(prev);
+            if (on) next.add(kind);
+            else next.delete(kind);
+            return next;
+          })
+        }
       />
       <div className="relative flex-1">
         <div ref={containerRef} className="absolute inset-0" data-testid="map-container" />

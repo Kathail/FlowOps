@@ -41,9 +41,22 @@ export interface SrFeatureProps {
   asset_uid: string | null;
 }
 
+export interface ServiceAreaFeatureProps {
+  kind: "service_area";
+  id: number;
+  code: string;
+  name: string;
+  area_kind: "maintenance" | "water_system" | "sewer_system" | "storm_system";
+  color: string | null;
+}
+
 export interface MapOverlays {
   open_wos: GeoJSON.FeatureCollection<GeoJSON.Point, WoFeatureProps>;
   active_srs: GeoJSON.FeatureCollection<GeoJSON.Point, SrFeatureProps>;
+  service_areas: GeoJSON.FeatureCollection<
+    GeoJSON.MultiPolygon | GeoJSON.Polygon,
+    ServiceAreaFeatureProps
+  >;
 }
 
 export function getMapOverlays(): Promise<MapOverlays> {

@@ -118,6 +118,23 @@ export function AssetDetailPage() {
           <p className="text-sm text-slate-300">
             {asset.class_code} · {asset.domain}
           </p>
+          {asset.areas && asset.areas.length > 0 && (
+            <ul className="mt-2 flex flex-wrap gap-1.5">
+              {asset.areas.map((a) => (
+                <li
+                  key={a.id}
+                  title={a.kind.replace(/_/g, " ")}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-700 bg-slate-900/60 px-2 py-0.5 text-[11px] text-slate-300"
+                >
+                  <span
+                    className="inline-block h-2 w-2 rounded-full"
+                    style={{ backgroundColor: a.color ?? "#475569" }}
+                  />
+                  {a.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <button
           onClick={() => {

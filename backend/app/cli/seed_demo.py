@@ -144,6 +144,7 @@ def _wipe_demo() -> None:
         EntityLink,
         Invitation,
         Schedule,
+        ServiceArea,
         TaskDefinition,
     )
 
@@ -153,6 +154,9 @@ def _wipe_demo() -> None:
     db.session.execute(Schedule.__table__.delete().where(Schedule.tenant_id == tenant_id))
     db.session.execute(
         TaskDefinition.__table__.delete().where(TaskDefinition.tenant_id == tenant_id)
+    )
+    db.session.execute(
+        ServiceArea.__table__.delete().where(ServiceArea.tenant_id == tenant_id)
     )
     db.session.execute(WoTemplate.__table__.delete().where(WoTemplate.tenant_id == tenant_id))
     db.session.execute(Asset.__table__.delete().where(Asset.tenant_id == tenant_id))
@@ -706,6 +710,76 @@ def _seed() -> None:
     db.session.flush()  # so the catalog seed sees discoloured as existing
 
     seed_tasks(db.session, tenant.id)
+
+    # Service areas — example maintenance districts + system polygons
+    # covering the demo asset extent (~lon -76.498 .. -76.470, ~lat
+    # 38.9637 .. 38.9810). North/South split for maintenance districts;
+    # one polygon per system type to demonstrate the pattern.
+    from app.models import ServiceArea
+
+    def _multi(coords: list[list[list[float]]]) -> dict:
+        return {"type": "MultiPolygon", "coordinates": [coords]}
+
+    def _box(west: float, south: float, east: float, north: float) -> list[list[list[float]]]:
+        return [[
+            [west, south],
+            [east, south],
+            [east, north],
+            [west, north],
+            [west, south],
+        ]]
+
+    areas = [
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="MAINT-NORTH",
+            name="North maintenance district",
+            kind="maintenance",
+            color="#3b82f6",
+            geom=geojson_to_wkb(_multi(_box(-76.500, 38.973, -76.468, 38.985))),
+        ),
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="MAINT-SOUTH",
+            name="South maintenance district",
+            kind="maintenance",
+            color="#a855f7",
+            geom=geojson_to_wkb(_multi(_box(-76.500, 38.960, -76.468, 38.973))),
+        ),
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="WATER-PRIMARY",
+            name="Bayside primary water system",
+            kind="water_system",
+            color="#1e88e5",
+            geom=geojson_to_wkb(_multi(_box(-76.500, 38.960, -76.468, 38.985))),
+        ),
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="WATER-EAST-ANNEX",
+            name="East-side annexed water system",
+            kind="water_system",
+            color="#0ea5e9",
+            geom=geojson_to_wkb(_multi(_box(-76.475, 38.960, -76.468, 38.985))),
+        ),
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="SEWER-PRIMARY",
+            name="Bayside collection system",
+            kind="sewer_system",
+            color="#8b5cf6",
+            geom=geojson_to_wkb(_multi(_box(-76.500, 38.960, -76.468, 38.985))),
+        ),
+        ServiceArea(
+            tenant_id=tenant.id,
+            code="STORM-PRIMARY",
+            name="Bayside storm drainage",
+            kind="storm_system",
+            color="#10b981",
+            geom=geojson_to_wkb(_multi(_box(-76.500, 38.960, -76.468, 38.985))),
+        ),
+    ]
+    db.session.add_all(areas)
 
     db.session.commit()
 
