@@ -338,6 +338,7 @@ def update_work_order(wo_number: str):
         "crew_id",
         "resolution",
         "attrs",
+        "task_data",
     ):
         val = getattr(data, field)
         if val is not None:

@@ -158,7 +158,10 @@ export function createWorkOrder(input: WorkOrderCreateInput): Promise<WorkOrderD
 
 export function updateWorkOrder(
   wo_number: string,
-  input: Partial<WorkOrderCreateInput> & { resolution?: string | null },
+  input: Partial<WorkOrderCreateInput> & {
+    resolution?: string | null;
+    task_data?: Record<string, unknown>;
+  },
 ): Promise<WorkOrderDetail> {
   return apiJson<WorkOrderDetail>(`/api/v1/work-orders/${encodeURIComponent(wo_number)}`, {
     method: "PATCH",

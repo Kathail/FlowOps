@@ -50,6 +50,8 @@ class ServiceRequestRead(BaseModel):
     closure_reason: SrClosureReason | None = None
     duplicate_of_sr_number: str | None = None
     attrs: dict[str, Any] = Field(default_factory=dict)
+    task_definition_code: str | None = None
+    task_data: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
     updated_at: datetime
 
@@ -120,6 +122,7 @@ class ServiceRequestUpdate(BaseModel):
     closure_reason: SrClosureReason | None = None
     duplicate_of_sr_number: str | None = None
     attrs: dict[str, Any] | None = None
+    task_data: dict[str, Any] | None = None
 
 
 class WorkOrderDispatchPayload(BaseModel):

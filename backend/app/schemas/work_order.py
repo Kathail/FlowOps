@@ -156,6 +156,7 @@ class WorkOrderUpdate(BaseModel):
     crew_id: int | None = None
     resolution: str | None = None
     attrs: dict[str, Any] | None = None
+    task_data: dict[str, Any] | None = None
 
 
 class WorkOrderTransition(BaseModel):

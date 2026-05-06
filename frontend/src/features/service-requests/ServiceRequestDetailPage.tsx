@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
+import { getTaskDefinition, type TaskDefinitionRead } from "../tasks/api";
+import { TaskFormRenderer, type TaskData } from "../tasks/TaskFormRenderer";
 import { DispatchDialog } from "./DispatchDialog";
 import type { SrClosureReason } from "./api";
 import { useServiceRequest, useUpdateServiceRequest } from "./hooks";
@@ -26,11 +29,39 @@ export function ServiceRequestDetailPage() {
   const [closeNotes, setCloseNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  const taskCode = query.data?.task_definition_code ?? null;
+  const taskQuery = useQuery<TaskDefinitionRead, Error>({
+    queryKey: ["task-definition", taskCode],
+    queryFn: () => getTaskDefinition(taskCode!),
+    enabled: !!taskCode,
+  });
+
+  // Local copy of task_data so the form drives chip rendering without
+  // round-tripping through the server on every keystroke.
+  const [taskData, setTaskData] = useState<TaskData>(query.data?.task_data ?? {});
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (query.data?.task_data) setTaskData(query.data.task_data);
+  }, [query.data?.task_data]);
+
   if (query.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
   if (query.isError) return <div className="p-8 text-red-400">Failed to load.</div>;
   if (!query.data) return null;
 
   const data = query.data;
+
+  function handleTaskChange(next: TaskData) {
+    setTaskData(next);
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      update.mutate(
+        { task_data: next },
+        { onSuccess: () => setSavedAt(new Date()) },
+      );
+    }, 600);
+  }
 
   async function transition(status: "triaged" | "closed") {
     setErrorMessage(null);
@@ -152,8 +183,50 @@ export function ServiceRequestDetailPage() {
         </section>
       )}
 
+      {taskQuery.data && (
+        <section className="rounded-lg border border-slate-800 bg-slate-900 p-4">
+          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">
+            Task
+          </h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <p className="text-base text-slate-100">{taskQuery.data.title}</p>
+              {taskQuery.data.summary && (
+                <p className="mt-1 text-xs text-slate-400">{taskQuery.data.summary}</p>
+              )}
+            </div>
+            <Link
+              to={`/${slug}/admin/task-definitions`}
+              className="font-mono text-xs text-slate-400 hover:text-blue-300 hover:underline"
+            >
+              {taskQuery.data.code} · v{taskQuery.data.version}
+            </Link>
+          </div>
+          {taskQuery.data.form.length > 0 && (
+            <div className="mt-4">
+              <TaskFormRenderer
+                task={taskQuery.data}
+                value={taskData}
+                onChange={handleTaskChange}
+              />
+              <div className="mt-2 text-xs text-slate-500">
+                {update.isPending && <span>Saving…</span>}
+                {!update.isPending && savedAt && (
+                  <span>Saved {savedAt.toLocaleTimeString()}</span>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
       <LinkedItems entityType="service_request" entityId={data.id} />
-      <ActivityTimeline entityType="service_request" entityId={data.id} />
+      <ActivityTimeline
+        entityType="service_request"
+        entityId={data.id}
+        smartComments={taskQuery.data?.smart_comments}
+        taskData={taskData}
+      />
 
       {dispatchOpen && (
         <DispatchDialog

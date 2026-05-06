@@ -62,6 +62,12 @@ def _payload(sr: ServiceRequest) -> dict[str, Any]:
         parent = db.session.get(ServiceRequest, sr.duplicate_of_id)
         dup_sr_number = parent.sr_number if parent else None
     asset_uid = sr.asset_obj.asset_uid if sr.asset_obj else None
+    task_definition_code: str | None = None
+    if sr.task_definition_id is not None:
+        from app.models import TaskDefinition
+
+        td = db.session.get(TaskDefinition, sr.task_definition_id)
+        task_definition_code = td.code if td else None
     return {
         "id": sr.id,
         "sr_number": sr.sr_number,
@@ -87,6 +93,8 @@ def _payload(sr: ServiceRequest) -> dict[str, Any]:
         "closure_reason": sr.closure_reason,
         "duplicate_of_sr_number": dup_sr_number,
         "attrs": sr.attrs or {},
+        "task_definition_code": task_definition_code,
+        "task_data": sr.task_data or {},
         "created_at": sr.created_at.isoformat(),
         "updated_at": sr.updated_at.isoformat(),
     }
@@ -339,6 +347,7 @@ def update_service_request(sr_number: str):
         "closure_notes",
         "closure_reason",
         "attrs",
+        "task_data",
     ):
         val = getattr(data, field)
         if val is not None:

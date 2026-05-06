@@ -43,6 +43,8 @@ export interface ServiceRequestRead {
   closure_reason: SrClosureReason | null;
   duplicate_of_sr_number: string | null;
   attrs: Record<string, unknown>;
+  task_definition_code: string | null;
+  task_data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -118,6 +120,7 @@ export interface ServiceRequestUpdateInput {
   closure_notes?: string | null;
   closure_reason?: SrClosureReason | null;
   duplicate_of_sr_number?: string | null;
+  task_data?: Record<string, unknown>;
 }
 
 export interface DispatchInput {

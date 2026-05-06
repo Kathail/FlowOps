@@ -1,15 +1,17 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { getTaskDefinition, type TaskDefinitionRead } from "../tasks/api";
+import { TaskFormRenderer, type TaskData } from "../tasks/TaskFormRenderer";
 import {
   addTask,
   logMaterial,
   logTime,
   transitionWorkOrder,
   updateTask,
+  updateWorkOrder,
   uploadAttachment,
   type WoStatus,
   type WorkOrderDetail,
@@ -110,33 +112,15 @@ export function WorkOrderDetailPage() {
       </Section>
 
       {taskQuery.data && (
-        <Section title="Task">
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <p className="text-base text-slate-100">{taskQuery.data.title}</p>
-              {taskQuery.data.summary && (
-                <p className="mt-1 text-xs text-slate-400">{taskQuery.data.summary}</p>
-              )}
-            </div>
-            <Link
-              to={`/${slug}/admin/task-definitions`}
-              className="font-mono text-xs text-slate-400 hover:text-blue-300 hover:underline"
-            >
-              {taskQuery.data.code} · v{taskQuery.data.version}
-            </Link>
-          </div>
-          {Object.keys(wo.task_data).length > 0 && (
-            <details className="mt-3 text-xs">
-              <summary className="cursor-pointer text-slate-400 hover:text-slate-200">
-                Task data ({Object.keys(wo.task_data).length} field
-                {Object.keys(wo.task_data).length === 1 ? "" : "s"})
-              </summary>
-              <pre className="mt-2 overflow-x-auto rounded bg-slate-950/60 p-2 text-[11px] text-slate-300">
-                {JSON.stringify(wo.task_data, null, 2)}
-              </pre>
-            </details>
+        <TaskSection
+          task={taskQuery.data}
+          wo={wo}
+          slug={slug}
+          onChange={(next) => queryClient.setQueryData(
+            ["work-order", woNumber],
+            { ...wo, task_data: next },
           )}
-        </Section>
+        />
       )}
 
       <TasksSection wo={wo} />
@@ -160,6 +144,85 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">{title}</h2>
       {children}
     </section>
+  );
+}
+
+/**
+ * Renders the task definition's form so the operator can fill in
+ * task_data. Local state drives the UI (so the smart-comment chips on
+ * the activity composer update reactively as the operator types). A
+ * debounced PATCH persists changes to the backend.
+ */
+function TaskSection({
+  task,
+  wo,
+  slug,
+  onChange,
+}: {
+  task: TaskDefinitionRead;
+  wo: WorkOrderDetail;
+  slug: string | undefined;
+  onChange: (next: TaskData) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [data, setData] = useState<TaskData>(wo.task_data);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // If the WO refetches with new task_data, sync local state.
+  useEffect(() => {
+    setData(wo.task_data);
+  }, [wo.task_data]);
+
+  const save = useMutation({
+    mutationFn: (next: TaskData) =>
+      updateWorkOrder(wo.wo_number, { task_data: next }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(["work-order", wo.wo_number], updated);
+      setSavedAt(new Date());
+      setError(null);
+    },
+    onError: (e: Error) => setError(e.message),
+  });
+
+  function handleChange(next: TaskData) {
+    setData(next);
+    onChange(next); // keeps chip render in lockstep with the form
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => save.mutate(next), 600);
+  }
+
+  return (
+    <Section title="Task">
+      <div className="flex items-baseline justify-between gap-3">
+        <div>
+          <p className="text-base text-slate-100">{task.title}</p>
+          {task.summary && (
+            <p className="mt-1 text-xs text-slate-400">{task.summary}</p>
+          )}
+        </div>
+        <Link
+          to={`/${slug}/admin/task-definitions`}
+          className="font-mono text-xs text-slate-400 hover:text-blue-300 hover:underline"
+        >
+          {task.code} · v{task.version}
+        </Link>
+      </div>
+
+      {task.form.length > 0 && (
+        <div className="mt-4">
+          <TaskFormRenderer task={task} value={data} onChange={handleChange} />
+          <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
+            {save.isPending && <span>Saving…</span>}
+            {!save.isPending && savedAt && (
+              <span>Saved {savedAt.toLocaleTimeString()}</span>
+            )}
+            {error && <span className="text-red-400">Save failed: {error}</span>}
+          </div>
+        </div>
+      )}
+    </Section>
   );
 }
 
