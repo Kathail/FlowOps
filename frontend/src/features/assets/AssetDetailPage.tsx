@@ -6,8 +6,8 @@ import { Button } from "../../components/Button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { DetailHeader } from "../../components/DetailHeader";
 import { ErrorState, LoadingState } from "../../components/States";
+import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { translateApiError } from "../../lib/translateApiError";
-import { useUnsavedChangesWarning } from "../../lib/useUnsavedChangesWarning";
 import { AreaChips } from "../tasks/AreaChips";
 import { deleteAsset, updateAsset, type AssetOut, type AssetUpdateInput } from "./api";
 import { useAsset } from "./hooks";
@@ -76,7 +76,6 @@ export function AssetDetailPage() {
   }, [assetQuery.data]);
 
   const dirty = !!form && !!assetQuery.data && Object.keys(diff(assetQuery.data, form)).length > 0;
-  useUnsavedChangesWarning(dirty);
 
   const save = useMutation<AssetOut, Error, AssetUpdateInput>({
     mutationFn: (patch) => updateAsset(params.uid!, patch),
@@ -124,6 +123,7 @@ export function AssetDetailPage() {
 
   return (
     <div className="p-8 max-w-2xl space-y-4">
+      <UnsavedChangesGuard dirty={dirty} />
       <DetailHeader
         backTo={`/${params.slug}/assets`}
         backLabel="Back to assets"

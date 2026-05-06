@@ -4,13 +4,10 @@ import { useEffect } from "react";
  * Browser-level guard: warns the user before unloading the tab
  * (refresh / close / navigate to another origin) when `dirty` is true.
  *
- * NOTE: this does NOT intercept in-app navigation (clicking a
- * react-router `<Link>`). Doing so requires the data router
- * (`createBrowserRouter` + `useBlocker`); the app currently uses the
- * component-router (`<BrowserRouter>`). When the router is migrated,
- * upgrade this hook to also block in-app nav. Until then, the
- * beforeunload guard at least catches the most damaging case
- * (accidental tab close / refresh).
+ * Pairs with `<UnsavedChangesGuard>` (from `components/UnsavedChangesGuard`)
+ * which adds the in-app nav block via `useBlocker`. Use this hook
+ * directly only if you need the tab-close guard without the in-app
+ * dialog (rare).
  */
 export function useUnsavedChangesWarning(dirty: boolean): void {
   useEffect(() => {

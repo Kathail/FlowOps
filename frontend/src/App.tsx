@@ -1,6 +1,12 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import {
+  createBrowserRouter,
+  createRoutesFromElements,
+  Navigate,
+  Route,
+  RouterProvider,
+} from "react-router-dom";
 import { TenantShell } from "./components/TenantShell";
 import { AcceptInvitationPage } from "./features/admin/AcceptInvitationPage";
 import { AdminAssetClassesPage } from "./features/admin/AdminAssetClassesPage";
@@ -42,58 +48,67 @@ function MapFallback() {
   );
 }
 
+// Data router (v6.4+). Required for `useBlocker` (used by
+// <UnsavedChangesGuard>); also opts into the v7 behaviour flags so
+// future upgrades are noisy in dev, not silent in prod.
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterTenantPage />} />
+      <Route path="/accept-invitation/:token" element={<AcceptInvitationPage />} />
+      <Route
+        path="/:slug"
+        element={
+          <RequireAuth>
+            <TenantShell />
+          </RequireAuth>
+        }
+      >
+        <Route index element={<TenantHomePage />} />
+        <Route path="assets" element={<AssetListPage />} />
+        <Route path="assets/:uid" element={<AssetDetailPage />} />
+        <Route path="work-orders" element={<WorkOrderListPage />} />
+        <Route path="work-orders/:wo" element={<WorkOrderDetailPage />} />
+        <Route path="inspections" element={<InspectionListPage />} />
+        <Route path="inspections/:n" element={<InspectionDetailPage />} />
+        <Route path="service-requests" element={<ServiceRequestListPage />} />
+        <Route path="service-requests/:sr" element={<ServiceRequestDetailPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="reports/:reportSlug" element={<ReportDetailPage />} />
+        <Route path="schedules" element={<SchedulesPage />} />
+        <Route path="admin" element={<AdminLayout />}>
+          <Route index element={<AdminUsersPage />} />
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="invitations" element={<AdminInvitationsPage />} />
+          <Route path="tenant" element={<AdminTenantPage />} />
+          <Route path="asset-classes" element={<AdminAssetClassesPage />} />
+          <Route path="task-definitions" element={<TaskCatalog />} />
+        </Route>
+        <Route
+          path="map"
+          element={
+            <Suspense fallback={<MapFallback />}>
+              <MapPage />
+            </Suspense>
+          }
+        />
+      </Route>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </>,
+  ),
+  {
+    future: {
+      v7_relativeSplatPath: true,
+    },
+  },
+);
+
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterTenantPage />} />
-          <Route
-            path="/accept-invitation/:token"
-            element={<AcceptInvitationPage />}
-          />
-          <Route
-            path="/:slug"
-            element={
-              <RequireAuth>
-                <TenantShell />
-              </RequireAuth>
-            }
-          >
-            <Route index element={<TenantHomePage />} />
-            <Route path="assets" element={<AssetListPage />} />
-            <Route path="assets/:uid" element={<AssetDetailPage />} />
-            <Route path="work-orders" element={<WorkOrderListPage />} />
-            <Route path="work-orders/:wo" element={<WorkOrderDetailPage />} />
-            <Route path="inspections" element={<InspectionListPage />} />
-            <Route path="inspections/:n" element={<InspectionDetailPage />} />
-            <Route path="service-requests" element={<ServiceRequestListPage />} />
-            <Route path="service-requests/:sr" element={<ServiceRequestDetailPage />} />
-            <Route path="reports" element={<ReportsPage />} />
-            <Route path="reports/:reportSlug" element={<ReportDetailPage />} />
-            <Route path="schedules" element={<SchedulesPage />} />
-            <Route path="admin" element={<AdminLayout />}>
-              <Route index element={<AdminUsersPage />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="invitations" element={<AdminInvitationsPage />} />
-              <Route path="tenant" element={<AdminTenantPage />} />
-              <Route path="asset-classes" element={<AdminAssetClassesPage />} />
-              <Route path="task-definitions" element={<TaskCatalog />} />
-            </Route>
-            <Route
-              path="map"
-              element={
-                <Suspense fallback={<MapFallback />}>
-                  <MapPage />
-                </Suspense>
-              }
-            />
-          </Route>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
     </QueryClientProvider>
   );
 }

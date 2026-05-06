@@ -117,4 +117,8 @@ v1 service request handling is manual: Service Intake creates a request, Supervi
 
 Both epics introduce new personas. The permissions model in v1 must store roles in a way that adding two more roles is a data migration, not a refactor. (If v1 currently uses an enum on `users.role`, switch to a join table before v1 GA.)
 
+> **Verified (2026-05-06).** Schema is already a `Role` + `user_role` join table (`backend/app/models/user.py`); no `users.role` enum exists. Adding new roles for v2 is a data insert, not a migration. The places that need updating when v2 lands: `backend/app/api/auth.py` `DEFAULT_ROLES` (per-tenant seed list), `frontend/src/features/admin/AdminUsersPage.tsx` `ROLE_OPTIONS` (UI checklist), and any `@require_roles(...)` decorators on endpoints that should grant the new role.
+>
+> **Gotcha for v2 cutover:** `DEFAULT_ROLES` only seeds new tenants. When the new role codes are added there, **existing tenants need a one-shot data backfill** (insert one `Role` row per tenant per new code). Plan a small Alembic data migration as part of the EPIC-V2 rollout, not the schema migration the original note feared.
+
 Both epics depend on the v1 work order and asset models being stable. Avoid material schema churn on those tables after v1 GA, or these epics balloon.

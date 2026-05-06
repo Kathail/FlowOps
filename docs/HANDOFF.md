@@ -1,46 +1,62 @@
-# Handoff — v1 complete (post-Sprint 12)
+# Handoff — data-router migration + unsaved-changes guard wired up
 
-Last commit on `main`: the upcoming `feat: sprint 12 hardening` once squash-merged.
-Pushed to: `https://github.com/Kathail/CityWater`
+Last commit on `main`: pending — about to land:
+`refactor: migrate to data router; ship UnsavedChangesGuard with useBlocker`.
+Prior to that: `e43d9b9` (`docs: BACKLOG.md + recurring WOs spec delta`),
+`308b6b7` (UX sweep), all pushed.
 
-All 13 planned sprints (S0–S12) are shipped. From here it's bug fixes, real
-deployments, and v2 scope.
+v1 has shipped (S0–S12) and a substantial post-v1 trajectory has landed: dark UI rebrand, recurring schedules, activity timeline + cross-entity links, link-driven autopopulation, the task-definitions catalog (the "keystone" — 28 tasks across water/sewer/storm/general), `simulate-year` CLI, smart comment chips, checklist-driven drafts, daily WOs grouping SRs, dashboard with KPIs + supervisor metrics + by-area panel, map overlays for open WOs/active SRs, service areas (maintenance districts + water/sewer/storm systems), area chips, demo-tenant button, audit infrastructure skeleton, and most recently the UI primitives + UX sweep that consolidated duplicated patterns into reusable components.
 
-## Where the project stands
+## Where things stand right now
 
-| Sprint | Status | Highlights |
-|---|---|---|
-| S0 | ✅ done | Repo scaffold, Docker compose, /healthz, CI |
-| S1 | ✅ done | Auth, tenancy, RBAC, audit log listener |
-| S2 | ✅ done | Asset catalog (23 classes seeded), asset CRUD, OpenAPI codegen |
-| S3 | ✅ done | Asset map (MapLibre + ST_AsMVT tiles), layer panel, basemap selector |
-| S4 | ✅ done | CSV + GeoJSON import/export, streaming, 1000-row perf check |
-| S5 | ✅ done | Work orders + tasks/time/materials/attachments (boto3 + EXIF), Kanban (@dnd-kit), templates |
-| S6 | ✅ done | Inspections (5 non-CCTV kinds): hydrant flow w/ NFPA 291 server-side calc, valve, MH, CB, lift station |
-| S7 | ✅ done | CCTV / PACP — code catalog, WinCan XML+JSON import, observation table |
-| S8 | ✅ done | Service requests — intake, triage, dispatch → WO, ST_DWithin duplicate detection, Nominatim geocode stub |
-| S9 | ✅ done | Reports — 5 canned (break-history, wo-summary, inspection-summary, age-distribution, condition×criticality), JSON/CSV/PDF via ReportLab |
-| S10 | ✅ done | Field PWA — vite-plugin-pwa SW, IDB-backed mutation queue + asset cache fallback, online/offline banner, conflict drawer |
-| S11 | ✅ done | Admin & polish — invitations (Argon2-hashed tokens, accept page), role editor, tenant settings, asset-class JSON Schema editor |
-| S12 | ✅ done | Hardening — Flask-Limiter on auth + accept, CSP / HSTS / Permissions-Policy headers, request-ID middleware, email driver interface (stdout / Resend), audit-retention cleanup endpoint, backup runbook + script |
+| Area | State |
+|---|---|
+| **Frontend tests** | **200** (`cd frontend && npm test`) |
+| **Backend tests** | **371** (`cd backend && uv run pytest`) |
+| **Migrations** | 0001–0028 apply cleanly; latest is `0028_service_area`. No new migrations pending. |
+| **Lint / typecheck** | Clean: `npm run lint`, `npx tsc -b`, `prettier --check` on touched files |
+| **Dev servers** | Currently up: backend `127.0.0.1:5000`, Vite `127.0.0.1:5173` (started this session, still running) |
 
-## Tests passing
+### Last session (UX sweep + spec delta)
 
-- **Backend: 224** (`cd backend && uv run pytest`)
-- **Frontend: 41** (`cd frontend && npm test`)
-- All migrations 0001–0019 apply cleanly. (S12 added no migrations — purely runtime hardening + ops.)
+Two commits worth of work, both pushed:
+
+- **`308b6b7` — UX sweep.** Added five new primitives + libs with tests: `<ConfirmDialog>` (portal-rendered modal replacing native `confirm()`; backdrop + Escape; busy/error states), `<StatusPill tone dot>` (single source of truth for status / priority / pass-fail badges, optional dot for colorblind cues), `<Dash>` (standardised null-value placeholder), `lib/format.ts` (locale-aware `formatDateTime`/`formatDate`/`formatRelative` via `Intl`), `lib/translateApiError.ts` (API code → user copy, generic fallback so `TypeError` stack traces never leak), `lib/useUnsavedChangesWarning` (`beforeunload` guard — limited; in-app nav blocking needs `createBrowserRouter` migration). Then swept the codebase: 4 list pages got `overflow-x-auto`, 5 native `confirm()` sites migrated to `<ConfirmDialog>`, 10 mutation handlers switched to `translateApiError()`, status pills consolidated across WO/SR/Inspection/Admin/Schedule pages, dates standardized via `formatDateTime`, list pages got `<EmptyState>` with context-aware CTAs (Clear filters / New X), search inputs got Enter-to-submit, `IntakeDialog` + `DispatchDialog` got tenant context + required-field asterisks + Esc/backdrop close + ARIA dialog roles. Refactored `.btn-*` utilities to split sizing into `.btn-sm` (no `!important` needed via cascade order) and added a real `.btn-secondary` distinct from ghost.
+- **`e43d9b9` — docs.** Created `docs/BACKLOG.md` capturing the two v2 epics (Maintenance Planner workspace, Dispatcher workspace) with rationale, trigger conditions, persona impact, in/out scope, v1 dependencies, open questions, and rough sprint estimates. Added §3.10 to `SPEC.md` with the recurring-WO spec delta — full data model (`wo_template`), generation logic (on-close + daily-job, idempotent), API surface, UI surfaces, AC1–AC7. Replaced the brief `wo_template` sketch in §3.5 with a forward-pointer to §3.10.
+
+## Decisions that are blocking the next sprint
+
+These are written into §3.10 of `SPEC.md` as Q4 and Q5 — they need to be answered before any recurring-WO code starts:
+
+- **§3.10 Q4 — `task_template` / `instructions`?** The pre-delta `wo_template` sketch in §3.5 carried `task_template JSONB` + `instructions TEXT` so every recurring WO inherited the same checklist + SOP text. The delta omits these. Without them there is no path for "every flushing WO carries the same default checklist." Either add them back (recommended) or document why they're intentionally omitted (e.g. rely on `inspection_form_id` for inspection PMs and accept reactive PMs have no defaults).
+- **§3.10 Q5 — where does `category` come from?** `work_order.category` is NOT NULL but `wo_template` (per the delta) has no `category` column. Three options: (a) add `category` to the template, matching the old §3.5 sketch [recommended]; (b) derive from the asset class catalog; (c) require the daily generation job to take it from a per-class default.
+
+## Next-step candidates
+
+Pick one based on time horizon:
+
+1. **Adjudicate §3.10 Q4 + Q5** so the recurring-WO sprint is unblocked. Decisions only the project owner can make.
+2. **Recurring WO sprint** itself (post Q4/Q5): backend migration + generation job + UI per §3.10. ~1 sprint per the spec.
+3. **Adopt `<UnsavedChangesGuard>` on the other forms.** Currently only mounted on `AssetDetailPage`. Strong candidates: `WorkOrderDetailPage` (TaskSection / TimeSection / MaterialsSection — debounced auto-save means dirty windows are short, but inline-edit forms still benefit), `InspectionDetailPage` (debounced task_data writes), `ServiceRequestDetailPage` (same), `AdminAssetClassesPage` (JSON Schema editor — long edit sessions, easy to lose).
+4. **`LayerPanel` select-all/none + basemap help text** — small UX redesign that didn't fit the sweep PRs.
+
+### Resolved since the last handoff
+
+- ✅ **`users.role` schema check** — schema is already a `Role` + `user_role` join table; no `users.role` enum exists. Adding new roles for v2 is a data insert, not a migration. Notes added to `BACKLOG.md` cross-epic section, including the per-tenant role-backfill gotcha for v2 cutover.
+- ✅ **`createBrowserRouter` migration** — `App.tsx` now uses the data router via `createRoutesFromElements`. v7 future flags (`v7_relativeSplatPath`, `v7_startTransition`) opted in; the test-output warnings are gone.
+- ✅ **In-app unsaved-changes blocking** — new `<UnsavedChangesGuard dirty>` component composes `useBlocker` (in-app nav) + `useUnsavedChangesWarning` (tab close) and renders a `<ConfirmDialog>` when blocked. Adopted in `AssetDetailPage`. Tests for the guard mock `useBlocker` (jsdom + node-undici realm mismatch breaks real router navigation under tests; mocking is the standard workaround).
 
 ## Resume workflow
 
 ```sh
-# 1. From repo root, make sure Postgres + dev stack are up
+# 1. From repo root, make sure Postgres is up
 sudo systemctl start postgresql        # if not running
-make dev                               # docker-compose stack — only needed if you want MinIO/Redis/pg_tileserv too
+make dev                               # docker-compose stack — only needed for MinIO/Redis/pg_tileserv
 
 # 2. Backend
 cd backend
-uv sync                                # pulls any new deps
-uv run flask --app app.wsgi db upgrade # apply pending migrations (none currently)
+uv sync
+uv run flask --app app.wsgi db upgrade  # no pending migrations as of e43d9b9
 uv run flask --app app.wsgi run --debug --no-reload --port 5000 --host 127.0.0.1 &
 
 # 3. Frontend
@@ -48,8 +64,10 @@ cd ../frontend
 npm install
 npm run dev &
 
-# 4. Open http://127.0.0.1:5173 — login or /register
+# 4. Open http://127.0.0.1:5173 — login or hit "Try the demo →"
 ```
+
+The dev servers from this session are still running. If they're stale after a code change: `pkill -f "flask --app"` and `pkill -f vite` then restart.
 
 ## Memory hooks for the next session
 
@@ -60,70 +78,20 @@ The `~/.claude/projects/.../memory/` directory has these standing preferences sa
 - **`feedback_git_config_rule.md`** — when user provides identity values, set local-repo git config and proceed
 - **`user_git_identity.md`** — commits as `Kathail` / GitHub noreply email
 
-Resume cycle: post S8 plan → user says any go-ahead phrase ("approved", "go", "use best practice", "continue") → implement.
+## Outstanding spec deviations & notes
 
-## Sprint 8 — Service requests (next)
-
-Per `docs/SPEC.md` §9 (S8) and Epic 5 acceptance.
-
-**Migration**
-- `0018_create_service_request` — table per §3.7: `id, tenant_id, sr_number (UNIQUE per tenant), category, domain, status, priority, reported_at, caller_name/phone/email, address, location POINT 4326, description, intake_user_id, work_order_id?, closed_at, closure_notes, attrs, timestamps, deleted_at`. CHECK on `category, domain, status, priority` enums. Indexes: `(tenant_id, status) WHERE deleted_at IS NULL`, `(tenant_id, location) GIST`.
-
-**Endpoints**
-- `GET /api/v1/service-requests` — list with `?status, category, domain, since, q, page` filters
-- `POST /api/v1/service-requests` — intake creates SR (any role with create permission; intake role primarily)
-- `GET /api/v1/service-requests/{sr_number}`
-- `PATCH /api/v1/service-requests/{sr_number}` — triage / closure
-- `POST /api/v1/service-requests/{sr_number}/dispatch` `{work_order: {…}}` — creates a linked WorkOrder, sets SR status to `dispatched`
-
-**SR number format**: `SR-YYYY-NNNNN` per (tenant, year), retry-on-collision (mirror `WO-` and `INS-` patterns).
-
-**Reverse-geocode**: §10 Q1 default Nominatim. Implement a service stub that takes an address, calls Nominatim if `NOMINATIM_URL` env is set, returns lon/lat. If unset, requires the intake form to provide coords manually. Real Nominatim wiring can land in S11.
-
-**Duplicate detection** (Epic 5): on create, run `ST_DWithin(location, new_location, 100m) AND reported_at within 7 days` and return a list of likely duplicates in the response (don't block; warn).
-
-**Frontend** — `features/service-requests/`:
-- `ServiceRequestListPage` with status/category/domain filters
-- `ServiceRequestDetailPage` with caller info, location, timeline, "Dispatch as work order" button
-- `IntakeDialog` — one-step form for service intake (caller name/phone, address, category, domain, description); reverse-geocodes on submit if address provided
-- Sidebar: "Service requests" nav link
-
-**Tests** (~12 backend, ~2 frontend):
-- Each role's create permission per §6 matrix
-- SR-YYYY-NNNNN numbering, dispatch creates WO + transitions SR
-- Duplicate detection returns nearby recent SRs
-- Cross-tenant 404
-- IntakeDialog renders + submits
-
-## Outstanding spec deviations (already in docs/SPEC.md but worth re-checking)
-
-- §3.1 user table includes `user_uid` — tracked
-- §4 login takes `tenant_slug` — tracked
-- §10 Q6 (tenant URL strategy) — resolved → subpath
-- PACP code seed is a representative subset; NASSCO licensing required for full set
-- Vite dev server pinned to `127.0.0.1` for IPv4 (Node 25 was selecting `::1`)
-
-## Local DB state
-
-Migrations applied through `0017_pacp_code`. The `test-city` tenant from earlier testing still has its admin user (email `test@testing.com` per the user's recall). To reset:
-
-```sh
-PGPASSWORD=flowops psql -h localhost -U flowops -d flowops -c "
-DELETE FROM \"user\" WHERE tenant_id IN (SELECT id FROM tenant);
-DELETE FROM tenant;
-"
-```
-
-Or recreate from scratch:
-```sh
-PGPASSWORD=flowops psql -h localhost -U flowops -d postgres -c "DROP DATABASE flowops;"
-PGPASSWORD=flowops psql -h localhost -U flowops -d postgres -c "CREATE DATABASE flowops OWNER flowops;"
-cd backend && uv run flask --app app.wsgi db upgrade
-```
+- §3.10 is the authoritative `wo_template` schema. The brief sketch in §3.5 has been replaced by a pointer to §3.10. If a future spec edit re-adds fields to §3.5, treat that as a divergence to reconcile.
+- `task_template` / `instructions` / `category` open questions on §3.10 are real — see "Decisions blocking the next sprint" above.
+- The `ConfirmDialog` is the project's canonical confirmation pattern — nothing else should call `window.confirm()`. If a new flow needs confirmation, use `<ConfirmDialog>` (it's portal-rendered so it works from anywhere, including `<tr>`).
+- `lib/translateApiError.ts` is the canonical API-error → user-copy mapper. New mutation handlers should use it; raw `err.message` in user-visible alerts is a regression.
+- `lib/format.ts` is the canonical date formatter. Anything that does `.slice(0, 16).replace("T", " ")` or `.toLocaleString()` directly is drift.
+- The frontend uses the **data router** (`createBrowserRouter` + `RouterProvider`) — `useBlocker` is available, and `<UnsavedChangesGuard>` covers both tab-close and in-app navigation. v7 future flags are on (`v7_relativeSplatPath`, `v7_startTransition`).
+- PACP code seed is still a representative subset; NASSCO licensing required for full set.
+- Vite dev server pinned to `127.0.0.1` for IPv4 (Node 25 was selecting `::1`).
 
 ## Things to know going in
 
-- The dev stack is expected to be up before each session (memory rule). `pkill -f "flask --app"` and restart if backend is stale after backend code changes.
-- All sprint work has been **squash-merged** to `main` with original commits preserved on `feat/sprint-N-…` branches on GitHub.
-- Bundle is split: auth+assets+work-orders+inspections at ~97 KB gzipped, map chunk at ~290 KB gzipped (lazy on `/map`).
-- The OpenAPI spec at `/api/v1/openapi.json` is auto-generated from Pydantic schemas; `npm run generate-api` regenerates `frontend/src/api/generated.ts` (currently unused; type defs only — no path coverage in S2 commit).
+- All work is squash-merged to `main`; original branch history is on GitHub under `feat/sprint-N-…` for the v1 sprints.
+- Frontend bundle: auth+assets+work-orders+inspections at ~97 KB gzipped, map chunk at ~290 KB gzipped (lazy on `/map`). Has not been re-measured since the post-v1 work landed; worth re-checking before GA.
+- The OpenAPI spec at `/api/v1/openapi.json` is auto-generated from Pydantic schemas; `npm run generate-api` regenerates `frontend/src/api/generated.ts` (currently unused; type defs only).
+- `flask seed-demo` followed by `flask simulate-year` produces a populated `demo` tenant with 12 months of synthetic activity. The "Try the demo →" button on the login page logs into that tenant.
