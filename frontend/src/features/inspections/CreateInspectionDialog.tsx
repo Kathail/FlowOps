@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
 import { createInspection, type InspectionKind, type InspectionRead } from "./api";
 import { CatchBasinForm } from "./forms/CatchBasinForm";
+import { CctvForm } from "./forms/CctvForm";
 import { HydrantFlowForm } from "./forms/HydrantFlowForm";
 import { LiftStationForm } from "./forms/LiftStationForm";
 import { ManholeForm } from "./forms/ManholeForm";
@@ -15,6 +16,7 @@ const KINDS: { value: InspectionKind; label: string }[] = [
   { value: "manhole", label: "Manhole" },
   { value: "catch_basin", label: "Catch basin" },
   { value: "lift_station_round", label: "Lift station round" },
+  { value: "cctv", label: "CCTV (PACP)" },
 ];
 
 interface Props {
@@ -121,6 +123,7 @@ export function CreateInspectionDialog({ onClose }: Props) {
           {kind === "manhole" && <ManholeForm onChange={setData} />}
           {kind === "catch_basin" && <CatchBasinForm onChange={setData} />}
           {kind === "lift_station_round" && <LiftStationForm onChange={setData} />}
+          {kind === "cctv" && <CctvForm onChange={setData} />}
         </div>
 
         <div className="grid grid-cols-3 gap-2">

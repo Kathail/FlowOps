@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { CreateInspectionDialog } from "./CreateInspectionDialog";
+import { ImportPacpDialog } from "./ImportPacpDialog";
 import { exportInspectionsUrl, type InspectionKind, type InspectionListParams } from "./api";
 import { useInspections } from "./hooks";
 
@@ -10,12 +11,13 @@ const KINDS: { value: InspectionKind; label: string }[] = [
   { value: "manhole", label: "Manhole" },
   { value: "catch_basin", label: "Catch basin" },
   { value: "lift_station_round", label: "Lift station" },
-  { value: "cctv", label: "CCTV (S7)" },
+  { value: "cctv", label: "CCTV" },
 ];
 
 export function InspectionListPage() {
   const [search, setSearch] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const params: InspectionListParams = {
     kind: (search.get("kind") as InspectionKind) || undefined,
@@ -49,6 +51,12 @@ export function InspectionListPage() {
             Export CSV
           </a>
           <button
+            onClick={() => setImportOpen(true)}
+            className="rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+          >
+            Import PACP…
+          </button>
+          <button
             onClick={() => setCreateOpen(true)}
             className="rounded bg-slate-900 px-3 py-1.5 text-sm text-white"
           >
@@ -58,6 +66,7 @@ export function InspectionListPage() {
       </header>
 
       {createOpen && <CreateInspectionDialog onClose={() => setCreateOpen(false)} />}
+      {importOpen && <ImportPacpDialog onClose={() => setImportOpen(false)} />}
 
       <div className="flex gap-3 items-end flex-wrap">
         <label className="block">

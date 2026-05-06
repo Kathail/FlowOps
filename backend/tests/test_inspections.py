@@ -187,12 +187,6 @@ def test_inspection_without_asset_allowed(admin_client):
     assert resp.get_json()["asset_uid"] is None
 
 
-def test_cctv_blocked_in_s6(admin_client):
-    resp = _create(admin_client, kind="cctv", data={})
-    assert resp.status_code == 422
-    assert resp.get_json()["error"]["code"] == "cctv_not_yet_supported"
-
-
 def test_inspection_number_per_year(admin_client):
     a = _create(
         admin_client,

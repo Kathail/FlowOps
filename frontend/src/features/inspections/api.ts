@@ -93,3 +93,31 @@ export function exportInspectionsUrl(kind?: InspectionKind): string {
   if (kind) params.set("kind", kind);
   return `/api/v1/inspections/export?${params.toString()}`;
 }
+
+export interface PacpCode {
+  code: string;
+  description: string;
+  group: "structural" | "om" | "construction" | "miscellaneous";
+  is_structural: boolean;
+  is_om: boolean;
+  default_severity: number | null;
+  is_active: boolean;
+}
+
+export function listPacpCodes(): Promise<PacpCode[]> {
+  return apiJson<PacpCode[]>("/api/v1/pacp-codes");
+}
+
+export function importPacp(
+  file: File,
+  options: { asset_uid?: string; work_order_number?: string } = {},
+): Promise<InspectionRead> {
+  const fd = new FormData();
+  fd.append("file", file);
+  if (options.asset_uid) fd.append("asset_uid", options.asset_uid);
+  if (options.work_order_number) fd.append("work_order_number", options.work_order_number);
+  return apiJson<InspectionRead>("/api/v1/inspections/import-pacp", {
+    method: "POST",
+    body: fd,
+  });
+}
