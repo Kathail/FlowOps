@@ -1,6 +1,8 @@
 import { useRef, useState, type FormEvent } from "react";
 import { ApiError } from "../../lib/apiClient";
 import { useAssets } from "../assets/hooks";
+import { SmartCommentChips } from "../tasks/SmartCommentChips";
+import type { SmartComment } from "../tasks/api";
 import { type ActivityEntityType } from "./api";
 import { useCreateComment } from "./hooks";
 
@@ -20,9 +22,20 @@ import { useCreateComment } from "./hooks";
 interface Props {
   entityType: ActivityEntityType;
   entityId: number;
+  /** Optional task-driven smart comments. When supplied along with the
+   * current task_data, suggestion chips render under the textarea.
+   * Tapping a chip inserts its text at the cursor; operator can edit
+   * or clear before posting. */
+  smartComments?: SmartComment[];
+  taskData?: Record<string, unknown>;
 }
 
-export function CommentComposer({ entityType, entityId }: Props) {
+export function CommentComposer({
+  entityType,
+  entityId,
+  smartComments,
+  taskData,
+}: Props) {
   const [body, setBody] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [assetQuery, setAssetQuery] = useState("");
@@ -34,9 +47,15 @@ export function CommentComposer({ entityType, entityId }: Props) {
   const assets = useAssets({ q: assetQuery, page_size: 20 }, pickerOpen && assetQuery.length >= 1);
 
   function insertReference(uid: string) {
+    insertAtCursor(uid);
+    setPickerOpen(false);
+    setAssetQuery("");
+  }
+
+  function insertAtCursor(text: string) {
     const ta = textareaRef.current;
     if (!ta) {
-      setBody((b) => (b ? `${b.trimEnd()} ${uid}` : uid));
+      setBody((b) => (b ? `${b.trimEnd()} ${text}` : text));
       return;
     }
     const start = ta.selectionStart ?? body.length;
@@ -45,16 +64,19 @@ export function CommentComposer({ entityType, entityId }: Props) {
     const after = body.slice(end);
     const padBefore = before.length === 0 || /\s$/.test(before) ? "" : " ";
     const padAfter = after.length === 0 || /^\s/.test(after) ? "" : " ";
-    const next = `${before}${padBefore}${uid}${padAfter}${after}`;
+    const next = `${before}${padBefore}${text}${padAfter}${after}`;
     setBody(next);
-    setPickerOpen(false);
-    setAssetQuery("");
-    // Restore cursor after the inserted reference.
     queueMicrotask(() => {
       ta.focus();
-      const cursor = before.length + padBefore.length + uid.length;
+      const cursor = before.length + padBefore.length + text.length;
       ta.setSelectionRange(cursor, cursor);
     });
+  }
+
+  function applySuggestion(text: string) {
+    // Empty body → replace; non-empty → insert at cursor with spacing.
+    if (!body.trim()) setBody(text);
+    else insertAtCursor(text);
   }
 
   async function onSubmit(e: FormEvent) {
@@ -83,6 +105,14 @@ export function CommentComposer({ entityType, entityId }: Props) {
         placeholder="Add a comment…"
         className="block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
       />
+
+      {smartComments && smartComments.length > 0 && (
+        <SmartCommentChips
+          smartComments={smartComments}
+          taskData={taskData ?? {}}
+          onPick={applySuggestion}
+        />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button

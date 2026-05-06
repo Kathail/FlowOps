@@ -35,6 +35,7 @@ class TaskDefinitionRead(TaskDefinitionBrief):
     prefill: dict[str, Any] = Field(default_factory=dict)
     form: list[dict[str, Any]] = Field(default_factory=list)
     canned_comments: list[str] = Field(default_factory=list)
+    smart_comments: list[dict[str, Any]] = Field(default_factory=list)
     procedure: dict[str, Any] = Field(default_factory=dict)
     completion: dict[str, Any] = Field(default_factory=dict)
     spawns: list[dict[str, Any]] = Field(default_factory=list)
@@ -59,6 +60,7 @@ class TaskDefinitionCreate(BaseModel):
     prefill: dict[str, Any] = Field(default_factory=dict)
     form: list[dict[str, Any]] = Field(default_factory=list)
     canned_comments: list[str] = Field(default_factory=list)
+    smart_comments: list[dict[str, Any]] = Field(default_factory=list)
     procedure: dict[str, Any] = Field(default_factory=dict)
     completion: dict[str, Any] = Field(default_factory=dict)
     spawns: list[dict[str, Any]] = Field(default_factory=list)
@@ -76,6 +78,7 @@ class TaskDefinitionUpdate(BaseModel):
     prefill: dict[str, Any] | None = None
     form: list[dict[str, Any]] | None = None
     canned_comments: list[str] | None = None
+    smart_comments: list[dict[str, Any]] | None = None
     procedure: dict[str, Any] | None = None
     completion: dict[str, Any] | None = None
     spawns: list[dict[str, Any]] | None = None

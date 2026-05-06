@@ -113,6 +113,93 @@ TASK_WAT_DISCOLOURED: dict[str, Any] = {
         },
     ],
     "canned_comments": ["water_discoloured", "cross_domain"],
+    # Suggestive only — chips render in the comment composer at task
+    # complete. Operator taps to insert, may edit or ignore. Variables
+    # render as `?` if missing from task_data so the gap is visible.
+    "smart_comments": [
+        {
+            "id": "discoloured_cleared",
+            "condition": "cold_outcome == 'cleared'",
+            "text": (
+                "Ran cold tap for {cold_run_minutes} min until water ran "
+                "clear. Verified Cl2 residual at {chlorine_residual} ppm. "
+                "Customer notified."
+            ),
+            "variables": ["cold_run_minutes", "chlorine_residual"],
+        },
+        {
+            "id": "discoloured_resolved_via_flush",
+            "condition": (
+                "cold_outcome == 'still_discoloured' && flush_minutes > 0 "
+                "&& outcome == 'resolved_on_site'"
+            ),
+            "text": (
+                "Cold tap did not clear after {cold_run_minutes} min. "
+                "Flushed nearest hydrant for {flush_minutes} min. "
+                "Cl2 residual {chlorine_residual} ppm. Resolved on site."
+            ),
+            "variables": [
+                "cold_run_minutes",
+                "flush_minutes",
+                "chlorine_residual",
+            ],
+        },
+        {
+            "id": "discoloured_still_bad",
+            "condition": (
+                "cold_outcome == 'still_discoloured' "
+                "&& outcome == 'follow_up_needed'"
+            ),
+            "text": (
+                "Cold tap run for {cold_run_minutes} min with no improvement. "
+                "Flushed nearest hydrant for {flush_minutes} min. "
+                "Distribution crew follow-up required."
+            ),
+            "variables": ["cold_run_minutes", "flush_minutes"],
+        },
+        {
+            "id": "discoloured_internal_plumbing",
+            "condition": (
+                "likely_cause == 'internal_plumbing' "
+                "|| outcome == 'referred_internal_plumbing'"
+            ),
+            "text": (
+                "Symptoms isolated to internal plumbing. "
+                "No distribution-side action required. "
+                "Referred to property owner."
+            ),
+            "variables": [],
+        },
+        {
+            "id": "discoloured_recent_main_work",
+            "condition": "likely_cause == 'recent_main_work'",
+            "text": (
+                "Discolouration consistent with recent main work in area. "
+                "Flushed for {flush_minutes} min; "
+                "Cl2 residual {chlorine_residual} ppm."
+            ),
+            "variables": ["flush_minutes", "chlorine_residual"],
+        },
+        {
+            "id": "discoloured_hydrant_use",
+            "condition": "likely_cause == 'hydrant_use'",
+            "text": (
+                "Likely caused by recent hydrant use upstream. "
+                "Cleared after running cold tap for {cold_run_minutes} min."
+            ),
+            "variables": ["cold_run_minutes"],
+        },
+        {
+            "id": "discoloured_fire_flow",
+            "condition": "likely_cause == 'fire_flow'",
+            "text": (
+                "Discolouration consistent with recent fire flow event. "
+                "Flushed nearest hydrant for {flush_minutes} min; "
+                "Cl2 residual {chlorine_residual} ppm."
+            ),
+            "variables": ["flush_minutes", "chlorine_residual"],
+        },
+    ],
     "procedure": {
         "preconditions": ["Confirm address and customer contact"],
         "ppe": ["safety vest"],

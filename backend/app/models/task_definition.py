@@ -83,6 +83,9 @@ class TaskDefinition(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, A
     canned_comments: Mapped[list[str]] = mapped_column(
         JSONB, nullable=False, default=list, server_default="[]"
     )
+    smart_comments: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, nullable=False, default=list, server_default="[]"
+    )
     procedure: Mapped[dict[str, Any]] = mapped_column(
         JSONB, nullable=False, default=dict, server_default="{}"
     )

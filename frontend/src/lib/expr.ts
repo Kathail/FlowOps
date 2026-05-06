@@ -362,3 +362,25 @@ export function safeEvaluate(
     throw e;
   }
 }
+
+const VAR_RE = /\{([a-zA-Z_][a-zA-Z0-9_.]*)\}/g;
+
+function formatValue(v: unknown): string {
+  if (v === null || v === undefined) return "?";
+  if (typeof v === "boolean") return v ? "yes" : "no";
+  if (typeof v === "number") {
+    if (Number.isInteger(v)) return String(v);
+    // Trim trailing-zero on whole-number floats (12.0 -> "12") but keep
+    // meaningful decimals as-is. Mirrors the Python `_format_value`.
+    return String(v);
+  }
+  return String(v);
+}
+
+/** Substitute `{path}` placeholders against a context dict. Missing
+ * keys render as `?` so the operator notices and fills the gap. */
+export function interpolate(template: string, ctx: unknown): string {
+  return template.replace(VAR_RE, (_match, path: string) =>
+    formatValue(resolve(path.split("."), ctx)),
+  );
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ExpressionError, evaluate, safeEvaluate } from "./expr";
+import { ExpressionError, evaluate, interpolate, safeEvaluate } from "./expr";
 import fixtures from "./expr.fixtures.json";
 
 interface FixtureCase {
@@ -37,5 +37,30 @@ describe("safeEvaluate", () => {
     expect(safeEvaluate(null, {})).toBe(true);
     expect(safeEvaluate("", {})).toBe(true);
     expect(safeEvaluate(undefined, {})).toBe(true);
+  });
+});
+
+describe("interpolate", () => {
+  it("substitutes flat keys", () => {
+    expect(interpolate("ran for {n} min", { n: 8 })).toBe("ran for 8 min");
+  });
+
+  it("substitutes dotted paths", () => {
+    expect(
+      interpolate("class {a.b.c}", { a: { b: { c: "WAT_HYD" } } }),
+    ).toBe("class WAT_HYD");
+  });
+
+  it("renders missing keys as ?", () => {
+    expect(interpolate("ran for {n} min", {})).toBe("ran for ? min");
+  });
+
+  it("renders booleans as yes/no", () => {
+    expect(interpolate("{ok}", { ok: true })).toBe("yes");
+    expect(interpolate("{ok}", { ok: false })).toBe("no");
+  });
+
+  it("preserves non-placeholder text", () => {
+    expect(interpolate("no vars here", { x: 1 })).toBe("no vars here");
   });
 });

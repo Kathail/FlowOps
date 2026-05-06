@@ -70,11 +70,19 @@ export interface TaskDefinitionBrief {
   updated_at: string;
 }
 
+export interface SmartComment {
+  id: string;
+  condition?: string;
+  text: string;
+  variables?: string[];
+}
+
 export interface TaskDefinitionRead extends TaskDefinitionBrief {
   triggers: Record<string, unknown>[];
   prefill: Record<string, unknown>;
   form: FormField[];
   canned_comments: string[];
+  smart_comments: SmartComment[];
   procedure: Procedure;
   completion: Record<string, unknown>;
   spawns: Record<string, unknown>[];
