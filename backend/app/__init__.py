@@ -145,9 +145,11 @@ def create_app(settings: Settings | None = None) -> Flask:
     from app.cli.geocode_tick import register as register_geocode_tick
     from app.cli.schedules_tick import register as register_schedules_tick
     from app.cli.seed_demo import register as register_seed_demo
+    from app.cli.simulate_year import register as register_simulate_year
 
     register_seed_demo(app)
     register_schedules_tick(app)
     register_geocode_tick(app)
+    register_simulate_year(app)
 
     return app
