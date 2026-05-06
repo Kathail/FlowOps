@@ -1,6 +1,6 @@
-# Handoff — resume point after Sprint 10
+# Handoff — resume point after Sprint 11
 
-Last commit on `main`: the upcoming `feat: sprint 10 field PWA` once squash-merged.
+Last commit on `main`: the upcoming `feat: sprint 11 admin & polish` once squash-merged.
 Pushed to: `https://github.com/Kathail/CityWater`
 
 ## Where the project stands
@@ -18,14 +18,14 @@ Pushed to: `https://github.com/Kathail/CityWater`
 | S8 | ✅ done | Service requests — intake, triage, dispatch → WO, ST_DWithin duplicate detection, Nominatim geocode stub |
 | S9 | ✅ done | Reports — 5 canned (break-history, wo-summary, inspection-summary, age-distribution, condition×criticality), JSON/CSV/PDF via ReportLab |
 | S10 | ✅ done | Field PWA — vite-plugin-pwa SW, IDB-backed mutation queue + asset cache fallback, online/offline banner, conflict drawer |
-| **S11** | **next** | Admin & polish (user invites, schema editor) |
-| S12 | pending | Hardening (rate limits, CSP, backups, runbooks) |
+| S11 | ✅ done | Admin & polish — invitations (Argon2-hashed tokens, accept page), role editor, tenant settings, asset-class JSON Schema editor |
+| **S12** | **next** | Hardening (rate limits, CSP, backups, runbooks) |
 
 ## Tests passing
 
-- **Backend: 196** (`cd backend && uv run pytest`)
-- **Frontend: 39** (`cd frontend && npm test`)
-- All migrations 0001–0018 apply cleanly. (S10 added no migrations — PWA is frontend-only.)
+- **Backend: 213** (`cd backend && uv run pytest`)
+- **Frontend: 41** (`cd frontend && npm test`)
+- All migrations 0001–0019 apply cleanly. (S11 added 0019_create_invitation.)
 
 ## Resume workflow
 

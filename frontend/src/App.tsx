@@ -2,6 +2,12 @@ import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { TenantShell } from "./components/TenantShell";
+import { AcceptInvitationPage } from "./features/admin/AcceptInvitationPage";
+import { AdminAssetClassesPage } from "./features/admin/AdminAssetClassesPage";
+import { AdminInvitationsPage } from "./features/admin/AdminInvitationsPage";
+import { AdminLayout } from "./features/admin/AdminLayout";
+import { AdminTenantPage } from "./features/admin/AdminTenantPage";
+import { AdminUsersPage } from "./features/admin/AdminUsersPage";
 import { AssetDetailPage } from "./features/assets/AssetDetailPage";
 import { AssetListPage } from "./features/assets/AssetListPage";
 import { LoginPage } from "./features/auth/LoginPage";
@@ -42,6 +48,10 @@ export function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterTenantPage />} />
           <Route
+            path="/accept-invitation/:token"
+            element={<AcceptInvitationPage />}
+          />
+          <Route
             path="/:slug"
             element={
               <RequireAuth>
@@ -60,6 +70,13 @@ export function App() {
             <Route path="service-requests/:sr" element={<ServiceRequestDetailPage />} />
             <Route path="reports" element={<ReportsPage />} />
             <Route path="reports/:reportSlug" element={<ReportDetailPage />} />
+            <Route path="admin" element={<AdminLayout />}>
+              <Route index element={<AdminUsersPage />} />
+              <Route path="users" element={<AdminUsersPage />} />
+              <Route path="invitations" element={<AdminInvitationsPage />} />
+              <Route path="tenant" element={<AdminTenantPage />} />
+              <Route path="asset-classes" element={<AdminAssetClassesPage />} />
+            </Route>
             <Route
               path="map"
               element={
