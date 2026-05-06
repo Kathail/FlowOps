@@ -21,8 +21,13 @@ type Blocker =
 let mockBlocker: Blocker = { state: "unblocked" };
 // Hook signature is (predicate) => blocker. Tests reach into
 // `useBlockerSpy.mock.calls.at(-1)?.[0]` to assert the registered
-// predicate behaves correctly.
-const useBlockerSpy = vi.fn(() => mockBlocker);
+// predicate behaves correctly — we keep the predicate parameter so
+// the recorded call args carry the right type, and `void` it to
+// satisfy `noUnusedParameters`.
+const useBlockerSpy = vi.fn((shouldBlock: () => boolean) => {
+  void shouldBlock;
+  return mockBlocker;
+});
 
 vi.mock("react-router-dom", () => ({
   useBlocker: (fn: Parameters<typeof useBlockerSpy>[0]) => useBlockerSpy(fn),

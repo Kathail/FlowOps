@@ -13,10 +13,7 @@ interface Props {
   onToggleSrs?: (v: boolean) => void;
   woCount?: number;
   srCount?: number;
-  serviceAreas?: GeoJSON.Feature<
-    GeoJSON.MultiPolygon | GeoJSON.Polygon,
-    ServiceAreaFeatureProps
-  >[];
+  serviceAreas?: GeoJSON.Feature<GeoJSON.MultiPolygon | GeoJSON.Polygon, ServiceAreaFeatureProps>[];
   areaKindsVisible?: Set<string>;
   onToggleAreaKind?: (kind: string, on: boolean) => void;
 }
@@ -38,7 +35,10 @@ export function LayerPanel({
   onToggleAreaKind,
 }: Props) {
   const areasByKind = serviceAreas.reduce<
-    Record<string, GeoJSON.Feature<GeoJSON.MultiPolygon | GeoJSON.Polygon, ServiceAreaFeatureProps>[]>
+    Record<
+      string,
+      GeoJSON.Feature<GeoJSON.MultiPolygon | GeoJSON.Polygon, ServiceAreaFeatureProps>[]
+    >
   >((acc, f) => {
     const k = f.properties.area_kind;
     (acc[k] ??= []).push(f);
@@ -98,9 +98,7 @@ export function LayerPanel({
                 aria-hidden="true"
               />
               <span className="text-slate-200">Open work orders</span>
-              <span className="ml-auto text-xs tabular-nums text-slate-400">
-                {woCount}
-              </span>
+              <span className="ml-auto text-xs tabular-nums text-slate-400">{woCount}</span>
             </label>
           </li>
           <li>
@@ -111,14 +109,9 @@ export function LayerPanel({
                 onChange={(e) => onToggleSrs?.(e.target.checked)}
                 aria-label="Toggle active service requests"
               />
-              <span
-                className="inline-block h-3 w-3 rounded-full bg-amber-500"
-                aria-hidden="true"
-              />
+              <span className="inline-block h-3 w-3 rounded-full bg-amber-500" aria-hidden="true" />
               <span className="text-slate-200">Active service requests</span>
-              <span className="ml-auto text-xs tabular-nums text-slate-400">
-                {srCount}
-              </span>
+              <span className="ml-auto text-xs tabular-nums text-slate-400">{srCount}</span>
             </label>
           </li>
         </ul>
@@ -147,9 +140,7 @@ export function LayerPanel({
                       style={{ borderColor: sample, backgroundColor: `${sample}33` }}
                       aria-hidden="true"
                     />
-                    <span className="text-slate-200">
-                      {AREA_KIND_LABELS[kind] ?? kind}
-                    </span>
+                    <span className="text-slate-200">{AREA_KIND_LABELS[kind] ?? kind}</span>
                     <span className="ml-auto text-xs tabular-nums text-slate-400">
                       {features.length}
                     </span>
@@ -180,14 +171,36 @@ export function LayerPanel({
       {domains.map((d) => {
         const ls = byDomain[d.id] ?? [];
         if (ls.length === 0) return null;
+        const allOn = ls.every((l) => visibleClasses.has(l.class_code));
+        const allOff = ls.every((l) => !visibleClasses.has(l.class_code));
         return (
           <section key={d.id} aria-labelledby={`heading-${d.id}`} className="mb-4">
-            <h2
-              id={`heading-${d.id}`}
-              className="text-xs font-medium uppercase text-slate-400 mb-1"
-            >
-              {d.label}
-            </h2>
+            <div className="mb-1 flex items-baseline justify-between">
+              <h2 id={`heading-${d.id}`} className="text-xs font-medium uppercase text-slate-400">
+                {d.label}
+              </h2>
+              <div className="flex gap-1 text-[10px] uppercase tracking-wide">
+                <button
+                  type="button"
+                  onClick={() => ls.forEach((l) => onToggle(l.class_code, true))}
+                  disabled={allOn}
+                  aria-label={`Show all ${d.label} layers`}
+                  className="text-slate-500 transition-colors hover:text-slate-200 disabled:cursor-not-allowed disabled:text-slate-700 disabled:hover:text-slate-700"
+                >
+                  All
+                </button>
+                <span className="text-slate-700">·</span>
+                <button
+                  type="button"
+                  onClick={() => ls.forEach((l) => onToggle(l.class_code, false))}
+                  disabled={allOff}
+                  aria-label={`Hide all ${d.label} layers`}
+                  className="text-slate-500 transition-colors hover:text-slate-200 disabled:cursor-not-allowed disabled:text-slate-700 disabled:hover:text-slate-700"
+                >
+                  None
+                </button>
+              </div>
+            </div>
             <ul className="space-y-1">
               {ls.map((l) => {
                 const checked = visibleClasses.has(l.class_code);

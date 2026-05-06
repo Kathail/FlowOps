@@ -68,6 +68,45 @@ describe("LayerPanel", () => {
     expect(onToggle).toHaveBeenCalledWith("SAN_MH", true);
   });
 
+  it("'All' toggles every layer in a domain on; 'None' toggles every layer off", async () => {
+    const onToggle = vi.fn();
+    // Two water layers so the per-domain action toggles more than one.
+    const layers: TileLayerDescriptor[] = [
+      ...FAKE_LAYERS,
+      { ...FAKE_LAYERS[0], id: "assets-wat-val", class_code: "WAT_VAL", name: "Valve" },
+    ];
+    render(
+      <LayerPanel
+        layers={layers}
+        visibleClasses={new Set()}
+        onToggle={onToggle}
+        basemap="osm"
+        onBasemapChange={() => undefined}
+      />,
+    );
+
+    // 'All' for water — both water layers should fire onToggle(_, true).
+    await userEvent.click(screen.getByRole("button", { name: /Show all Water layers/i }));
+    expect(onToggle).toHaveBeenCalledWith("WAT_HYD", true);
+    expect(onToggle).toHaveBeenCalledWith("WAT_VAL", true);
+    expect(onToggle).not.toHaveBeenCalledWith("SAN_MH", true);
+  });
+
+  it("disables 'All' when every layer in the domain is already on", () => {
+    render(
+      <LayerPanel
+        layers={FAKE_LAYERS}
+        visibleClasses={new Set(["WAT_HYD"])}
+        onToggle={() => undefined}
+        basemap="osm"
+        onBasemapChange={() => undefined}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Show all Water layers/i })).toBeDisabled();
+    // Sewer has nothing on, so 'None' is the disabled one for that domain.
+    expect(screen.getByRole("button", { name: /Hide all Sewer layers/i })).toBeDisabled();
+  });
+
   it("changes basemap when select changes", async () => {
     const onBasemapChange = vi.fn();
     render(
