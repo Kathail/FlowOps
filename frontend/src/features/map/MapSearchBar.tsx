@@ -29,8 +29,7 @@ interface AssetItem {
   class_code: string;
   domain: string;
   status: string;
-  geom?: { type: "Point"; coordinates: [number, number] } | null;
-  centroid?: { type: "Point"; coordinates: [number, number] } | null;
+  geometry?: GeoJSON.Geometry | null;
   address_cached?: string | null;
 }
 
@@ -217,20 +216,48 @@ function KindBadge({ kind }: { kind: MapSearchHit["kind"] }) {
 }
 
 function assetToHit(a: AssetItem): MapSearchHit | null {
-  const pt = a.centroid ?? a.geom;
+  const pt = representativePoint(a.geometry);
   if (!pt) return null;
-  const [lon, lat] = pt.coordinates;
   return {
     kind: "asset",
     uid: a.asset_uid,
     label: a.address_cached ?? a.class_code,
-    lon,
-    lat,
+    lon: pt[0],
+    lat: pt[1],
     class_code: a.class_code,
     domain: a.domain,
     status: a.status,
     priority: null,
   };
+}
+
+/** Reduce any geometry to a single (lon, lat) pair we can flyTo. */
+function representativePoint(geom: GeoJSON.Geometry | null | undefined): [number, number] | null {
+  if (!geom) return null;
+  switch (geom.type) {
+    case "Point":
+      return geom.coordinates as [number, number];
+    case "LineString": {
+      const cs = geom.coordinates;
+      if (cs.length === 0) return null;
+      // Midpoint vertex — close enough for a fly-to.
+      return cs[Math.floor(cs.length / 2)] as [number, number];
+    }
+    case "Polygon": {
+      const ring = geom.coordinates[0];
+      if (!ring || ring.length === 0) return null;
+      // Average vertices as a cheap centroid; good enough for navigation.
+      let sx = 0, sy = 0, n = 0;
+      for (const [x, y] of ring) {
+        sx += x;
+        sy += y;
+        n++;
+      }
+      return n ? [sx / n, sy / n] : null;
+    }
+    default:
+      return null;
+  }
 }
 
 function searchOverlay(
