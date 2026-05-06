@@ -101,6 +101,14 @@ def _materials_total(wo: WorkOrder) -> Decimal | None:
     return total if have_any else None
 
 
+def _wo_or_sr_areas(*, location: Any, asset_id: int | None) -> list[dict[str, Any]]:
+    """Defer the import to runtime — circular-import safety since
+    service_areas.py imports from app.models which imports work_orders."""
+    from app.api.service_areas import areas_for_wo_or_sr
+
+    return areas_for_wo_or_sr(location=location, asset_id=asset_id)
+
+
 def _list_wo_assets(wo_id: int) -> list[dict[str, Any]]:
     """Joined list of (work_order_asset, asset) ordered by sequence then uid."""
     from app.models import WorkOrderAsset
@@ -170,6 +178,7 @@ def _wo_payload(wo: WorkOrder) -> dict[str, Any]:
         "materials": [_serialize_material(m) for m in wo.materials],
         "attachments": [_serialize_attachment(a) for a in wo.attachments],
         "assets": _list_wo_assets(wo.id),
+        "areas": _wo_or_sr_areas(location=wo.location, asset_id=wo.asset_id),
     }
     total = _materials_total(wo)
     payload["materials_total"] = str(total) if total is not None else None

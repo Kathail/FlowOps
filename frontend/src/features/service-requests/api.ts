@@ -45,6 +45,13 @@ export interface ServiceRequestRead {
   attrs: Record<string, unknown>;
   task_definition_code: string | null;
   task_data: Record<string, unknown>;
+  areas: Array<{
+    id: number;
+    code: string;
+    name: string;
+    kind: "maintenance" | "water_system" | "sewer_system" | "storm_system";
+    color: string | null;
+  }>;
   created_at: string;
   updated_at: string;
 }

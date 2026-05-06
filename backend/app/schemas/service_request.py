@@ -52,6 +52,7 @@ class ServiceRequestRead(BaseModel):
     attrs: dict[str, Any] = Field(default_factory=dict)
     task_definition_code: str | None = None
     task_data: dict[str, Any] = Field(default_factory=dict)
+    areas: list[dict[str, Any]] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

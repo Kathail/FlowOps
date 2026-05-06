@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
+import { AreaChips } from "../tasks/AreaChips";
 import { ProcedureRunner } from "../tasks/ProcedureRunner";
 import { getTaskDefinition, type TaskDefinitionRead } from "../tasks/api";
 import { TaskFormRenderer, type TaskData } from "../tasks/TaskFormRenderer";
@@ -67,6 +68,11 @@ export function WorkOrderDetailPage() {
             <p className="mt-1 text-xs text-slate-400">
               {wo.type} · {wo.category} · {wo.priority}
             </p>
+            <AreaChips
+              areas={wo.areas}
+              taskDomain={taskQuery.data?.default_domain}
+              className="mt-2"
+            />
           </div>
           <div className="flex flex-col items-end gap-2">
             <StatusPill status={wo.status} />

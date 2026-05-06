@@ -96,9 +96,16 @@ def _payload(sr: ServiceRequest) -> dict[str, Any]:
         "attrs": sr.attrs or {},
         "task_definition_code": task_definition_code,
         "task_data": sr.task_data or {},
+        "areas": _sr_areas(location=sr.location, asset_id=sr.asset_id),
         "created_at": sr.created_at.isoformat(),
         "updated_at": sr.updated_at.isoformat(),
     }
+
+
+def _sr_areas(*, location: Any, asset_id: int | None) -> list[dict[str, Any]]:
+    from app.api.service_areas import areas_for_wo_or_sr
+
+    return areas_for_wo_or_sr(location=location, asset_id=asset_id)
 
 
 def _list_item(sr: ServiceRequest) -> dict[str, Any]:

@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
+import { AreaChips } from "../tasks/AreaChips";
 import { ProcedureRunner } from "../tasks/ProcedureRunner";
 import { getTaskDefinition, type TaskDefinitionRead } from "../tasks/api";
 import { TaskFormRenderer, type TaskData } from "../tasks/TaskFormRenderer";
@@ -95,6 +96,11 @@ export function ServiceRequestDetailPage() {
             {data.category} · {data.domain} ·{" "}
             <span className="font-medium">{data.status}</span> · priority {data.priority}
           </p>
+          <AreaChips
+            areas={data.areas}
+            taskDomain={taskQuery.data?.default_domain ?? data.domain}
+            className="mt-2"
+          />
         </div>
         <div className="flex flex-wrap gap-2">
           {data.status === "new" && (

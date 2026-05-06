@@ -111,6 +111,13 @@ export interface WorkOrderDetail extends WorkOrderListItem {
   updated_at: string;
   tasks: Task[];
   assets: WoAsset[];
+  areas: Array<{
+    id: number;
+    code: string;
+    name: string;
+    kind: "maintenance" | "water_system" | "sewer_system" | "storm_system";
+    color: string | null;
+  }>;
   time_logs: TimeLog[];
   materials: Material[];
   attachments: Attachment[];

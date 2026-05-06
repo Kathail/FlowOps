@@ -174,23 +174,46 @@ def areas_containing_point():
     })
 
 
+def _serialize_area(a: ServiceArea) -> dict[str, Any]:
+    return {
+        "id": a.id,
+        "code": a.code,
+        "name": a.name,
+        "kind": a.kind,
+        "color": a.color,
+    }
+
+
 def areas_for_asset(asset_id: int) -> list[dict[str, Any]]:
-    """Helper used by the asset detail serializer to attach containing
-    areas. Uses ST_Intersects so a line/polygon asset that crosses an
-    area boundary still gets attributed correctly."""
+    """Containing service areas for an asset. ST_Intersects handles
+    line/polygon assets that cross an area boundary correctly."""
     rows = db.session.execute(
         select(ServiceArea)
         .join(Asset, func.ST_Intersects(ServiceArea.geom, Asset.geom))
         .where(Asset.id == asset_id)
         .order_by(ServiceArea.kind, ServiceArea.name)
     ).scalars().all()
-    return [
-        {
-            "id": a.id,
-            "code": a.code,
-            "name": a.name,
-            "kind": a.kind,
-            "color": a.color,
-        }
-        for a in rows
-    ]
+    return [_serialize_area(a) for a in rows]
+
+
+def areas_for_point(wkb_or_none: Any) -> list[dict[str, Any]]:
+    """Containing service areas for a single POINT (or None)."""
+    if wkb_or_none is None:
+        return []
+    rows = db.session.scalars(
+        select(ServiceArea)
+        .where(func.ST_Contains(ServiceArea.geom, wkb_or_none))
+        .order_by(ServiceArea.kind, ServiceArea.name)
+    ).all()
+    return [_serialize_area(a) for a in rows]
+
+
+def areas_for_wo_or_sr(*, location: Any, asset_id: int | None) -> list[dict[str, Any]]:
+    """Pick the right containing-area lookup based on what the entity
+    has: prefer the entity's own POINT location; fall back to the
+    linked asset's geom (which may be a Point, LineString, or Polygon)."""
+    if location is not None:
+        return areas_for_point(location)
+    if asset_id is not None:
+        return areas_for_asset(asset_id)
+    return []
