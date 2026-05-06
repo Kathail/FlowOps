@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
+import { Alert } from "../../components/Alert";
 import { Logo } from "../../components/Logo";
 import { login, type AuthEnvelope } from "./api";
 import { ME_QUERY_KEY } from "./useAuth";
@@ -71,7 +72,7 @@ export function LoginPage() {
     <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-sm rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
+        className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
       >
         <div className="flex items-center gap-3">
           <Logo size={48} />
@@ -117,11 +118,7 @@ export function LoginPage() {
             required
           />
         </label>
-        {errorMessage && (
-          <p role="alert" className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
-            {errorMessage}
-          </p>
-        )}
+        {errorMessage && <Alert>{errorMessage}</Alert>}
         <button
           type="submit"
           disabled={mutation.isPending}

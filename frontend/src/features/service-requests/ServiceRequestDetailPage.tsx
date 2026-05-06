@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Alert } from "../../components/Alert";
 import { ApiError } from "../../lib/apiClient";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
@@ -102,12 +103,12 @@ export function ServiceRequestDetailPage() {
             className="mt-2"
           />
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {data.status === "new" && (
             <button
               onClick={() => transition("triaged")}
               disabled={update.isPending}
-              className="rounded border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800/50 disabled:opacity-50"
+              className="btn-ghost"
             >
               Mark triaged
             </button>
@@ -115,23 +116,20 @@ export function ServiceRequestDetailPage() {
           {!["closed", "duplicate", "dispatched"].includes(data.status) && (
             <button
               onClick={() => setDispatchOpen(true)}
-              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
+              className="btn-primary"
             >
               Dispatch as work order
             </button>
           )}
           {!["closed", "duplicate"].includes(data.status) && (
-            <button
-              onClick={() => setCloseOpen(true)}
-              className="rounded border border-slate-700 px-3 py-1.5 text-sm hover:bg-slate-800/50"
-            >
+            <button onClick={() => setCloseOpen(true)} className="btn-ghost">
               Close
             </button>
           )}
         </div>
       </header>
 
-      {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
+      {errorMessage && <Alert>{errorMessage}</Alert>}
 
       <section className="grid grid-cols-2 gap-6">
         <div className="space-y-3">

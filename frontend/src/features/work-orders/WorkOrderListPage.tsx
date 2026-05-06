@@ -44,19 +44,23 @@ export function WorkOrderListPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-100">Work orders</h1>
         <div className="flex gap-2">
-          <div className="rounded border border-slate-700 bg-slate-900 p-0.5 flex">
+          <div className="rounded border border-slate-700 bg-slate-950/40 p-0.5 flex">
             <button
               onClick={() => setParam("view", null)}
-              className={`px-2.5 py-1 text-xs rounded ${
-                view === "list" ? "bg-slate-900 text-white" : "text-slate-200"
+              className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                view === "list"
+                  ? "bg-blue-500 text-white"
+                  : "text-slate-400 hover:text-slate-100"
               }`}
             >
               List
             </button>
             <button
               onClick={() => setParam("view", "kanban")}
-              className={`px-2.5 py-1 text-xs rounded ${
-                view === "kanban" ? "bg-slate-900 text-white" : "text-slate-200"
+              className={`px-2.5 py-1 text-xs rounded transition-colors ${
+                view === "kanban"
+                  ? "bg-blue-500 text-white"
+                  : "text-slate-400 hover:text-slate-100"
               }`}
             >
               Kanban
@@ -64,7 +68,7 @@ export function WorkOrderListPage() {
           </div>
           <button
             onClick={() => setCreateOpen(true)}
-            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
+            className="btn-primary"
           >
             New work order
           </button>

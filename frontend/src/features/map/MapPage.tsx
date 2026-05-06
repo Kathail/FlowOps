@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl, { type Map as MapLibreMap, type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { Link, useParams } from "react-router-dom";
 import { useMapOverlays, useTileLayers } from "./hooks";
 import { LayerPanel } from "./LayerPanel";
 import type { BasemapId } from "./basemap";
@@ -480,6 +481,7 @@ export function MapPage() {
       />
       <div className="relative flex-1">
         <div ref={containerRef} className="absolute inset-0" data-testid="map-container" />
+        <MapHeader />
         <MapSearchBar onPick={flyToHit} />
         {selected && <AssetSidePanel feature={selected} onClose={() => setSelected(null)} />}
         {contextMenu && (
@@ -510,6 +512,19 @@ export function MapPage() {
           />
         )}
       </div>
+    </div>
+  );
+}
+
+function MapHeader() {
+  const { slug } = useParams<{ slug: string }>();
+  return (
+    <div className="absolute left-3 top-3 z-10 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/90 px-3 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur">
+      <Link to={`/${slug}/`} className="text-slate-400 hover:text-slate-200">
+        ← Home
+      </Link>
+      <span className="text-slate-600">/</span>
+      <span className="font-medium text-slate-100">Map</span>
     </div>
   );
 }

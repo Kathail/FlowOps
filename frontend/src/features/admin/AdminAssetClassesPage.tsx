@@ -53,8 +53,8 @@ export function AdminAssetClassesPage() {
     return <p className="text-sm text-red-400">Failed to load asset classes.</p>;
 
   return (
-    <div className="grid grid-cols-12 gap-4">
-      <aside className="col-span-4 max-h-[70vh] overflow-auto rounded border border-slate-800 bg-slate-900">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-12">
+      <aside className="md:col-span-4 max-h-[70vh] overflow-auto rounded border border-slate-800 bg-slate-900">
         <ul className="divide-y divide-slate-800 text-sm">
           {query.data?.map((ac) => (
             <li key={ac.code}>
@@ -77,7 +77,7 @@ export function AdminAssetClassesPage() {
         </ul>
       </aside>
 
-      <section className="col-span-8 space-y-3 rounded border border-slate-800 bg-slate-900 p-4">
+      <section className="md:col-span-8 space-y-3 rounded border border-slate-800 bg-slate-900 p-4">
         {!current ? (
           <p className="text-sm text-slate-400">
             Pick an asset class on the left to edit its attribute schema.

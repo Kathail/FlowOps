@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
+import { Button } from "../../components/Button";
 import { AreaChips } from "../tasks/AreaChips";
 import { deleteAsset, updateAsset, type AssetOut, type AssetUpdateInput } from "./api";
 import { useAsset } from "./hooks";
@@ -121,15 +122,15 @@ export function AssetDetailPage() {
           </p>
           <AreaChips areas={asset.areas} domain={asset.domain} className="mt-2" />
         </div>
-        <button
+        <Button
+          variant="danger"
           onClick={() => {
             if (confirm(`Soft-delete ${asset.asset_uid}?`)) remove.mutate();
           }}
           disabled={remove.isPending}
-          className="rounded border border-red-300 px-3 py-1.5 text-sm text-red-300 hover:bg-red-50"
         >
           Delete
-        </button>
+        </Button>
       </div>
 
       <form

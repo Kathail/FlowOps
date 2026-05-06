@@ -145,7 +145,19 @@ export function InspectionListPage() {
                 <td className="px-3 py-2 font-mono text-xs">{i.asset_uid ?? "—"}</td>
                 <td className="px-3 py-2">{i.performed_at.slice(0, 16).replace("T", " ")}</td>
                 <td className="px-3 py-2">{i.overall_condition ?? "—"}</td>
-                <td className="px-3 py-2">{i.pass === null ? "—" : i.pass ? "✓" : "✗"}</td>
+                <td className="px-3 py-2">
+                  {i.pass === null ? (
+                    <span className="text-slate-500">—</span>
+                  ) : i.pass ? (
+                    <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase text-emerald-200 ring-1 ring-emerald-500/30">
+                      Pass
+                    </span>
+                  ) : (
+                    <span className="rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium uppercase text-red-200 ring-1 ring-red-500/40">
+                      Fail
+                    </span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

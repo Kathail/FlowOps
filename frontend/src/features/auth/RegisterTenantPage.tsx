@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
+import { Alert } from "../../components/Alert";
 import { ApiError } from "../../lib/apiClient";
 import { registerTenant, type AuthEnvelope } from "./api";
 import { ME_QUERY_KEY } from "./useAuth";
@@ -91,12 +92,7 @@ export function RegisterTenantPage() {
           />
         </label>
         {errorMessage && (
-          <p
-            role="alert"
-            className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
-          >
-            {errorMessage}
-          </p>
+          <Alert>{errorMessage}</Alert>
         )}
         <button type="submit" disabled={mutation.isPending} className="btn-primary w-full">
           {mutation.isPending ? "Creating…" : "Create tenant"}
