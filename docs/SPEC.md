@@ -226,11 +226,9 @@ work_order_material
 work_order_attachment
   id, work_order_id, kind ('photo', 'doc', 'sketch'),
   s3_key, content_type, original_filename, taken_at, geo POINT, uploaded_by
-
-wo_template
-  id, tenant_id, name, category, default_priority, applies_to_classes TEXT[],
-  task_template JSONB, instructions TEXT
 ```
+
+`work_order.template_id` references `wo_template(id)` — the recurring-WO seed feature. See §3.10 for the `wo_template` schema, generation logic, API, and acceptance criteria.
 
 Status transitions are enforced server-side. Illegal transitions return 409.
 
@@ -419,6 +417,90 @@ audit_log
 
 Implemented via two SQLAlchemy listeners on the `Session` class: `before_flush` captures diffs of `AuditableMixin` rows; `after_flush_postexec` inserts the corresponding `audit_log` entries (so primary keys of newly-created rows are populated). Non-mutation events (login, logout, failed_login, register_tenant) emit explicitly via `emit_event()` in `app/services/audit.py`. The `password_hash` field is unconditionally stripped from `before`/`after` payloads.
 
+### 3.10 Recurring work orders
+
+#### Purpose
+
+v1 supports preventive maintenance through recurring work orders. This is the seed of the v2 Maintenance Planner: it provides the schema and basic UX that the Planner will extend with rules, compliance, and batch generation. v1 itself ships a minimal version — fixed-frequency, fixed-target — sufficient for a small utility to run a basic PM program without specialized planner tooling.
+
+#### Out of scope for v1
+
+- Conditional rules ("if asset attribute X then frequency Y")
+- Compliance reporting against regulatory drivers
+- Batch generation with map preview
+- Workload forecasting
+- Backlog/deferral management
+
+All deferred to EPIC-V2-PLANNER (see `BACKLOG.md`).
+
+#### Data model
+
+New table: `wo_template`
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | PK |
+| tenant_id | uuid | FK, indexed, NOT NULL |
+| name | text | e.g., "Hydrant annual flow test" |
+| description | text | nullable |
+| asset_class | text | FK to asset class catalog. Required. |
+| target_mode | enum('all_in_class', 'specific_assets') | NOT NULL |
+| target_asset_ids | uuid[] | populated only when target_mode='specific_assets' |
+| frequency_unit | enum('days', 'weeks', 'months', 'years') | NOT NULL |
+| frequency_value | integer | NOT NULL, > 0 |
+| priority | enum (matches WO priority) | default 'normal' |
+| estimated_duration_minutes | integer | nullable |
+| inspection_form_id | uuid | nullable, FK to inspection form catalog |
+| active | boolean | default true |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
+| created_by | uuid | FK to users |
+
+WO instances generated from a template carry `wo_template_id` (nullable FK on `work_order` table). This is how next-instance scheduling traces back.
+
+#### Generation logic
+
+Two triggers:
+
+1. **On instance close** — when a WO with a non-null `wo_template_id` is closed, generate the next instance for the same asset with `due_date = completion_date + frequency`. One WO per asset.
+2. **Scheduled job (daily)** — for any active template that has no open instance for an asset it targets, create one with `due_date = (last_close_date OR template_created_at) + frequency`. This handles missed completions and newly added assets that match an existing class-wide template.
+
+Generation is idempotent: a single template + asset + open instance = at most one WO.
+
+#### API surface
+
+- `GET /api/wo-templates` — list, filter by asset_class, active
+- `POST /api/wo-templates` — create
+- `GET /api/wo-templates/{id}` — detail
+- `PATCH /api/wo-templates/{id}` — update (changes apply to instances generated after the update; existing open instances unchanged)
+- `POST /api/wo-templates/{id}/pause` and `/resume`
+- `DELETE /api/wo-templates/{id}` — soft delete (sets active=false; never destroys history)
+
+#### UI surfaces (v1)
+
+- **WO Templates list** (Supervisor + Admin): table, filter by asset class, active toggle
+- **WO Template editor**: form with name, asset class picker, target-mode toggle, frequency, defaults
+- **Due / overdue view** (Supervisor home): list of open WOs by due date, filterable by template + asset class
+- **Asset detail view**: show recurring WOs targeting this asset (so a tech sees what PM is on this asset)
+
+#### Acceptance criteria
+
+- **AC1**: Supervisor creates a WO template targeting all hydrants in the tenant with a 12-month frequency. System generates one WO per hydrant with `due_date = template_created_at + 12 months`.
+- **AC2**: A WO generated from a template is closed. System generates the next instance for that asset with `due_date = completion_date + frequency`. No instance is generated for any other asset.
+- **AC3**: A new hydrant is added 6 months after the template was created. The next daily job generates one WO for the new hydrant with appropriate due_date.
+- **AC4**: A template is paused. No new instances generate until resumed. Existing open instances are unchanged.
+- **AC5**: A template's frequency is changed from 12 months to 6 months. Existing open instances retain their original due_date. Instances generated after the change use the new frequency.
+- **AC6**: Closing the last open instance for an asset under a paused template does not generate a new instance.
+- **AC7**: Soft-deleting a template (active=false) does not regenerate instances. Existing open instances remain workable.
+
+#### Open questions for v1
+
+- Q1: Should a tech see "I'm working a template-generated WO" in the field PWA, with a link to the template? Recommendation: yes, low cost.
+- Q2: When a template targets `all_in_class` and the class has thousands of assets, the daily job could generate a large WO batch in one tick. Acceptable, or batch over multiple days/workers? Recommendation: chunk generation over background workers; cap per-tick at N.
+- Q3: When a tech reschedules a generated instance, does the *next* instance schedule from the original `due_date` or from the rescheduled date? Recommendation: from completion, not original due_date — keeps schedule self-correcting after weather/access delays.
+- Q4: The pre-delta `wo_template` sketch in §3.5 carried `task_template JSONB` and `instructions TEXT` — a way for every recurring WO to inherit the same checklist and SOP text. The delta omits these. Is that intentional (rely on `inspection_form_id` for inspection-style PMs, leave reactive PMs without default tasks), or should `task_template` / `instructions` be added back? Without them there is no path for "every flushing WO carries the same default checklist."
+- Q5: `work_order.category` is NOT NULL but `wo_template` has no `category` column in the delta. A template-generated WO needs its category set somewhere — options: (a) add `category` to the template (matches the old §3.5 sketch), (b) derive from the asset class catalog, (c) require the generation job to take it from a per-class default. Recommendation: (a) — explicit on the template, no surprise downstream.
+
 ---
 
 ## 4. API surface
@@ -487,8 +569,15 @@ Tenant scoping is implicit from session. Slug only appears in URL for human-read
 - `POST /api/v1/work-orders/{wo_number}/time` — log time
 - `POST /api/v1/work-orders/{wo_number}/materials`
 - `POST /api/v1/work-orders/{wo_number}/attachments` — multipart
-- `GET /api/v1/wo-templates`
-- `POST /api/v1/wo-templates` — admin
+- `GET /api/v1/wo-templates` — list, `?asset_class=`, `?active=`
+- `POST /api/v1/wo-templates` — admin / supervisor
+- `GET /api/v1/wo-templates/{id}`
+- `PATCH /api/v1/wo-templates/{id}` — applies to instances generated after the update; existing open instances unchanged
+- `POST /api/v1/wo-templates/{id}/pause`
+- `POST /api/v1/wo-templates/{id}/resume`
+- `DELETE /api/v1/wo-templates/{id}` — soft delete (`active=false`)
+
+See §3.10 for generation semantics and acceptance criteria.
 
 #### Inspections
 - `GET /api/v1/inspections?kind=cctv&asset_id=...`
@@ -617,8 +706,17 @@ PRs must satisfy these to be merged.
 - [ ] Time logging sums correctly to total hours
 - [ ] Materials log totals cost
 - [ ] Attachments upload to S3, GPS preserved from EXIF
-- [ ] Templates apply default tasks, priority, instructions
 - [ ] Kanban board view: drag between status columns updates server
+
+#### Recurring WO acceptance criteria (§3.10)
+
+- [ ] **AC1**: Template targeting all-in-class generates one WO per matching asset on creation, `due_date = template_created_at + frequency`.
+- [ ] **AC2**: Closing a template-generated WO generates the next instance for the same asset with `due_date = completion_date + frequency`. No instance is generated for any other asset.
+- [ ] **AC3**: An asset added after the template was created gets a WO on the next daily-job tick with appropriate due_date.
+- [ ] **AC4**: A paused template generates no new instances; existing open instances are unchanged.
+- [ ] **AC5**: Frequency change applies only to instances generated after the change; open instances retain their original due_date.
+- [ ] **AC6**: Closing the last open instance under a paused template does not generate a new instance.
+- [ ] **AC7**: Soft-delete (`active=false`) does not regenerate instances; open instances remain workable.
 
 ### Epic 4: Inspections
 - [ ] All 6 inspection kinds creatable
