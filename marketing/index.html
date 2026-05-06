@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CityWater — Public-works software for small water utilities</title>
+    <meta
+      name="description"
+      content="Work orders, inspections, and asset records — built specifically for municipal water, sewer, and storm crews. Without the consultants, the procurement, or the six-figure price tag."
+    />
+
+    <!-- Open Graph / social -->
+    <meta property="og:title" content="CityWater — Public-works software for small water utilities" />
+    <meta
+      property="og:description"
+      content="Modern work-management for municipal water, sewer, and storm crews. Built for the gap between paper and a six-figure CMMS."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://citywater.ca" />
+    <!-- TODO: og:image once you have one. 1200x630 PNG, ideally a screenshot crop. -->
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CityWater — Public-works software for small water utilities" />
+    <meta
+      name="twitter:description"
+      content="Modern work-management for municipal water, sewer, and storm crews."
+    />
+
+    <!-- Favicon — placeholder. Generate a real one once branding is set. -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%231e3a5f'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='Georgia,serif' font-size='52' font-weight='bold' fill='%23f6f2ea'%3EC%3C/text%3E%3C/svg%3E"
+    />
+
+    <!-- Fonts: Fraunces (display) + Public Sans (body) + JetBrains Mono (accent) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./dist/output.css" />
+  </head>
+
+  <body class="min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-[var(--color-rule)]">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 md:px-10">
+        <a href="/" class="flex items-baseline gap-2">
+          <span class="font-display text-2xl font-semibold tracking-tight">CityWater</span>
+          <span class="section-num">CA</span>
+        </a>
+        <nav class="flex items-center gap-6 md:gap-8">
+          <a
+            href="#what"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >What's in the box</a
+          >
+          <a
+            href="#who"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >Who it's for</a
+          >
+          <a
+            href="https://app.citywater.ca"
+            class="btn-primary text-sm"
+            >Try the demo
+            <span class="arrow">→</span></a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="mx-auto max-w-6xl px-6 pb-20 pt-16 md:px-10 md:pb-32 md:pt-24">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num reveal reveal-1">§ 01 / Hero</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <span class="annotation reveal reveal-1">Now in beta</span>
+
+          <h1
+            class="font-display reveal reveal-2 mt-6 text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl"
+          >
+            Modern public-works software <br class="hidden md:inline" />for
+            <em class="italic" style="font-variation-settings: 'SOFT' 100, 'WONK' 1;"
+              >small water utilities</em
+            >.
+          </h1>
+
+          <p
+            class="reveal reveal-3 mt-8 max-w-2xl text-lg leading-relaxed text-[var(--color-ink-soft)] md:text-xl"
+          >
+            Work orders, inspections, and asset records — built specifically for municipal water,
+            sewer, and storm crews. Without the consultants, the procurement, or the six-figure
+            price tag.
+          </p>
+
+          <div class="reveal reveal-4 mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <a href="https://app.citywater.ca" class="btn-primary"
+              >Try the demo <span class="arrow">→</span></a
+            >
+            <a href="mailto:contact@citywater.ca" class="btn-secondary text-sm"
+              >or email me directly</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule-dotted mx-auto max-w-6xl" />
+
+    <!-- The problem -->
+    <section class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">§ 02 / Problem</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <h2
+            class="font-display max-w-3xl text-3xl font-medium leading-tight tracking-tight md:text-5xl"
+          >
+            Built for the gap between paper and a six-figure CMMS.
+          </h2>
+
+          <div class="mt-10 grid grid-cols-1 gap-x-12 gap-y-6 md:grid-cols-2">
+            <p class="text-lg leading-relaxed text-[var(--color-ink-soft)]">
+              If your utility is too small for an enterprise CMMS but too big for a spreadsheet,
+              you've probably tried both. The spreadsheet gets out of sync within a month. The
+              enterprise quotes start at six figures, take a year to deploy, and require a GIS team
+              you don't have.
+            </p>
+            <p class="text-lg leading-relaxed text-[var(--color-ink-soft)]">
+              That's the gap CityWater fills. It's a modern, opinionated work-management tool that
+              already knows what a hydrant flush is, what a PACP code means, and what a maintenance
+              district is — without making you configure any of it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hero figure / screenshot -->
+    <section class="mx-auto max-w-6xl px-6 pb-20 md:px-10 md:pb-28">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">Fig. 01</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <div class="figure-frame aspect-video w-full overflow-hidden rounded-sm">
+            <!-- Replace with actual dashboard screenshot. Recommend exporting at 2400x1350 PNG. -->
+            <div
+              class="flex h-full w-full items-center justify-center text-sm text-[var(--color-ink-faint)]"
+            >
+              <span class="font-mono">[ replace with /public/screenshots/dashboard.png ]</span>
+            </div>
+          </div>
+          <p class="mt-4 max-w-2xl text-sm italic text-[var(--color-ink-soft)]">
+            Fig. 01 — A supervisor's view of today: open work, by area, with the KPIs utilities
+            actually report up.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule-dotted mx-auto max-w-6xl" />
+
+    <!-- What's in the box -->
+    <section id="what" class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">§ 03 / Features</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <h2
+            class="font-display text-3xl font-medium leading-tight tracking-tight md:text-5xl"
+          >
+            What's in the box.
+          </h2>
+
+          <div class="mt-12 grid grid-cols-1 gap-x-12 gap-y-12 md:grid-cols-2">
+            <article>
+              <span class="pillar-num">01</span>
+              <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
+                Work orders that match how crews actually work.
+              </h3>
+              <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+                Recurring schedules for the things you do every month. Daily groupings that bundle
+                service requests into a tomorrow-morning run. Checklist-driven drafts so nobody
+                starts from a blank page.
+              </p>
+            </article>
+
+            <article>
+              <span class="pillar-num">02</span>
+              <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
+                Inspections with the codes you already use.
+              </h3>
+              <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+                PACP for sewer CCTV, hydrant flow tests, valve exercising — preloaded, not
+                something you build out of a generic form-builder.
+              </p>
+            </article>
+
+            <article>
+              <span class="pillar-num">03</span>
+              <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
+                A map that knows your service areas.
+              </h3>
+              <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+                Maintenance districts, water/sewer/storm systems, open work, and active requests —
+                all visible at once, color-coded by area.
+              </p>
+            </article>
+
+            <article>
+              <span class="pillar-num">04</span>
+              <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
+                A dashboard your supervisor will actually open.
+              </h3>
+              <p class="mt-3 leading-relaxed text-[var(--color-ink-soft)]">
+                Daily KPIs, by-area workload, pass/fail trends, and a daily-WO view that turns
+                yesterday's service requests into tomorrow's plan.
+              </p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule-dotted mx-auto max-w-6xl" />
+
+    <!-- Who it's for -->
+    <section id="who" class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">§ 04 / Audience</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <h2
+            class="font-display max-w-3xl text-3xl font-medium leading-tight tracking-tight md:text-5xl"
+          >
+            Who it's for.
+          </h2>
+
+          <div class="mt-10 grid grid-cols-1 gap-x-12 gap-y-8 md:grid-cols-2">
+            <div class="border-l-2 border-[var(--color-blueprint)] pl-6">
+              <span class="annotation">For you</span>
+              <p class="mt-4 text-lg leading-relaxed text-[var(--color-ink)]">
+                If you run public works for a town between 5,000 and 50,000 people and Excel is
+                starting to crack under the load, this is for you.
+              </p>
+            </div>
+
+            <div class="border-l-2 border-[var(--color-rule-strong)] pl-6">
+              <span class="annotation" style="--color-ochre: #8a847a;">Not for you</span>
+              <p class="mt-4 text-lg leading-relaxed text-[var(--color-ink-soft)]">
+                If you've got a six-figure CMMS deployment with a dedicated GIS team to run it,
+                you're not the target — and that's fine.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="rule-dotted mx-auto max-w-6xl" />
+
+    <!-- Honest beta note -->
+    <section class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">§ 05 / Honest beta note</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <h2
+            class="font-display max-w-3xl text-3xl font-medium leading-tight tracking-tight md:text-5xl"
+          >
+            CityWater is built solo and currently in early beta.
+          </h2>
+
+          <p
+            class="mt-8 max-w-3xl text-lg leading-relaxed text-[var(--color-ink-soft)]"
+          >
+            A few things to know up front: data may be migrated or reset before general
+            availability, you'll find rough edges, and there's no support contract — just a real
+            human reading every email. If you run a utility and want to help shape what this
+            becomes, that's exactly who I'm looking for.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final CTA -->
+    <section class="mx-auto max-w-6xl px-6 pb-32 md:px-10">
+      <div class="grid grid-cols-12 gap-x-6">
+        <div class="col-span-12 md:col-span-2">
+          <span class="section-num">§ 06 / Run it</span>
+        </div>
+        <div class="col-span-12 md:col-span-10">
+          <div
+            class="border border-[var(--color-rule-strong)] p-10 md:p-16"
+            style="background: var(--color-paper-2);"
+          >
+            <h2 class="font-display text-3xl font-medium tracking-tight md:text-4xl">
+              Want to see it run?
+            </h2>
+            <p class="mt-4 max-w-xl text-[var(--color-ink-soft)]">
+              The demo is a populated tenant with twelve months of synthetic activity. Click around
+              for as long as you like.
+            </p>
+            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href="https://app.citywater.ca" class="btn-primary"
+                >Try the demo <span class="arrow">→</span></a
+              >
+              <a href="mailto:contact@citywater.ca" class="btn-secondary"
+                >or email me directly: contact@citywater.ca</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-[var(--color-rule)]">
+      <div
+        class="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-[var(--color-ink-faint)] md:flex-row md:items-center md:justify-between md:px-10"
+      >
+        <div class="flex items-center gap-4">
+          <span class="font-display text-base font-semibold text-[var(--color-ink-soft)]"
+            >CityWater</span
+          >
+          <span class="section-num">© 2026 — beta</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="mailto:contact@citywater.ca" class="hover:text-[var(--color-ink)]"
+            >contact@citywater.ca</a
+          >
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

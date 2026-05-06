@@ -1,0 +1,14 @@
+{
+  "name": "citywater-marketing",
+  "version": "0.1.0",
+  "private": true,
+  "description": "citywater.ca — brochure / landing page",
+  "scripts": {
+    "dev": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch",
+    "build": "tailwindcss -i ./src/input.css -o ./dist/output.css --minify && cp index.html dist/index.html && cp -r public/* dist/ 2>/dev/null || true"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
+  }
+}
