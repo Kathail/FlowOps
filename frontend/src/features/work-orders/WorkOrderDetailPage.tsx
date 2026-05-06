@@ -1,8 +1,12 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { Button } from "../../components/Button";
+import { Dash } from "../../components/Dash";
 import { ErrorState, LoadingState } from "../../components/States";
+import { StatusPill as SharedStatusPill, type PillTone } from "../../components/StatusPill";
 import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
+import { formatDateTime } from "../../lib/format";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { AreaChips } from "../tasks/AreaChips";
@@ -75,16 +79,18 @@ export function WorkOrderDetailPage() {
           </div>
           <div className="flex flex-col items-end gap-2">
             <StatusPill status={wo.status} />
-            <div className="flex gap-1">
+            <div className="flex flex-wrap justify-end gap-1">
               {TRANSITIONS[wo.status].map((to) => (
-                <button
+                <Button
                   key={to}
+                  variant="ghost"
+                  size="sm"
                   onClick={() => transition.mutate(to)}
                   disabled={transition.isPending}
-                  className="rounded border border-slate-700 px-2 py-0.5 text-xs text-slate-200 hover:bg-slate-800"
+                  aria-label={`Transition to ${to.replace("_", " ")}`}
                 >
-                  → {to}
-                </button>
+                  → {to.replace("_", " ")}
+                </Button>
               ))}
             </div>
           </div>
@@ -103,15 +109,15 @@ export function WorkOrderDetailPage() {
                 {wo.asset_uid}
               </Link>
             ) : (
-              "—"
+              <Dash />
             )}
           </dd>
           <dt className="text-slate-400">Due</dt>
-          <dd>{wo.due_by?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
+          <dd>{formatDateTime(wo.due_by) || <Dash />}</dd>
           <dt className="text-slate-400">Started</dt>
-          <dd>{wo.started_at?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
+          <dd>{formatDateTime(wo.started_at) || <Dash />}</dd>
           <dt className="text-slate-400">Completed</dt>
-          <dd>{wo.completed_at?.slice(0, 16).replace("T", " ") ?? "—"}</dd>
+          <dd>{formatDateTime(wo.completed_at) || <Dash />}</dd>
         </dl>
         {wo.description && (
           <p className="mt-3 text-sm text-slate-200 whitespace-pre-wrap">{wo.description}</p>
@@ -241,18 +247,23 @@ function TaskSection({
   );
 }
 
+// Tone mapping kept in sync with WorkOrderListPage's STATUS_TONE — both
+// surface the same WoStatus so the pill should read identically.
+const STATUS_TONE: Record<WoStatus, PillTone> = {
+  draft: "muted",
+  open: "info",
+  assigned: "info",
+  in_progress: "info",
+  on_hold: "warning",
+  completed: "success",
+  cancelled: "neutral",
+};
+
 function StatusPill({ status }: { status: WoStatus }) {
-  const colors: Record<WoStatus, string> = {
-    draft: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
-    open: "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30",
-    assigned: "bg-purple-500/15 text-purple-200 ring-1 ring-purple-500/30",
-    in_progress: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30",
-    on_hold: "bg-orange-500/15 text-orange-200 ring-1 ring-orange-500/30",
-    completed: "bg-emerald-500/15 text-emerald-200 ring-1 ring-emerald-500/30",
-    cancelled: "bg-slate-800 text-slate-500 ring-1 ring-slate-700 line-through",
-  };
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[status]}`}>{status}</span>
+    <SharedStatusPill tone={STATUS_TONE[status]} dot>
+      {status.replace("_", " ")}
+    </SharedStatusPill>
   );
 }
 
@@ -301,13 +312,9 @@ function TasksSection({ wo }: { wo: WorkOrderDetail }) {
           placeholder="Add a task…"
           className="flex-1 rounded border border-slate-700 px-2 py-1 text-sm"
         />
-        <button
-          type="submit"
-          disabled={!newTitle.trim() || add.isPending}
-          className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-        >
+        <Button type="submit" size="sm" disabled={!newTitle.trim() || add.isPending}>
           Add
-        </button>
+        </Button>
       </form>
     </Section>
   );
@@ -376,8 +383,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
         <ul className="text-sm space-y-1 mb-3">
           {wo.time_logs.map((t) => (
             <li key={t.id} className="text-slate-200">
-              {t.started_at.slice(0, 16).replace("T", " ")} →{" "}
-              {t.ended_at.slice(0, 16).replace("T", " ")}
+              {formatDateTime(t.started_at)} → {formatDateTime(t.ended_at)}
               <span className="text-slate-400 ml-2">{t.hours_decimal} h</span>
             </li>
           ))}
@@ -612,13 +618,13 @@ function MaterialsSection({ wo }: { wo: WorkOrderDetail }) {
             className="mt-1 block w-24 rounded border border-slate-700 px-2 py-1 text-sm"
           />
         </label>
-        <button
+        <Button
           type="submit"
+          size="sm"
           disabled={!form.description || !form.quantity || log.isPending}
-          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
         >
           Add
-        </button>
+        </Button>
       </form>
     </Section>
   );
