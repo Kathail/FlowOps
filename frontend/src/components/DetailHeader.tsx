@@ -19,14 +19,7 @@ interface Props {
   meta?: ReactNode;
 }
 
-export function DetailHeader({
-  backTo,
-  backLabel,
-  title,
-  subtitle,
-  trailing,
-  meta,
-}: Props) {
+export function DetailHeader({ backTo, backLabel, title, subtitle, trailing, meta }: Props) {
   return (
     <header className="space-y-1">
       <Link to={backTo} className="text-sm text-slate-400 hover:underline">
@@ -38,9 +31,7 @@ export function DetailHeader({
           {subtitle && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
           {meta && <div className="mt-2">{meta}</div>}
         </div>
-        {trailing && (
-          <div className="flex flex-col items-end gap-2">{trailing}</div>
-        )}
+        {trailing && <div className="flex flex-col items-end gap-2">{trailing}</div>}
       </div>
     </header>
   );

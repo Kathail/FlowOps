@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Button } from "../../components/Button";
+import { Dash } from "../../components/Dash";
+import { EmptyState } from "../../components/States";
+import { formatDate } from "../../lib/format";
 import { ExportButton } from "./ExportButton";
 import { ImportDialog } from "./ImportDialog";
 import { useAssetClasses, useAssets } from "./hooks";
@@ -31,17 +35,21 @@ export function AssetListPage() {
     setSearch(next);
   }
 
+  function clearFilters() {
+    setSearch(new URLSearchParams());
+    setPendingQ("");
+  }
+
+  const hasFilters = !!(params.class || params.status || params.q);
+
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-100">Assets</h1>
         <div className="flex gap-2">
-          <button
-            onClick={() => setImportOpen(true)}
-            className="rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800"
-          >
+          <Button variant="ghost" onClick={() => setImportOpen(true)}>
             Import…
-          </button>
+          </Button>
           <ExportButton />
         </div>
       </header>
@@ -95,13 +103,13 @@ export function AssetListPage() {
               className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
             />
           </label>
-          <button type="submit" className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-400">
+          <Button type="submit" size="sm">
             Search
-          </button>
+          </Button>
         </form>
       </div>
 
-      <div className="rounded-lg border border-slate-800 bg-slate-900">
+      <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/50 text-slate-300">
             <tr>
@@ -123,8 +131,26 @@ export function AssetListPage() {
             )}
             {assetsQuery.data?.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-slate-400 text-center">
-                  No assets match these filters.
+                <td colSpan={6} className="p-0">
+                  <EmptyState
+                    title={hasFilters ? "No assets match these filters." : "No assets yet."}
+                    hint={
+                      hasFilters
+                        ? "Try widening the filters or clearing them."
+                        : "Import a CSV or add an asset on the map to get started."
+                    }
+                    action={
+                      hasFilters ? (
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
+                          Clear filters
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => setImportOpen(true)}>
+                          Import assets
+                        </Button>
+                      )
+                    }
+                  />
                 </td>
               </tr>
             )}
@@ -137,9 +163,11 @@ export function AssetListPage() {
                 </td>
                 <td className="px-3 py-2">{a.class_code}</td>
                 <td className="px-3 py-2">{a.status}</td>
-                <td className="px-3 py-2">{a.condition ?? "—"}</td>
-                <td className="px-3 py-2">{a.install_date ?? "—"}</td>
-                <td className="px-3 py-2">{a.material ?? "—"}</td>
+                <td className="px-3 py-2">{a.condition ?? <Dash />}</td>
+                <td className="px-3 py-2">
+                  {a.install_date ? formatDate(a.install_date) : <Dash />}
+                </td>
+                <td className="px-3 py-2">{a.material ?? <Dash />}</td>
               </tr>
             ))}
           </tbody>
@@ -152,22 +180,24 @@ export function AssetListPage() {
             Page {assetsQuery.data.page} · {assetsQuery.data.total} total
           </span>
           <div className="flex gap-2">
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setParam("page", String(Math.max(1, params.page! - 1)))}
               disabled={params.page! <= 1}
-              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
             >
               Prev
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => setParam("page", String(params.page! + 1))}
               disabled={
                 assetsQuery.data.page * assetsQuery.data.page_size >= assetsQuery.data.total
               }
-              className="rounded border border-slate-700 px-2 py-1 disabled:opacity-50"
             >
               Next
-            </button>
+            </Button>
           </div>
         </div>
       )}

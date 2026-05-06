@@ -2,7 +2,10 @@ import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Alert } from "../../components/Alert";
-import { ApiError } from "../../lib/apiClient";
+import { Button } from "../../components/Button";
+import { DetailHeader } from "../../components/DetailHeader";
+import { ErrorState, LoadingState } from "../../components/States";
+import { translateApiError } from "../../lib/translateApiError";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { AreaChips } from "../tasks/AreaChips";
@@ -43,8 +46,8 @@ export function ServiceRequestDetailPage() {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
 
-  if (query.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
-  if (query.isError) return <div className="p-8 text-red-400">Failed to load.</div>;
+  if (query.isLoading) return <LoadingState />;
+  if (query.isError) return <ErrorState message="Failed to load." retry={() => query.refetch()} />;
   if (!query.data) return null;
 
   const data = query.data;
@@ -54,16 +57,12 @@ export function ServiceRequestDetailPage() {
     // Optimistic cache write — instant UI update for the form, the
     // procedure checkboxes, the smart-comment chips, and the checklist
     // draft. Cache is the single source of truth for task_data.
-    queryClient.setQueryData<ServiceRequestRead>(
-      [SR_DETAIL_KEY, sr],
-      (prev) => (prev ? { ...prev, task_data: next } : prev),
+    queryClient.setQueryData<ServiceRequestRead>([SR_DETAIL_KEY, sr], (prev) =>
+      prev ? { ...prev, task_data: next } : prev,
     );
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      update.mutate(
-        { task_data: next },
-        { onSuccess: () => setSavedAt(new Date()) },
-      );
+      update.mutate({ task_data: next }, { onSuccess: () => setSavedAt(new Date()) });
     }, 600);
   }
 
@@ -81,53 +80,47 @@ export function ServiceRequestDetailPage() {
         await update.mutateAsync({ status });
       }
     } catch (err) {
-      if (err instanceof ApiError) setErrorMessage(err.message);
-      else setErrorMessage(String(err));
+      setErrorMessage(translateApiError(err));
     }
   }
 
   return (
     <div className="p-8 space-y-6">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-100">
-            {data.sr_number}
-          </h1>
-          <p className="text-sm text-slate-400">
-            {data.category} · {data.domain} ·{" "}
-            <span className="font-medium">{data.status}</span> · priority {data.priority}
-          </p>
-          <AreaChips
-            areas={data.areas}
-            domain={taskQuery.data?.default_domain ?? data.domain}
-            className="mt-2"
-          />
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {data.status === "new" && (
-            <button
-              onClick={() => transition("triaged")}
-              disabled={update.isPending}
-              className="btn-ghost"
-            >
-              Mark triaged
-            </button>
-          )}
-          {!["closed", "duplicate", "dispatched"].includes(data.status) && (
-            <button
-              onClick={() => setDispatchOpen(true)}
-              className="btn-primary"
-            >
-              Dispatch as work order
-            </button>
-          )}
-          {!["closed", "duplicate"].includes(data.status) && (
-            <button onClick={() => setCloseOpen(true)} className="btn-ghost">
-              Close
-            </button>
-          )}
-        </div>
-      </header>
+      <DetailHeader
+        backTo={`/${slug}/service-requests`}
+        backLabel="Back to service requests"
+        title={data.sr_number}
+        subtitle={
+          <>
+            {data.category} · {data.domain} · <span className="font-medium">{data.status}</span> ·
+            priority {data.priority}
+          </>
+        }
+        meta={
+          <AreaChips areas={data.areas} domain={taskQuery.data?.default_domain ?? data.domain} />
+        }
+        trailing={
+          <div className="flex flex-wrap items-center gap-2">
+            {data.status === "new" && (
+              <Button
+                variant="ghost"
+                onClick={() => transition("triaged")}
+                disabled={update.isPending}
+              >
+                Mark triaged
+              </Button>
+            )}
+            {!["closed", "duplicate", "dispatched"].includes(data.status) && (
+              <Button onClick={() => setDispatchOpen(true)}>Dispatch as work order</Button>
+            )}
+            {!["closed", "duplicate"].includes(data.status) && (
+              <Button variant="ghost" onClick={() => setCloseOpen(true)}>
+                Close
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       {errorMessage && <Alert>{errorMessage}</Alert>}
 
@@ -144,8 +137,7 @@ export function ServiceRequestDetailPage() {
           <Field label="Address" value={data.reported_address} />
           {data.location && (
             <p className="text-sm text-slate-200">
-              {data.location.coordinates[0].toFixed(5)},{" "}
-              {data.location.coordinates[1].toFixed(5)}
+              {data.location.coordinates[0].toFixed(5)}, {data.location.coordinates[1].toFixed(5)}
             </p>
           )}
           {data.work_order_number && (
@@ -182,18 +174,14 @@ export function ServiceRequestDetailPage() {
             )}
           </p>
           {data.closure_notes && (
-            <p className="whitespace-pre-line text-sm text-slate-200">
-              {data.closure_notes}
-            </p>
+            <p className="whitespace-pre-line text-sm text-slate-200">{data.closure_notes}</p>
           )}
         </section>
       )}
 
       {taskQuery.data && (
         <section className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">
-            Task
-          </h2>
+          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">Task</h2>
           <div className="flex items-baseline justify-between gap-3">
             <div>
               <p className="text-base text-slate-100">{taskQuery.data.title}</p>
@@ -230,9 +218,7 @@ export function ServiceRequestDetailPage() {
 
           <div className="mt-2 text-xs text-slate-500">
             {update.isPending && <span>Saving…</span>}
-            {!update.isPending && savedAt && (
-              <span>Saved {savedAt.toLocaleTimeString()}</span>
-            )}
+            {!update.isPending && savedAt && <span>Saved {savedAt.toLocaleTimeString()}</span>}
           </div>
         </section>
       )}
@@ -285,19 +271,12 @@ export function ServiceRequestDetailPage() {
               />
             </label>
             <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setCloseOpen(false)}
-                className="rounded border border-slate-700 px-3 py-1.5 text-sm"
-              >
+              <Button variant="ghost" onClick={() => setCloseOpen(false)}>
                 Cancel
-              </button>
-              <button
-                onClick={() => transition("closed")}
-                disabled={update.isPending}
-                className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-              >
+              </Button>
+              <Button onClick={() => transition("closed")} disabled={update.isPending}>
                 Close SR
-              </button>
+              </Button>
             </div>
           </div>
         </div>

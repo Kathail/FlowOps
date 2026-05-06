@@ -1,12 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ApiError } from "../../lib/apiClient";
-import type {
-  DuplicateCandidate,
-  SrCategory,
-  SrDomain,
-  SrPriority,
-} from "./api";
+import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
+import { formatDateTime } from "../../lib/format";
+import { translateApiError } from "../../lib/translateApiError";
+import type { DuplicateCandidate, SrCategory, SrDomain, SrPriority } from "./api";
 import { useCreateServiceRequest } from "./hooks";
 
 const CATEGORIES: { value: SrCategory; label: string }[] = [
@@ -88,22 +86,27 @@ export function IntakeDialog({ onClose }: Props) {
         navigate(`/${slug}/service-requests/${resp.service_request.sr_number}`);
       }
     } catch (err) {
-      if (err instanceof ApiError) setErrorMessage(err.message);
-      else setErrorMessage(String(err));
+      setErrorMessage(translateApiError(err));
     }
   }
+
+  // Close on Escape (when not in the middle of a save).
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && !create.isPending) onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, create.isPending]);
 
   if (createdSrNumber && duplicates.length > 0) {
     return (
       <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
         <div className="w-full max-w-xl rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/10">
-          <h2 className="text-lg font-semibold text-slate-100">
-            Created {createdSrNumber}
-          </h2>
+          <h2 className="text-lg font-semibold text-slate-100">Created {createdSrNumber}</h2>
           <p className="mt-2 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
             Found {duplicates.length} possible duplicate
-            {duplicates.length === 1 ? "" : "s"} within 100 m / 7 days. Review before
-            dispatching.
+            {duplicates.length === 1 ? "" : "s"} within 100 m / 7 days. Review before dispatching.
           </p>
           <ul className="mt-3 max-h-64 divide-y divide-slate-800 overflow-auto rounded border border-slate-800">
             {duplicates.map((d) => (
@@ -115,31 +118,21 @@ export function IntakeDialog({ onClose }: Props) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-300">
-                  {new Date(d.reported_at).toLocaleString()} · {d.category}
+                  {formatDateTime(d.reported_at)} · {d.category}
                 </p>
                 {d.description && (
-                  <p className="mt-1 text-xs text-slate-200 line-clamp-2">
-                    {d.description}
-                  </p>
+                  <p className="mt-1 text-xs text-slate-200 line-clamp-2">{d.description}</p>
                 )}
               </li>
             ))}
           </ul>
           <div className="mt-4 flex justify-end gap-2">
-            <button
-              onClick={onClose}
-              className="rounded border border-slate-700 px-3 py-1.5 text-sm"
-            >
+            <Button variant="ghost" onClick={onClose}>
               Close
-            </button>
-            <button
-              onClick={() =>
-                navigate(`/${slug}/service-requests/${createdSrNumber}`)
-              }
-              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400"
-            >
+            </Button>
+            <Button onClick={() => navigate(`/${slug}/service-requests/${createdSrNumber}`)}>
               Open new SR
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -147,15 +140,28 @@ export function IntakeDialog({ onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="intake-dialog-title"
+      className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !create.isPending) onClose();
+      }}
+    >
       <form
         onSubmit={onSubmit}
         className="w-full max-w-xl space-y-3 rounded-lg bg-slate-900 p-6 shadow-lg"
       >
-        <h2 className="text-lg font-semibold text-slate-100">New service request</h2>
+        <h2 id="intake-dialog-title" className="text-lg font-semibold text-slate-100">
+          New service request
+        </h2>
+        <p className="text-xs text-slate-500">
+          Tenant: <span className="text-slate-300">{slug}</span>
+        </p>
 
         <div className="grid grid-cols-3 gap-3">
-          <Field label="Category">
+          <Field label="Category" required>
             <select
               className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.category}
@@ -168,7 +174,7 @@ export function IntakeDialog({ onClose }: Props) {
               ))}
             </select>
           </Field>
-          <Field label="Domain">
+          <Field label="Domain" required>
             <select
               className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.domain}
@@ -181,7 +187,7 @@ export function IntakeDialog({ onClose }: Props) {
               ))}
             </select>
           </Field>
-          <Field label="Priority">
+          <Field label="Priority" required>
             <select
               className="mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm"
               value={form.priority}
@@ -258,33 +264,40 @@ export function IntakeDialog({ onClose }: Props) {
           />
         </Field>
 
-        {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
+        {errorMessage && <Alert>{errorMessage}</Alert>}
 
         <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded border border-slate-700 px-3 py-1.5 text-sm"
-          >
+          <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={create.isPending}
-            className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-          >
+          </Button>
+          <Button type="submit" disabled={create.isPending}>
             {create.isPending ? "Saving…" : "Create"}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <label className="block text-sm">
-      <span className="text-slate-200">{label}</span>
+      <span className="text-slate-200">
+        {label}
+        {required && (
+          <span className="text-red-400" aria-hidden="true">
+            {" *"}
+          </span>
+        )}
+      </span>
       <div className="mt-1">{children}</div>
     </label>
   );

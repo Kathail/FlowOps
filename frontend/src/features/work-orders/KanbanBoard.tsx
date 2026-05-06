@@ -57,7 +57,18 @@ export function KanbanBoard({ items, slug }: Props) {
 
   return (
     <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      {/* Edge fade hints there's more content when columns scroll horizontally —
+          fixed-width cards inside overflow-x-auto have no visible scrollbar
+          on most modern browsers, so without a fade the right side just clips. */}
+      <div
+        className="flex gap-3 overflow-x-auto pb-2"
+        style={{
+          maskImage:
+            "linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%)",
+        }}
+      >
         {ACTIVE_COLUMNS.map((col) => (
           <Column
             key={col.id}

@@ -15,22 +15,12 @@ export function LoadingState({ label = "Loading…" }: { label?: string }) {
   );
 }
 
-export function ErrorState({
-  message,
-  retry,
-}: {
-  message: string;
-  retry?: () => void;
-}) {
+export function ErrorState({ message, retry }: { message: string; retry?: () => void }) {
   return (
     <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-6 text-sm text-red-200">
       <p>{message}</p>
       {retry && (
-        <button
-          type="button"
-          onClick={retry}
-          className="mt-2 text-xs underline hover:text-red-100"
-        >
+        <button type="button" onClick={retry} className="mt-2 text-xs underline hover:text-red-100">
           Try again
         </button>
       )}

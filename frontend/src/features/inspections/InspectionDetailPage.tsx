@@ -1,6 +1,11 @@
 import { useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { Dash } from "../../components/Dash";
+import { DetailHeader } from "../../components/DetailHeader";
+import { ErrorState, LoadingState } from "../../components/States";
+import { StatusPill } from "../../components/StatusPill";
+import { formatDateTime } from "../../lib/format";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { ProcedureRunner } from "../tasks/ProcedureRunner";
@@ -25,16 +30,16 @@ export function InspectionDetailPage() {
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  if (insQuery.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
-  if (insQuery.error) return <div className="p-8 text-red-400">{insQuery.error.message}</div>;
+  if (insQuery.isLoading) return <LoadingState />;
+  if (insQuery.error)
+    return <ErrorState message={insQuery.error.message} retry={() => insQuery.refetch()} />;
   const ins = insQuery.data!;
   const taskData = ins.task_data;
 
   function handleTaskChange(next: TaskData) {
     // Optimistic cache write — instant UI update; debounced PATCH persists.
-    queryClient.setQueryData<InspectionRead>(
-      ["inspection", n],
-      (prev) => (prev ? { ...prev, task_data: next } : prev),
+    queryClient.setQueryData<InspectionRead>(["inspection", n], (prev) =>
+      prev ? { ...prev, task_data: next } : prev,
     );
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -44,43 +49,54 @@ export function InspectionDetailPage() {
 
   return (
     <div className="p-8 max-w-3xl space-y-6">
-      <header className="space-y-1">
-        <Link to={`/${slug}/inspections`} className="text-sm text-slate-400 hover:underline">
-          ← Back to inspections
-        </Link>
-        <h1 className="text-2xl font-semibold text-slate-100">{ins.inspection_number}</h1>
-        <p className="text-base text-slate-200">{ins.kind.replace(/_/g, " ")}</p>
-        <p className="text-xs text-slate-400">
-          Performed {ins.performed_at.slice(0, 16).replace("T", " ")}
-          {ins.asset_uid && (
-            <>
-              {" · "}
-              <Link to={`/${slug}/assets/${ins.asset_uid}`} className="font-mono hover:underline">
-                {ins.asset_uid}
-              </Link>
-            </>
-          )}
-          {ins.work_order_number && (
-            <>
-              {" · "}
-              <Link
-                to={`/${slug}/work-orders/${ins.work_order_number}`}
-                className="font-mono hover:underline"
-              >
-                {ins.work_order_number}
-              </Link>
-            </>
-          )}
-        </p>
-      </header>
+      <DetailHeader
+        backTo={`/${slug}/inspections`}
+        backLabel="Back to inspections"
+        title={ins.inspection_number}
+        subtitle={
+          <>
+            {ins.kind.replace(/_/g, " ")} · performed {formatDateTime(ins.performed_at)}
+            {ins.asset_uid && (
+              <>
+                {" · "}
+                <Link to={`/${slug}/assets/${ins.asset_uid}`} className="font-mono hover:underline">
+                  {ins.asset_uid}
+                </Link>
+              </>
+            )}
+            {ins.work_order_number && (
+              <>
+                {" · "}
+                <Link
+                  to={`/${slug}/work-orders/${ins.work_order_number}`}
+                  className="font-mono hover:underline"
+                >
+                  {ins.work_order_number}
+                </Link>
+              </>
+            )}
+          </>
+        }
+        trailing={
+          ins.pass === null ? null : ins.pass ? (
+            <StatusPill tone="success" dot>
+              Pass
+            </StatusPill>
+          ) : (
+            <StatusPill tone="danger" dot>
+              Fail
+            </StatusPill>
+          )
+        }
+      />
 
       <section className="rounded-lg border border-slate-800 bg-slate-900 p-4">
         <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">Summary</h2>
         <dl className="grid grid-cols-2 gap-y-1 text-sm">
           <dt className="text-slate-400">Overall condition</dt>
-          <dd>{ins.overall_condition ?? "—"}</dd>
+          <dd>{ins.overall_condition ?? <Dash />}</dd>
           <dt className="text-slate-400">Pass</dt>
-          <dd>{ins.pass === null ? "—" : ins.pass ? "Pass" : "Fail"}</dd>
+          <dd>{ins.pass === null ? <Dash /> : ins.pass ? "Pass" : "Fail"}</dd>
         </dl>
         {ins.notes && (
           <p className="mt-3 text-sm text-slate-200 whitespace-pre-wrap">{ins.notes}</p>
@@ -107,9 +123,7 @@ export function InspectionDetailPage() {
 
       {taskQuery.data && (
         <section className="rounded-lg border border-slate-800 bg-slate-900 p-4">
-          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">
-            Task
-          </h2>
+          <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400 mb-2">Task</h2>
           <div className="flex items-baseline justify-between gap-3">
             <div>
               <p className="text-base text-slate-100">{taskQuery.data.title}</p>
@@ -144,9 +158,7 @@ export function InspectionDetailPage() {
           )}
           <div className="mt-2 text-xs text-slate-500">
             {update.isPending && <span>Saving…</span>}
-            {!update.isPending && savedAt && (
-              <span>Saved {savedAt.toLocaleTimeString()}</span>
-            )}
+            {!update.isPending && savedAt && <span>Saved {savedAt.toLocaleTimeString()}</span>}
           </div>
         </section>
       )}

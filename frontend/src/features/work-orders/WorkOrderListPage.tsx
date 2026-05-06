@@ -1,9 +1,31 @@
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Button } from "../../components/Button";
+import { Dash } from "../../components/Dash";
+import { EmptyState } from "../../components/States";
+import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { formatDate } from "../../lib/format";
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog";
 import { KanbanBoard } from "./KanbanBoard";
-import { type WoStatus, type WorkOrderListParams } from "./api";
+import { type WoPriority, type WoStatus, type WorkOrderListParams } from "./api";
 import { useWorkOrders } from "./hooks";
+
+const STATUS_TONE: Record<WoStatus, PillTone> = {
+  draft: "muted",
+  open: "info",
+  assigned: "info",
+  in_progress: "info",
+  on_hold: "warning",
+  completed: "success",
+  cancelled: "neutral",
+};
+
+const PRIORITY_TONE: Record<WoPriority, PillTone> = {
+  low: "muted",
+  normal: "neutral",
+  high: "warning",
+  emergency: "danger",
+};
 
 const STATUSES: WoStatus[] = [
   "draft",
@@ -39,6 +61,14 @@ export function WorkOrderListPage() {
     setSearch(next);
   }
 
+  function clearFilters() {
+    const next = new URLSearchParams();
+    if (view === "kanban") next.set("view", "kanban");
+    setSearch(next);
+  }
+
+  const hasFilters = !!(params.status || params.assigned_to || params.q);
+
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
@@ -48,9 +78,7 @@ export function WorkOrderListPage() {
             <button
               onClick={() => setParam("view", null)}
               className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                view === "list"
-                  ? "bg-blue-500 text-white"
-                  : "text-slate-400 hover:text-slate-100"
+                view === "list" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
               }`}
             >
               List
@@ -58,20 +86,13 @@ export function WorkOrderListPage() {
             <button
               onClick={() => setParam("view", "kanban")}
               className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                view === "kanban"
-                  ? "bg-blue-500 text-white"
-                  : "text-slate-400 hover:text-slate-100"
+                view === "kanban" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
               }`}
             >
               Kanban
             </button>
           </div>
-          <button
-            onClick={() => setCreateOpen(true)}
-            className="btn-primary"
-          >
-            New work order
-          </button>
+          <Button onClick={() => setCreateOpen(true)}>New work order</Button>
         </div>
       </header>
 
@@ -103,17 +124,27 @@ export function WorkOrderListPage() {
               />
               <span>Assigned to me</span>
             </label>
-            <label className="block">
-              <span className="text-xs text-slate-300">Search</span>
-              <input
-                defaultValue={search.get("q") ?? ""}
-                onBlur={(e) => setParam("q", e.target.value || null)}
-                className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
-              />
-            </label>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const input = e.currentTarget.elements.namedItem("q") as HTMLInputElement;
+                setParam("q", input.value || null);
+              }}
+              className="block"
+            >
+              <label className="block">
+                <span className="text-xs text-slate-300">Search</span>
+                <input
+                  name="q"
+                  defaultValue={search.get("q") ?? ""}
+                  onBlur={(e) => setParam("q", e.target.value || null)}
+                  className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
+                />
+              </label>
+            </form>
           </div>
 
-          <div className="rounded-lg border border-slate-800 bg-slate-900">
+          <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900">
             <table className="w-full text-sm">
               <thead className="bg-slate-800/50 text-slate-300">
                 <tr>
@@ -135,8 +166,28 @@ export function WorkOrderListPage() {
                 )}
                 {woQuery.data?.items.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
-                      No work orders match these filters.
+                    <td colSpan={6} className="p-0">
+                      <EmptyState
+                        title={
+                          hasFilters ? "No work orders match these filters." : "No work orders yet."
+                        }
+                        hint={
+                          hasFilters
+                            ? "Try widening the filters or clearing them."
+                            : "Create one from a service request or directly here."
+                        }
+                        action={
+                          hasFilters ? (
+                            <Button variant="ghost" size="sm" onClick={clearFilters}>
+                              Clear filters
+                            </Button>
+                          ) : (
+                            <Button size="sm" onClick={() => setCreateOpen(true)}>
+                              New work order
+                            </Button>
+                          )
+                        }
+                      />
                     </td>
                   </tr>
                 )}
@@ -148,10 +199,16 @@ export function WorkOrderListPage() {
                       </Link>
                     </td>
                     <td className="px-3 py-2">{w.title}</td>
-                    <td className="px-3 py-2">{w.status}</td>
-                    <td className="px-3 py-2">{w.priority}</td>
-                    <td className="px-3 py-2 font-mono text-xs">{w.asset_uid ?? "—"}</td>
-                    <td className="px-3 py-2">{w.due_by?.slice(0, 10) ?? "—"}</td>
+                    <td className="px-3 py-2">
+                      <StatusPill tone={STATUS_TONE[w.status]} dot>
+                        {w.status.replace("_", " ")}
+                      </StatusPill>
+                    </td>
+                    <td className="px-3 py-2">
+                      <StatusPill tone={PRIORITY_TONE[w.priority]}>{w.priority}</StatusPill>
+                    </td>
+                    <td className="px-3 py-2 font-mono text-xs">{w.asset_uid ?? <Dash />}</td>
+                    <td className="px-3 py-2">{w.due_by ? formatDate(w.due_by) : <Dash />}</td>
                   </tr>
                 ))}
               </tbody>

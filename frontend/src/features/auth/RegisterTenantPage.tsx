@@ -2,7 +2,8 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { Alert } from "../../components/Alert";
-import { ApiError } from "../../lib/apiClient";
+import { Button } from "../../components/Button";
+import { translateApiError } from "../../lib/translateApiError";
 import { registerTenant, type AuthEnvelope } from "./api";
 import { ME_QUERY_KEY } from "./useAuth";
 
@@ -24,13 +25,7 @@ export function RegisterTenantPage() {
       queryClient.setQueryData(ME_QUERY_KEY, data);
       navigate(`/${data.tenant.slug}/`, { replace: true });
     },
-    onError: (err) => {
-      if (err instanceof ApiError) {
-        setErrorMessage(err.code === "slug_taken" ? "That slug is already taken." : err.message);
-      } else {
-        setErrorMessage(err.message);
-      }
-    },
+    onError: (err) => setErrorMessage(translateApiError(err)),
   });
 
   function field<K extends keyof typeof form>(key: K) {
@@ -91,12 +86,10 @@ export function RegisterTenantPage() {
             required
           />
         </label>
-        {errorMessage && (
-          <Alert>{errorMessage}</Alert>
-        )}
-        <button type="submit" disabled={mutation.isPending} className="btn-primary w-full">
+        {errorMessage && <Alert>{errorMessage}</Alert>}
+        <Button type="submit" disabled={mutation.isPending} className="w-full">
           {mutation.isPending ? "Creating…" : "Create tenant"}
-        </button>
+        </Button>
         <p className="text-sm text-slate-400">
           Already have an account?{" "}
           <Link to="/login" className="text-blue-400 hover:text-blue-300 hover:underline">

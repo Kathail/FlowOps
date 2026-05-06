@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { ErrorState, LoadingState } from "../../components/States";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { AreaChips } from "../tasks/AreaChips";
@@ -51,8 +52,9 @@ export function WorkOrderDetailPage() {
     enabled: !!taskCode,
   });
 
-  if (woQuery.isLoading) return <div className="p-8 text-slate-400">Loading…</div>;
-  if (woQuery.error) return <div className="p-8 text-red-400">{woQuery.error.message}</div>;
+  if (woQuery.isLoading) return <LoadingState />;
+  if (woQuery.error)
+    return <ErrorState message={woQuery.error.message} retry={() => woQuery.refetch()} />;
   const wo = woQuery.data!;
 
   return (
@@ -68,11 +70,7 @@ export function WorkOrderDetailPage() {
             <p className="mt-1 text-xs text-slate-400">
               {wo.type} · {wo.category} · {wo.priority}
             </p>
-            <AreaChips
-              areas={wo.areas}
-              domain={taskQuery.data?.default_domain}
-              className="mt-2"
-            />
+            <AreaChips areas={wo.areas} domain={taskQuery.data?.default_domain} className="mt-2" />
           </div>
           <div className="flex flex-col items-end gap-2">
             <StatusPill status={wo.status} />
@@ -119,9 +117,7 @@ export function WorkOrderDetailPage() {
         )}
       </Section>
 
-      {taskQuery.data && (
-        <TaskSection task={taskQuery.data} wo={wo} slug={slug} />
-      )}
+      {taskQuery.data && <TaskSection task={taskQuery.data} wo={wo} slug={slug} />}
 
       <RouteSection wo={wo} slug={slug} />
 
@@ -173,8 +169,7 @@ function TaskSection({
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const save = useMutation({
-    mutationFn: (next: TaskData) =>
-      updateWorkOrder(wo.wo_number, { task_data: next }),
+    mutationFn: (next: TaskData) => updateWorkOrder(wo.wo_number, { task_data: next }),
     onSuccess: (updated) => {
       queryClient.setQueryData(["work-order", wo.wo_number], updated);
       setSavedAt(new Date());
@@ -187,9 +182,8 @@ function TaskSection({
     // Optimistic cache write — instant UI update for the form, the
     // procedure checkboxes, the smart-comment chips, and the checklist
     // draft (all of which read wo.task_data through the same cache).
-    queryClient.setQueryData<WorkOrderDetail>(
-      ["work-order", wo.wo_number],
-      (prev) => (prev ? { ...prev, task_data: next } : prev),
+    queryClient.setQueryData<WorkOrderDetail>(["work-order", wo.wo_number], (prev) =>
+      prev ? { ...prev, task_data: next } : prev,
     );
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => save.mutate(next), 600);
@@ -200,9 +194,7 @@ function TaskSection({
       <div className="flex items-baseline justify-between gap-3">
         <div>
           <p className="text-base text-slate-100">{task.title}</p>
-          {task.summary && (
-            <p className="mt-1 text-xs text-slate-400">{task.summary}</p>
-          )}
+          {task.summary && <p className="mt-1 text-xs text-slate-400">{task.summary}</p>}
         </div>
         <Link
           to={`/${slug}/admin/task-definitions`}
@@ -214,29 +206,19 @@ function TaskSection({
 
       {task.form.length > 0 && (
         <div className="mt-4">
-          <TaskFormRenderer
-            task={task}
-            value={wo.task_data}
-            onChange={handleChange}
-          />
+          <TaskFormRenderer task={task} value={wo.task_data} onChange={handleChange} />
         </div>
       )}
 
       {(task.procedure?.steps?.length ?? 0) > 0 && (
         <div className="mt-4">
-          <ProcedureRunner
-            task={task}
-            taskData={wo.task_data}
-            onChange={handleChange}
-          />
+          <ProcedureRunner task={task} taskData={wo.task_data} onChange={handleChange} />
         </div>
       )}
 
       <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
         {save.isPending && <span>Saving…</span>}
-        {!save.isPending && savedAt && (
-          <span>Saved {savedAt.toLocaleTimeString()}</span>
-        )}
+        {!save.isPending && savedAt && <span>Saved {savedAt.toLocaleTimeString()}</span>}
         {error && <span className="text-red-400">Save failed: {error}</span>}
       </div>
     </Section>
@@ -335,8 +317,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
   const [end, setEnd] = useState("");
 
   const log = useMutation({
-    mutationFn: (range: { started_at: string; ended_at: string }) =>
-      logTime(wo.wo_number, range),
+    mutationFn: (range: { started_at: string; ended_at: string }) => logTime(wo.wo_number, range),
     onSuccess: () => {
       setStart("");
       setEnd("");
@@ -390,9 +371,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
       {!manualMode ? (
         <div className="space-y-3">
           <div>
-            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">
-              Day
-            </p>
+            <p className="text-xs uppercase tracking-wider text-slate-500 mb-2">Day</p>
             <div className="flex gap-2">
               {(["today", "yesterday"] as const).map((d) => (
                 <button
@@ -413,12 +392,8 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
 
           <div>
             <div className="flex items-baseline justify-between mb-2">
-              <p className="text-xs uppercase tracking-wider text-slate-500">
-                Duration
-              </p>
-              <p className="text-sm tabular-nums text-blue-300">
-                {formatDuration(durationMins)}
-              </p>
+              <p className="text-xs uppercase tracking-wider text-slate-500">Duration</p>
+              <p className="text-sm tabular-nums text-blue-300">{formatDuration(durationMins)}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {[15, 30, 60, 120, 240, 480].map((m) => (

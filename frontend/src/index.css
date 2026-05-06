@@ -67,18 +67,32 @@
 }
 
 @layer components {
-  /* Reusable accents — adopt where it shortens the per-component classes. */
+  /* Button system. Variants supply color/border + default md sizing.
+     `.btn-sm` is appended on top to override padding + text size — it
+     is defined LAST in this layer so its declarations win the cascade
+     under same-specificity (no `!important` needed). */
   .btn-primary {
     @apply rounded bg-blue-500 px-3 py-1.5 text-sm font-medium text-white
-      hover:bg-blue-400 disabled:opacity-50;
+      transition-colors hover:bg-blue-400
+      disabled:cursor-not-allowed disabled:bg-blue-500/40 disabled:text-white/70;
+  }
+  .btn-secondary {
+    @apply rounded border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm
+      font-medium text-slate-100 transition-colors hover:bg-slate-700
+      disabled:cursor-not-allowed disabled:bg-slate-800/60 disabled:text-slate-400;
   }
   .btn-ghost {
     @apply rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200
-      hover:bg-slate-800 disabled:opacity-50;
+      transition-colors hover:bg-slate-800
+      disabled:cursor-not-allowed disabled:text-slate-500;
   }
   .btn-danger {
     @apply rounded border border-red-500/40 px-3 py-1.5 text-sm text-red-300
-      hover:bg-red-500/10 disabled:opacity-50;
+      transition-colors hover:bg-red-500/10
+      disabled:cursor-not-allowed disabled:text-red-300/50 disabled:hover:bg-transparent;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
   }
   .surface {
     @apply rounded border border-slate-800 bg-slate-900;

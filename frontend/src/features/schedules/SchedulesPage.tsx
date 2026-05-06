@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { ApiError } from "../../lib/apiClient";
+import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { Dash } from "../../components/Dash";
+import { ErrorState, LoadingState } from "../../components/States";
+import { StatusPill } from "../../components/StatusPill";
+import { formatDateTime } from "../../lib/format";
+import { translateApiError } from "../../lib/translateApiError";
 import { CreateScheduleDialog } from "./CreateScheduleDialog";
 import { type ScheduleRead } from "./api";
-import {
-  useDeleteSchedule,
-  useSchedules,
-  useTickSchedules,
-  useUpdateSchedule,
-} from "./hooks";
+import { useDeleteSchedule, useSchedules, useTickSchedules, useUpdateSchedule } from "./hooks";
 
 export function SchedulesPage() {
   const query = useSchedules();
@@ -26,7 +28,7 @@ export function SchedulesPage() {
           (r.instances.length ? ` — created ${r.instances.join(", ")}` : ""),
       );
     } catch (err) {
-      setTickError(err instanceof ApiError ? err.message : String(err));
+      setTickError(translateApiError(err));
     }
   }
 
@@ -40,38 +42,28 @@ export function SchedulesPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={fireTick}
             disabled={tick.isPending}
-            className="btn-ghost px-3 py-1.5 text-sm"
             title="Manually fire any due schedules"
           >
             {tick.isPending ? "Ticking…" : "Run tick now"}
-          </button>
-          <button onClick={() => setCreateOpen(true)} className="btn-primary px-3 py-1.5 text-sm">
-            + New schedule
-          </button>
+          </Button>
+          <Button onClick={() => setCreateOpen(true)}>+ New schedule</Button>
         </div>
       </header>
 
-      {tickResult && (
-        <p className="rounded border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-200">
-          {tickResult}
-        </p>
-      )}
-      {tickError && (
-        <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300">
-          {tickError}
-        </p>
-      )}
+      {tickResult && <Alert variant="info">{tickResult}</Alert>}
+      {tickError && <Alert>{tickError}</Alert>}
 
-      {query.isLoading && <p className="text-sm text-slate-400">Loading…</p>}
+      {query.isLoading && <LoadingState />}
       {query.isError && (
-        <p className="text-sm text-red-400">Failed to load schedules.</p>
+        <ErrorState message="Failed to load schedules." retry={() => query.refetch()} />
       )}
 
       {query.data && (
-        <div className="surface overflow-hidden">
+        <div className="surface overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-950/40 text-left text-xs uppercase text-slate-500">
               <tr>
@@ -101,9 +93,7 @@ export function SchedulesPage() {
         </div>
       )}
 
-      {createOpen && (
-        <CreateScheduleDialog onClose={() => setCreateOpen(false)} />
-      )}
+      {createOpen && <CreateScheduleDialog onClose={() => setCreateOpen(false)} />}
     </div>
   );
 }
@@ -111,59 +101,71 @@ export function SchedulesPage() {
 function Row({ schedule }: { schedule: ScheduleRead }) {
   const update = useUpdateSchedule(schedule.id);
   const remove = useDeleteSchedule();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   return (
-    <tr>
-      <td className="px-3 py-2">
-        <div className="text-slate-100">{schedule.name}</div>
-        {schedule.description && (
-          <div className="text-xs text-slate-500">{schedule.description}</div>
-        )}
-      </td>
-      <td className="px-3 py-2">
-        <span
-          className={`rounded px-1.5 py-0.5 text-xs ring-1 ${
-            schedule.kind === "work_order"
-              ? "bg-blue-500/15 text-blue-200 ring-blue-500/30"
-              : "bg-violet-500/15 text-violet-200 ring-violet-500/30"
-          }`}
-        >
-          {schedule.kind === "work_order" ? "WO" : "Inspection"}
-        </span>
-      </td>
-      <td className="px-3 py-2 font-mono text-xs text-slate-300">{schedule.rrule}</td>
-      <td className="px-3 py-2 font-mono text-xs text-slate-400">
-        {schedule.asset_uid ?? "—"}
-      </td>
-      <td className="px-3 py-2 text-xs text-slate-300">
-        {schedule.next_run_at
-          ? new Date(schedule.next_run_at).toLocaleString()
-          : "—"}
-      </td>
-      <td className="px-3 py-2 text-xs text-slate-500">
-        {schedule.last_run_at
-          ? new Date(schedule.last_run_at).toLocaleString()
-          : "never"}
-      </td>
-      <td className="px-3 py-2">
-        <button
-          onClick={() => update.mutate({ active: !schedule.active })}
-          className={`text-xs ${schedule.active ? "text-emerald-300" : "text-slate-500"} hover:underline`}
-        >
-          {schedule.active ? "active" : "paused"}
-        </button>
-      </td>
-      <td className="px-3 py-2 text-right">
-        <button
-          onClick={() => {
-            if (window.confirm(`Delete schedule "${schedule.name}"?`)) {
-              remove.mutate(schedule.id);
-            }
-          }}
-          className="text-xs text-red-300 hover:text-red-200 hover:underline"
-        >
-          Delete
-        </button>
-      </td>
-    </tr>
+    <>
+      <tr>
+        <td className="px-3 py-2">
+          <div className="text-slate-100">{schedule.name}</div>
+          {schedule.description && (
+            <div className="text-xs text-slate-500">{schedule.description}</div>
+          )}
+        </td>
+        <td className="px-3 py-2">
+          <StatusPill tone={schedule.kind === "work_order" ? "info" : "neutral"}>
+            {schedule.kind === "work_order" ? "WO" : "Inspection"}
+          </StatusPill>
+        </td>
+        <td className="px-3 py-2 font-mono text-xs text-slate-300">{schedule.rrule}</td>
+        <td className="px-3 py-2 font-mono text-xs text-slate-400">
+          {schedule.asset_uid ?? <Dash />}
+        </td>
+        <td className="px-3 py-2 text-xs text-slate-300">
+          {formatDateTime(schedule.next_run_at) || <Dash />}
+        </td>
+        <td className="px-3 py-2 text-xs text-slate-500">
+          {schedule.last_run_at ? formatDateTime(schedule.last_run_at) : "never"}
+        </td>
+        <td className="px-3 py-2">
+          <button
+            type="button"
+            onClick={() => update.mutate({ active: !schedule.active })}
+            className={`text-xs hover:underline ${schedule.active ? "text-emerald-300" : "text-slate-500"}`}
+            aria-label={schedule.active ? "Pause schedule" : "Activate schedule"}
+          >
+            {schedule.active ? "active" : "paused"}
+          </button>
+        </td>
+        <td className="px-3 py-2 text-right">
+          <button
+            type="button"
+            onClick={() => {
+              setDeleteError(null);
+              setDeleteOpen(true);
+            }}
+            className="text-xs text-red-300 hover:text-red-200 hover:underline"
+          >
+            Delete
+          </button>
+        </td>
+      </tr>
+      {deleteOpen && (
+        <ConfirmDialog
+          title={`Delete schedule "${schedule.name}"?`}
+          message="The schedule and any future runs are removed. Existing work orders or inspections it has already created stay in place."
+          confirmLabel="Delete schedule"
+          errorMessage={deleteError}
+          busy={remove.isPending}
+          onConfirm={() =>
+            remove.mutate(schedule.id, {
+              onSuccess: () => setDeleteOpen(false),
+              onError: (e) => setDeleteError(translateApiError(e)),
+            })
+          }
+          onCancel={() => setDeleteOpen(false)}
+        />
+      )}
+    </>
   );
 }

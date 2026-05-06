@@ -2,7 +2,9 @@ import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { ApiError } from "../../lib/apiClient";
+import { translateApiError } from "../../lib/translateApiError";
 import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
 import { Logo } from "../../components/Logo";
 import { login, type AuthEnvelope } from "./api";
 import { ME_QUERY_KEY } from "./useAuth";
@@ -31,15 +33,7 @@ export function LoginPage() {
       queryClient.setQueryData(ME_QUERY_KEY, data);
       navigate(`/${data.tenant.slug}/`, { replace: true });
     },
-    onError: (err) => {
-      if (err instanceof ApiError) {
-        setErrorMessage(
-          err.code === "bad_credentials" ? "Invalid tenant, email, or password." : err.message,
-        );
-      } else {
-        setErrorMessage(err.message);
-      }
-    },
+    onError: (err) => setErrorMessage(translateApiError(err)),
   });
 
   const demoMutation = useMutation<AuthEnvelope, Error>({
@@ -49,11 +43,13 @@ export function LoginPage() {
       navigate(`/${data.tenant.slug}/`, { replace: true });
     },
     onError: (err) => {
-      setErrorMessage(
-        err instanceof ApiError && err.code === "bad_credentials"
-          ? "Demo tenant isn't seeded. Run `flask seed-demo` then retry."
-          : err.message,
-      );
+      // Special-case the missing-seed scenario for the demo CTA — it's
+      // operational guidance, not a generic auth failure.
+      if (err instanceof ApiError && err.code === "bad_credentials") {
+        setErrorMessage("Demo tenant isn't seeded. Run `flask seed-demo` then retry.");
+        return;
+      }
+      setErrorMessage(translateApiError(err));
     },
   });
 
@@ -80,9 +76,7 @@ export function LoginPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-400">
               CityWater
             </p>
-            <h1 className="text-xl font-semibold text-slate-100 leading-tight">
-              Sign in
-            </h1>
+            <h1 className="text-xl font-semibold text-slate-100 leading-tight">Sign in</h1>
           </div>
         </div>
         <label className="block">
@@ -119,13 +113,9 @@ export function LoginPage() {
           />
         </label>
         {errorMessage && <Alert>{errorMessage}</Alert>}
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="btn-primary w-full"
-        >
+        <Button type="submit" disabled={mutation.isPending} className="w-full">
           {mutation.isPending ? "Signing in…" : "Sign in"}
-        </button>
+        </Button>
 
         <div className="flex items-center gap-3 text-xs text-slate-500">
           <div className="h-px flex-1 bg-slate-800" />
@@ -133,11 +123,14 @@ export function LoginPage() {
           <div className="h-px flex-1 bg-slate-800" />
         </div>
 
+        {/* Demo button keeps a one-off emerald accent — it's a deliberate
+            "try this" call-to-action that should read differently from the
+            primary submit. */}
         <button
           type="button"
           onClick={tryDemo}
           disabled={demoMutation.isPending}
-          className="w-full rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-100 hover:border-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
+          className="w-full rounded-md border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm font-medium text-emerald-100 transition-colors hover:border-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50"
         >
           {demoMutation.isPending ? "Loading demo…" : "Try the demo →"}
         </button>

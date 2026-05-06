@@ -1,15 +1,11 @@
 import { useMemo, useState } from "react";
-import { ApiError } from "../../lib/apiClient";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { translateApiError } from "../../lib/translateApiError";
 import { useAuth } from "../auth/useAuth";
 import type { TaskDefinitionRead } from "../tasks/api";
 import { type ActivityEntityType, type CommentRead, type HistoryEvent } from "./api";
 import { CommentComposer } from "./CommentComposer";
-import {
-  useComments,
-  useDeleteComment,
-  useHistory,
-  useUpdateComment,
-} from "./hooks";
+import { useComments, useDeleteComment, useHistory, useUpdateComment } from "./hooks";
 
 interface Props {
   entityType: ActivityEntityType;
@@ -25,12 +21,7 @@ type TimelineRow =
   | { kind: "comment"; at: string; data: CommentRead }
   | { kind: "event"; at: string; data: HistoryEvent };
 
-export function ActivityTimeline({
-  entityType,
-  entityId,
-  task,
-  taskData,
-}: Props) {
+export function ActivityTimeline({ entityType, entityId, task, taskData }: Props) {
   const comments = useComments(entityType, entityId);
   const history = useHistory(entityType, entityId);
 
@@ -51,9 +42,7 @@ export function ActivityTimeline({
 
   return (
     <section className="surface p-4">
-      <h2 className="text-xs font-medium uppercase tracking-wider text-slate-500">
-        Activity
-      </h2>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-slate-500">Activity</h2>
 
       <div className="mt-4 rounded border border-slate-800 bg-slate-950/40 p-4">
         <CommentComposer
@@ -70,9 +59,7 @@ export function ActivityTimeline({
 
       <ol className="mt-4 space-y-3">
         {rows.length === 0 && !comments.isLoading && !history.isLoading && (
-          <li className="text-sm text-slate-500">
-            No activity yet. Be the first to comment.
-          </li>
+          <li className="text-sm text-slate-500">No activity yet. Be the first to comment.</li>
         )}
         {rows.map((row) =>
           row.kind === "comment" ? (
@@ -102,9 +89,7 @@ function CommentRow({
 }) {
   const { user } = useAuth();
   const isAuthor = user && comment.created_by === user.id;
-  const isAdmin = !!user?.roles.some((r) =>
-    ["admin", "supervisor"].includes(r.code),
-  );
+  const isAdmin = !!user?.roles.some((r) => ["admin", "supervisor"].includes(r.code));
   const canEdit = isAuthor || isAdmin;
 
   const update = useUpdateComment(entityType, entityId);
@@ -113,6 +98,8 @@ function CommentRow({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(comment.body);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function save() {
     setErrorMessage(null);
@@ -120,7 +107,7 @@ function CommentRow({
       await update.mutateAsync({ commentId: comment.id, body: draft.trim() });
       setEditing(false);
     } catch (err) {
-      setErrorMessage(err instanceof ApiError ? err.message : String(err));
+      setErrorMessage(translateApiError(err));
     }
   }
 
@@ -128,27 +115,24 @@ function CommentRow({
     <li className="rounded-lg border border-slate-800 bg-slate-900/60 p-3">
       <div className="flex items-baseline justify-between gap-3">
         <div className="text-xs text-slate-400">
-          <span className="text-slate-200 font-medium">
-            {comment.author_name ?? "Unknown"}
-          </span>
+          <span className="text-slate-200 font-medium">{comment.author_name ?? "Unknown"}</span>
           <span className="ml-2">{relativeTime(comment.created_at)}</span>
-          {comment.edited_at && (
-            <span className="ml-2 italic text-slate-500">(edited)</span>
-          )}
+          {comment.edited_at && <span className="ml-2 italic text-slate-500">(edited)</span>}
         </div>
         {canEdit && !editing && (
           <div className="flex gap-2 text-xs">
             <button
+              type="button"
               onClick={() => setEditing(true)}
               className="text-slate-400 hover:text-blue-300"
             >
               Edit
             </button>
             <button
+              type="button"
               onClick={() => {
-                if (window.confirm("Delete this comment?")) {
-                  remove.mutate(comment.id);
-                }
+                setDeleteError(null);
+                setDeleteOpen(true);
               }}
               className="text-red-400 hover:text-red-300"
             >
@@ -157,6 +141,22 @@ function CommentRow({
           </div>
         )}
       </div>
+      {deleteOpen && (
+        <ConfirmDialog
+          title="Delete this comment?"
+          message="The comment is removed from the activity feed permanently."
+          confirmLabel="Delete comment"
+          errorMessage={deleteError}
+          busy={remove.isPending}
+          onConfirm={() =>
+            remove.mutate(comment.id, {
+              onSuccess: () => setDeleteOpen(false),
+              onError: (e) => setDeleteError(translateApiError(e)),
+            })
+          }
+          onCancel={() => setDeleteOpen(false)}
+        />
+      )}
 
       {editing ? (
         <div className="mt-2 space-y-2">
@@ -166,9 +166,7 @@ function CommentRow({
             rows={3}
             className="block w-full rounded border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-slate-100"
           />
-          {errorMessage && (
-            <p className="text-xs text-red-400">{errorMessage}</p>
-          )}
+          {errorMessage && <p className="text-xs text-red-400">{errorMessage}</p>}
           <div className="flex justify-end gap-2">
             <button
               onClick={() => {
@@ -189,9 +187,7 @@ function CommentRow({
           </div>
         </div>
       ) : (
-        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-200">
-          {comment.body}
-        </p>
+        <p className="mt-2 whitespace-pre-wrap text-sm text-slate-200">{comment.body}</p>
       )}
     </li>
   );
@@ -204,13 +200,9 @@ function EventRow({ event }: { event: HistoryEvent }) {
       <div className="flex-1 min-w-0 text-sm">
         <p className="text-slate-300">
           {formatEvent(event)}
-          {event.actor && (
-            <span className="text-slate-500"> — {event.actor}</span>
-          )}
+          {event.actor && <span className="text-slate-500"> — {event.actor}</span>}
         </p>
-        <p className="text-xs text-slate-500">
-          {relativeTime(event.occurred_at)}
-        </p>
+        <p className="text-xs text-slate-500">{relativeTime(event.occurred_at)}</p>
       </div>
     </li>
   );

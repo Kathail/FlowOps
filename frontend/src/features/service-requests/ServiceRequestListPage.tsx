@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Button } from "../../components/Button";
+import { Dash } from "../../components/Dash";
+import { EmptyState } from "../../components/States";
+import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { formatDateTime } from "../../lib/format";
 import { IntakeDialog } from "./IntakeDialog";
-import type {
-  ServiceRequestListParams,
-  SrCategory,
-  SrDomain,
-  SrStatus,
-} from "./api";
+import type { ServiceRequestListParams, SrCategory, SrDomain, SrStatus } from "./api";
 import { useServiceRequests } from "./hooks";
 
 const STATUSES: SrStatus[] = ["new", "triaged", "dispatched", "closed", "duplicate"];
@@ -23,10 +23,19 @@ const CATEGORIES: SrCategory[] = [
   "other",
 ];
 
+const STATUS_TONE: Record<SrStatus, PillTone> = {
+  new: "info",
+  triaged: "warning",
+  dispatched: "info",
+  closed: "muted",
+  duplicate: "muted",
+};
+
 export function ServiceRequestListPage() {
   const { slug } = useParams<{ slug: string }>();
   const [search, setSearch] = useSearchParams();
   const [intakeOpen, setIntakeOpen] = useState(false);
+  const [pendingQ, setPendingQ] = useState(search.get("q") ?? "");
 
   const params: ServiceRequestListParams = {
     status: (search.get("status") as SrStatus) || undefined,
@@ -47,16 +56,18 @@ export function ServiceRequestListPage() {
     setSearch(next);
   }
 
+  function clearFilters() {
+    setSearch(new URLSearchParams());
+    setPendingQ("");
+  }
+
+  const hasFilters = !!(params.status || params.category || params.domain || params.q);
+
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-100">Service requests</h1>
-        <button
-          onClick={() => setIntakeOpen(true)}
-          className="rounded bg-blue-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-400"
-        >
-          New intake
-        </button>
+        <Button onClick={() => setIntakeOpen(true)}>New intake</Button>
       </header>
 
       <div className="flex flex-wrap items-end gap-3 text-sm">
@@ -105,18 +116,27 @@ export function ServiceRequestListPage() {
             ))}
           </select>
         </label>
-        <label className="flex-1 max-w-xs">
-          <span className="block text-slate-300">Search</span>
-          <input
-            value={params.q ?? ""}
-            onChange={(e) => setParam("q", e.target.value || null)}
-            placeholder="number, caller, address, description"
-            className="mt-1 w-full rounded border border-slate-700 px-2 py-1"
-          />
-        </label>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            setParam("q", pendingQ || null);
+          }}
+          className="flex-1 max-w-xs"
+        >
+          <label>
+            <span className="block text-slate-300">Search</span>
+            <input
+              value={pendingQ}
+              onChange={(e) => setPendingQ(e.target.value)}
+              onBlur={() => setParam("q", pendingQ || null)}
+              placeholder="number, caller, address, description"
+              className="mt-1 w-full rounded border border-slate-700 px-2 py-1"
+            />
+          </label>
+        </form>
       </div>
 
-      <div className="overflow-hidden rounded border border-slate-800 bg-slate-900">
+      <div className="overflow-x-auto rounded border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
             <tr>
@@ -143,15 +163,17 @@ export function ServiceRequestListPage() {
                   </Link>
                 </td>
                 <td className="px-3 py-2">
-                  <StatusPill status={sr.status} />
+                  <StatusPill tone={STATUS_TONE[sr.status]} dot>
+                    {sr.status}
+                  </StatusPill>
                 </td>
                 <td className="px-3 py-2">{sr.category}</td>
                 <td className="px-3 py-2">{sr.domain}</td>
                 <td className="px-3 py-2">{sr.priority}</td>
-                <td className="px-3 py-2">{sr.caller_name ?? "—"}</td>
-                <td className="px-3 py-2 max-w-xs truncate">{sr.reported_address ?? "—"}</td>
+                <td className="px-3 py-2">{sr.caller_name ?? <Dash />}</td>
+                <td className="px-3 py-2 max-w-xs truncate">{sr.reported_address ?? <Dash />}</td>
                 <td className="px-3 py-2 text-slate-400">
-                  {new Date(sr.reported_at).toLocaleString()}
+                  {formatDateTime(sr.reported_at) || <Dash />}
                 </td>
                 <td className="px-3 py-2">
                   {sr.work_order_number ? (
@@ -162,15 +184,37 @@ export function ServiceRequestListPage() {
                       {sr.work_order_number}
                     </Link>
                   ) : (
-                    "—"
+                    <Dash />
                   )}
                 </td>
               </tr>
             ))}
             {query.data && query.data.items.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-6 text-center text-slate-400">
-                  No service requests match these filters.
+                <td colSpan={9} className="p-0">
+                  <EmptyState
+                    title={
+                      hasFilters
+                        ? "No service requests match these filters."
+                        : "No service requests yet."
+                    }
+                    hint={
+                      hasFilters
+                        ? "Try widening the filters or clearing them."
+                        : "Log a new intake to get started."
+                    }
+                    action={
+                      hasFilters ? (
+                        <Button variant="ghost" size="sm" onClick={clearFilters}>
+                          Clear filters
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={() => setIntakeOpen(true)}>
+                          New intake
+                        </Button>
+                      )
+                    }
+                  />
                 </td>
               </tr>
             )}
@@ -180,20 +224,5 @@ export function ServiceRequestListPage() {
 
       {intakeOpen && <IntakeDialog onClose={() => setIntakeOpen(false)} />}
     </div>
-  );
-}
-
-function StatusPill({ status }: { status: SrStatus }) {
-  const cls: Record<SrStatus, string> = {
-    new: "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30",
-    triaged: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30",
-    dispatched: "bg-violet-500/15 text-violet-200 ring-1 ring-violet-500/30",
-    closed: "bg-slate-700/40 text-slate-300 ring-1 ring-slate-600/40",
-    duplicate: "bg-slate-800 text-slate-500 ring-1 ring-slate-700",
-  };
-  return (
-    <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${cls[status]}`}>
-      {status}
-    </span>
   );
 }

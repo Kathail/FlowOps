@@ -1,9 +1,10 @@
 import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 /**
- * Single source of truth for buttons. Variants map to existing
- * `.btn-*` Tailwind utilities in `index.css`. Drop in anywhere instead
- * of hand-rolling `bg-blue-500 px-3 py-1.5 text-sm` etc.
+ * Single source of truth for buttons. Variants map to the `.btn-*`
+ * Tailwind utilities in `index.css`; size composes a separate
+ * `.btn-sm` class that overrides padding + text size via cascade
+ * order (no `!important` needed).
  */
 
 export type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
@@ -16,14 +17,13 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const VARIANT: Record<ButtonVariant, string> = {
   primary: "btn-primary",
-  // Slightly more presence than ghost — for "Cancel" / secondary CTAs.
-  secondary: "btn-ghost",
+  secondary: "btn-secondary",
   ghost: "btn-ghost",
   danger: "btn-danger",
 };
 
 const SIZE: Record<ButtonSize, string> = {
-  sm: "!px-2 !py-1 !text-xs",
+  sm: "btn-sm",
   md: "",
 };
 
@@ -31,12 +31,6 @@ export const Button = forwardRef<HTMLButtonElement, Props>(function Button(
   { variant = "primary", size = "md", className = "", type = "button", ...rest },
   ref,
 ) {
-  return (
-    <button
-      ref={ref}
-      type={type}
-      className={`${VARIANT[variant]} ${SIZE[size]} ${className}`.trim()}
-      {...rest}
-    />
-  );
+  const classes = [VARIANT[variant], SIZE[size], className].filter(Boolean).join(" ");
+  return <button ref={ref} type={type} className={classes} {...rest} />;
 });

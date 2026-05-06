@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
+import { translateApiError } from "../../lib/translateApiError";
 import { useAssets } from "../assets/hooks";
 import {
   addWoAssets,
@@ -22,15 +24,11 @@ import {
  * patch through the React Query cache on success.
  */
 
-export function RouteSection({
-  wo,
-  slug,
-}: {
-  wo: WorkOrderDetail;
-  slug: string | undefined;
-}) {
+export function RouteSection({ wo, slug }: { wo: WorkOrderDetail; slug: string | undefined }) {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null);
+  const [removeError, setRemoveError] = useState<string | null>(null);
 
   const completed = wo.assets.filter((a) => a.completed_at).length;
   const total = wo.assets.length;
@@ -38,13 +36,15 @@ export function RouteSection({
   const update = useMutation({
     mutationFn: (vars: { uid: string; patch: Parameters<typeof updateWoAsset>[2] }) =>
       updateWoAsset(wo.wo_number, vars.uid, vars.patch),
-    onSuccess: (next) =>
-      queryClient.setQueryData(["work-order", wo.wo_number], next),
+    onSuccess: (next) => queryClient.setQueryData(["work-order", wo.wo_number], next),
   });
   const remove = useMutation({
     mutationFn: (uid: string) => removeWoAsset(wo.wo_number, uid),
-    onSuccess: (next) =>
-      queryClient.setQueryData(["work-order", wo.wo_number], next),
+    onSuccess: (next) => {
+      queryClient.setQueryData(["work-order", wo.wo_number], next);
+      setRemoveTarget(null);
+    },
+    onError: (err) => setRemoveError(translateApiError(err)),
   });
   const add = useMutation({
     mutationFn: (uids: string[]) => addWoAssets(wo.wo_number, uids),
@@ -90,9 +90,8 @@ export function RouteSection({
                 })
               }
               onRemove={() => {
-                if (window.confirm(`Remove ${a.asset_uid} from this WO?`)) {
-                  remove.mutate(a.asset_uid);
-                }
+                setRemoveError(null);
+                setRemoveTarget(a.asset_uid);
               }}
             />
           ))}
@@ -105,6 +104,18 @@ export function RouteSection({
           onClose={() => setPickerOpen(false)}
           onAdd={(uids) => add.mutate(uids)}
           isPending={add.isPending}
+        />
+      )}
+
+      {removeTarget && (
+        <ConfirmDialog
+          title={`Remove ${removeTarget} from this WO?`}
+          message="The asset stays in your inventory; only its association with this work order is removed."
+          confirmLabel="Remove"
+          errorMessage={removeError}
+          busy={remove.isPending}
+          onConfirm={() => remove.mutate(removeTarget)}
+          onCancel={() => setRemoveTarget(null)}
         />
       )}
     </section>
@@ -131,9 +142,7 @@ function RouteRow({
   return (
     <li
       className={`rounded-md border p-3 ${
-        checked
-          ? "border-emerald-500/40 bg-emerald-500/5"
-          : "border-slate-800 bg-slate-950/60"
+        checked ? "border-emerald-500/40 bg-emerald-500/5" : "border-slate-800 bg-slate-950/60"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -252,11 +261,7 @@ function AssetPicker({
         <div className="border-b border-slate-800 px-4 py-3">
           <div className="flex items-center justify-between gap-3">
             <h3 className="text-sm font-medium text-slate-100">Add assets to this WO</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-slate-400 hover:text-slate-200"
-            >
+            <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-200">
               ✕
             </button>
           </div>
@@ -327,9 +332,7 @@ function AssetPicker({
         </div>
 
         <div className="border-t border-slate-800 px-4 py-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-400">
-            {picked.size} selected
-          </p>
+          <p className="text-xs text-slate-400">{picked.size} selected</p>
           <div className="flex gap-2">
             <button
               type="button"
