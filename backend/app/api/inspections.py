@@ -57,10 +57,13 @@ def _is_supervisor_or_admin() -> bool:
 
 def _normalize_data(kind: InspectionKind, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the kind-specific data shape and (for hydrant_flow) compute the
-    NFPA 291 derived fields server-side. CCTV bypasses validation in S6."""
+    NFPA 291 derived fields server-side. CCTV uses cctv_validation directly."""
+    if kind == "cctv":
+        from app.services.cctv_validation import validate_cctv
+
+        return validate_cctv(data)
     schema = KIND_DATA_SCHEMA.get(kind)
     if schema is None:
-        # CCTV — handled in S7; for now accept the payload as-is
         return dict(data)
     try:
         validated = schema.model_validate(data)
@@ -208,14 +211,6 @@ def list_inspections():
 @require_roles("admin", "supervisor", "tech")
 def create_inspection():
     data = _validate(InspectionCreate, request.get_json(silent=True) or {})
-
-    # CCTV is reserved for S7 — reject explicitly so the message is clear.
-    if data.kind == "cctv":
-        raise ValidationError(
-            "CCTV inspections are not yet supported (lands in S7)",
-            code="cctv_not_yet_supported",
-        )
-
     normalized_data = _normalize_data(data.kind, data.data)
     asset_id = _resolve_asset_id(data.asset_uid, data.kind)
     work_order_id = _resolve_wo_id(data.work_order_number)
@@ -358,3 +353,50 @@ def _stream_csv(stmt: Select, kind: str | None) -> Generator[str, None, None]:
             buffer.truncate()
     if buffer.tell():
         yield buffer.getvalue()
+
+
+@inspections_bp.post("/import-pacp")
+@login_required
+@require_roles("admin", "supervisor", "tech")
+def import_pacp():
+    from datetime import UTC, datetime
+
+    from app.services.wincan_import import parse as parse_wincan
+
+    file = request.files.get("file")
+    if not file:
+        raise ValidationError("missing 'file' field", code="missing_file")
+
+    parsed = parse_wincan(file.stream, content_type=file.mimetype)
+    normalized_data = _normalize_data("cctv", parsed)
+
+    asset_id = _resolve_asset_id(request.form.get("asset_uid"), "cctv")
+    work_order_id = _resolve_wo_id(request.form.get("work_order_number"))
+
+    inspection_number = next_inspection_number(current_user.tenant_id)
+    last_error: IntegrityError | None = None
+    for _attempt in range(3):
+        ins = Inspection(
+            tenant_id=current_user.tenant_id,
+            inspection_number=inspection_number,
+            kind="cctv",
+            asset_id=asset_id,
+            work_order_id=work_order_id,
+            performed_at=datetime.now(UTC),
+            performed_by=current_user.id,
+            data=normalized_data,
+            attrs={},
+        )
+        db.session.add(ins)
+        try:
+            db.session.commit()
+            db.session.refresh(ins)
+            return jsonify(_payload(ins)), 201
+        except IntegrityError as e:
+            db.session.rollback()
+            last_error = e
+            inspection_number = next_inspection_number(current_user.tenant_id)
+    raise ConflictError(
+        "could not generate unique inspection_number after retries",
+        code="number_collision",
+    ) from last_error
