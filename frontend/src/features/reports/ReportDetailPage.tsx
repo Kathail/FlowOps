@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { ErrorState, LoadingState } from "../../components/States";
+import { translateApiError } from "../../lib/translateApiError";
 import { downloadUrl } from "./api";
 import { useReport, useReportCatalog } from "./hooks";
 
@@ -50,9 +52,7 @@ export function ReportDetailPage() {
           <h1 className="mt-1 text-2xl font-semibold text-slate-100">
             {report.data?.title ?? meta?.title ?? reportSlug}
           </h1>
-          {report.data && (
-            <p className="text-sm text-slate-400">{report.data.subtitle}</p>
-          )}
+          {report.data && <p className="text-sm text-slate-400">{report.data.subtitle}</p>}
         </div>
         <div className="flex gap-2">
           {reportSlug && (
@@ -90,9 +90,9 @@ export function ReportDetailPage() {
         </div>
       )}
 
-      {report.isLoading && <div className="text-slate-400">Running…</div>}
+      {report.isLoading && <LoadingState label="Running…" />}
       {report.isError && (
-        <div className="text-red-400">{report.error.message}</div>
+        <ErrorState message={translateApiError(report.error)} retry={() => report.refetch()} />
       )}
 
       {report.data && (
@@ -164,11 +164,7 @@ function FilterField({
     return (
       <label>
         <span className="block text-slate-300">{name}</span>
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={inputClass}
-        >
+        <select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>
           <option value="">All</option>
           {DOMAIN_OPTIONS.map((d) => (
             <option key={d} value={d}>
@@ -183,11 +179,7 @@ function FilterField({
     return (
       <label>
         <span className="block text-slate-300">{name}</span>
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={inputClass}
-        >
+        <select value={value} onChange={(e) => onChange(e.target.value)} className={inputClass}>
           <option value="">All</option>
           {INSPECTION_KINDS.map((k) => (
             <option key={k} value={k}>

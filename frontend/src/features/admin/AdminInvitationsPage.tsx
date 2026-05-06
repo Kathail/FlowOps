@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
+import { formatDateTime } from "../../lib/format";
 import { ApiError } from "../../lib/apiClient";
 import {
   type InvitationCreateInput,
@@ -18,8 +19,7 @@ const ROLE_OPTIONS = [
   { code: "readonly", label: "Read only" },
 ];
 
-const inputClass =
-  "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
+const inputClass = "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
 
 export function AdminInvitationsPage() {
   const qc = useQueryClient();
@@ -35,11 +35,7 @@ export function AdminInvitationsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [created, setCreated] = useState<InvitationCreateResponse | null>(null);
 
-  const create = useMutation<
-    InvitationCreateResponse,
-    Error,
-    InvitationCreateInput
-  >({
+  const create = useMutation<InvitationCreateResponse, Error, InvitationCreateInput>({
     mutationFn: createInvitation,
     onSuccess: (resp) => {
       setCreated(resp);
@@ -47,14 +43,12 @@ export function AdminInvitationsPage() {
       setFullName("");
       qc.invalidateQueries({ queryKey: ["admin", "invitations"] });
     },
-    onError: (e) =>
-      setErrorMessage(e instanceof ApiError ? e.message : String(e)),
+    onError: (e) => setErrorMessage(e instanceof ApiError ? e.message : String(e)),
   });
 
   const revoke = useMutation<InvitationRead, Error, number>({
     mutationFn: revokeInvitation,
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ["admin", "invitations"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "invitations"] }),
   });
 
   function toggleRole(code: string) {
@@ -131,17 +125,13 @@ export function AdminInvitationsPage() {
             </button>
           </div>
         </form>
-        {errorMessage && (
-          <p className="mt-2 text-sm text-red-400">{errorMessage}</p>
-        )}
+        {errorMessage && <p className="mt-2 text-sm text-red-400">{errorMessage}</p>}
         {created && (
           <div className="mt-4 rounded border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm">
             <p className="font-medium text-emerald-300">
               Invitation created for {created.invitation.email}.
             </p>
-            <p className="mt-1 text-xs text-emerald-300">
-              Send this link — it's only shown once:
-            </p>
+            <p className="mt-1 text-xs text-emerald-300">Send this link — it's only shown once:</p>
             <code className="mt-1 block break-all rounded bg-slate-900 p-2 text-xs">
               {created.accept_url}
             </code>
@@ -165,9 +155,7 @@ export function AdminInvitationsPage() {
               <tr key={inv.id}>
                 <td className="px-3 py-2">
                   <div>{inv.email}</div>
-                  {inv.full_name && (
-                    <div className="text-xs text-slate-400">{inv.full_name}</div>
-                  )}
+                  {inv.full_name && <div className="text-xs text-slate-400">{inv.full_name}</div>}
                 </td>
                 <td className="px-3 py-2">
                   {inv.role_codes.length === 0 ? (
@@ -180,7 +168,7 @@ export function AdminInvitationsPage() {
                   <StatusPill inv={inv} />
                 </td>
                 <td className="px-3 py-2 text-xs text-slate-400">
-                  {new Date(inv.expires_at).toLocaleString()}
+                  {formatDateTime(inv.expires_at)}
                 </td>
                 <td className="px-3 py-2 text-right">
                   {inv.accepted_at === null && inv.revoked_at === null && (
@@ -218,9 +206,7 @@ function StatusPill({ inv }: { inv: InvitationRead }) {
   }
   if (inv.revoked_at) {
     return (
-      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-300">
-        revoked
-      </span>
+      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-slate-300">revoked</span>
     );
   }
   if (new Date(inv.expires_at) < new Date()) {

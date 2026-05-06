@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { ErrorState, LoadingState } from "../../components/States";
 import { useReportCatalog } from "./hooks";
 
 export function ReportsPage() {
@@ -14,9 +15,9 @@ export function ReportsPage() {
         </p>
       </header>
 
-      {query.isLoading && <div className="text-slate-400">Loading…</div>}
+      {query.isLoading && <LoadingState />}
       {query.isError && (
-        <div className="text-red-400">Failed to load report catalog.</div>
+        <ErrorState message="Failed to load report catalog." retry={() => query.refetch()} />
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -30,8 +31,7 @@ export function ReportsPage() {
             <p className="mt-1 text-sm text-slate-300">{report.description}</p>
             {report.filters.length > 0 && (
               <p className="mt-2 text-xs uppercase text-slate-400">
-                Filters:{" "}
-                {report.filters.map((f) => f.name).join(", ")}
+                Filters: {report.filters.map((f) => f.name).join(", ")}
               </p>
             )}
           </Link>

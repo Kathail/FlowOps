@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { ErrorState, LoadingState } from "../../components/States";
 import { type TaskListResponse, listTaskDefinitions } from "./api";
 
 /**
@@ -19,15 +20,14 @@ export function TaskCatalog() {
       <header>
         <h1 className="text-2xl font-semibold text-slate-100">Task definitions</h1>
         <p className="mt-1 text-sm text-slate-400">
-          Forms, procedures, and completion contracts for every kind of
-          operator work. Editing is API-only for now — a visual editor lands
-          in a follow-up release.
+          Forms, procedures, and completion contracts for every kind of operator work. Editing is
+          API-only for now — a visual editor lands in a follow-up release.
         </p>
       </header>
 
-      {query.isLoading && <p className="text-sm text-slate-500">Loading…</p>}
+      {query.isLoading && <LoadingState />}
       {query.isError && (
-        <p className="text-sm text-red-400">Failed to load task definitions.</p>
+        <ErrorState message="Failed to load task definitions." retry={() => query.refetch()} />
       )}
 
       {query.data && (
@@ -56,9 +56,7 @@ export function TaskCatalog() {
                   </td>
                   <td className="px-3 py-2 text-slate-100">{td.title}</td>
                   <td className="px-3 py-2 text-slate-300">{td.produces}</td>
-                  <td className="px-3 py-2 text-slate-300">
-                    {td.default_domain ?? "—"}
-                  </td>
+                  <td className="px-3 py-2 text-slate-300">{td.default_domain ?? "—"}</td>
                   <td className="px-3 py-2 text-slate-400">v{td.version}</td>
                   <td className="px-3 py-2">
                     <StatusPill status={td.status} />
@@ -87,11 +85,7 @@ function StatusPill({ status }: { status: string }) {
     archived: "bg-slate-800 text-slate-500 ring-1 ring-slate-700",
   };
   return (
-    <span
-      className={`rounded px-1.5 py-0.5 text-xs font-medium ${
-        cls[status] ?? cls.draft
-      }`}
-    >
+    <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${cls[status] ?? cls.draft}`}>
       {status}
     </span>
   );

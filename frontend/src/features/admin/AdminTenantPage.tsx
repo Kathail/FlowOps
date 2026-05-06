@@ -1,10 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type FormEvent } from "react";
-import { ApiError } from "../../lib/apiClient";
+import { Alert } from "../../components/Alert";
+import { Button } from "../../components/Button";
+import { ErrorState, LoadingState } from "../../components/States";
+import { translateApiError } from "../../lib/translateApiError";
 import { type TenantRead, getTenant, updateTenant } from "./api";
 
-const inputClass =
-  "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
+const inputClass = "mt-1 block w-full rounded border border-slate-700 px-2 py-1 text-sm";
 
 const UNITS_OPTIONS = ["imperial", "metric"];
 const LOCALES = ["en-US", "en-CA", "en-GB", "es-ES", "fr-FR"];
@@ -46,13 +48,12 @@ export function AdminTenantPage() {
       setSavedAt(new Date().toLocaleTimeString());
       setErrorMessage(null);
     },
-    onError: (e) =>
-      setErrorMessage(e instanceof ApiError ? e.message : String(e)),
+    onError: (e) => setErrorMessage(translateApiError(e)),
   });
 
-  if (query.isLoading) return <p className="text-sm text-slate-400">Loading…</p>;
+  if (query.isLoading) return <LoadingState />;
   if (query.isError)
-    return <p className="text-sm text-red-400">Failed to load tenant.</p>;
+    return <ErrorState message="Failed to load tenant." retry={() => query.refetch()} />;
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -78,11 +79,7 @@ export function AdminTenantPage() {
       <div className="grid grid-cols-2 gap-3">
         <label>
           <span className="text-slate-200">Locale</span>
-          <select
-            value={locale}
-            onChange={(e) => setLocale(e.target.value)}
-            className={inputClass}
-          >
+          <select value={locale} onChange={(e) => setLocale(e.target.value)} className={inputClass}>
             {LOCALES.map((l) => (
               <option key={l} value={l}>
                 {l}
@@ -92,11 +89,7 @@ export function AdminTenantPage() {
         </label>
         <label>
           <span className="text-slate-200">Units</span>
-          <select
-            value={units}
-            onChange={(e) => setUnits(e.target.value)}
-            className={inputClass}
-          >
+          <select value={units} onChange={(e) => setUnits(e.target.value)} className={inputClass}>
             {UNITS_OPTIONS.map((u) => (
               <option key={u} value={u}>
                 {u}
@@ -118,23 +111,17 @@ export function AdminTenantPage() {
       </label>
 
       <p className="text-xs text-slate-400">
-        Slug <code className="rounded bg-slate-800 px-1">/{query.data?.slug}</code>{" "}
-        is fixed for v1. Reach out to support to rename.
+        Slug <code className="rounded bg-slate-800 px-1">/{query.data?.slug}</code> is fixed for v1.
+        Reach out to support to rename.
       </p>
 
-      {errorMessage && <p className="text-sm text-red-400">{errorMessage}</p>}
-      {savedAt && (
-        <p className="text-xs text-emerald-300">Saved at {savedAt}.</p>
-      )}
+      {errorMessage && <Alert>{errorMessage}</Alert>}
+      {savedAt && <Alert variant="success">Saved at {savedAt}.</Alert>}
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          disabled={save.isPending}
-          className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
-        >
+        <Button type="submit" disabled={save.isPending}>
           {save.isPending ? "Saving…" : "Save"}
-        </button>
+        </Button>
       </div>
     </form>
   );

@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import {
-  type QueuedMutation,
-  discardMutation,
-  drainQueue,
-  listMutations,
-} from "../lib/offline";
+import { formatDateTime } from "../lib/format";
+import { type QueuedMutation, discardMutation, drainQueue, listMutations } from "../lib/offline";
 
 interface Props {
   onClose: () => void;
@@ -17,9 +13,7 @@ export function ConflictDrawer({ onClose }: Props) {
   async function refresh() {
     const all = await listMutations();
     setItems(
-      all.filter(
-        (m) => m.status === "conflict" || m.status === "failed" || m.status === "queued",
-      ),
+      all.filter((m) => m.status === "conflict" || m.status === "failed" || m.status === "queued"),
     );
   }
 
@@ -89,7 +83,8 @@ export function ConflictDrawer({ onClose }: Props) {
                 </span>
               </div>
               <p className="text-xs text-slate-400">
-                Enqueued {new Date(m.enqueuedAt).toLocaleString()} · attempts: {m.attempts}
+                Enqueued {formatDateTime(new Date(m.enqueuedAt).toISOString())} · attempts:{" "}
+                {m.attempts}
               </p>
               {m.errorStatus && (
                 <p className="text-xs text-red-400">

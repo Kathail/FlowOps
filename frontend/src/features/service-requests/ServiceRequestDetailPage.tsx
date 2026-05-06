@@ -6,6 +6,7 @@ import { Button } from "../../components/Button";
 import { DetailHeader } from "../../components/DetailHeader";
 import { ErrorState, LoadingState } from "../../components/States";
 import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
+import { formatDateTime } from "../../lib/format";
 import { translateApiError } from "../../lib/translateApiError";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
@@ -149,7 +150,7 @@ export function ServiceRequestDetailPage() {
           <Field label="Name" value={data.caller_name} />
           <Field label="Phone" value={data.caller_phone} />
           <Field label="Email" value={data.caller_email} />
-          <Field label="Reported" value={new Date(data.reported_at).toLocaleString()} />
+          <Field label="Reported" value={formatDateTime(data.reported_at)} />
         </div>
         <div className="space-y-3">
           <h2 className="text-sm font-semibold uppercase text-slate-400">Location</h2>
@@ -188,7 +189,7 @@ export function ServiceRequestDetailPage() {
             {data.closed_at && (
               <span className="text-slate-400">
                 {" — "}
-                {new Date(data.closed_at).toLocaleString()}
+                {formatDateTime(data.closed_at)}
               </span>
             )}
           </p>

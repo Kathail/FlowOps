@@ -1,6 +1,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
 import { ErrorState, LoadingState } from "../../components/States";
@@ -241,8 +242,12 @@ function TaskSection({
       <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
         {save.isPending && <span>Saving…</span>}
         {!save.isPending && savedAt && <span>Saved {savedAt.toLocaleTimeString()}</span>}
-        {error && <span className="text-red-400">Save failed: {error}</span>}
       </div>
+      {error && (
+        <div className="mt-2">
+          <Alert>Save failed: {error}</Alert>
+        </div>
+      )}
     </Section>
   );
 }
