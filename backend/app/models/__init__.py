@@ -5,6 +5,7 @@ from app.models.audit import AuditLog
 from app.models.crew import Crew, CrewMember
 from app.models.inspection import VALID_KINDS as INSPECTION_VALID_KINDS
 from app.models.inspection import Inspection
+from app.models.invitation import Invitation
 from app.models.mixins import (
     AuditableMixin,
     SoftDeleteMixin,
@@ -44,6 +45,7 @@ __all__ = [
     "Crew",
     "CrewMember",
     "Inspection",
+    "Invitation",
     "PacpCode",
     "Role",
     "ServiceRequest",
