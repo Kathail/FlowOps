@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { formatDateTime } from "../lib/format";
 import { type QueuedMutation, discardMutation, drainQueue, listMutations } from "../lib/offline";
+import { StatusPill, type PillTone } from "./StatusPill";
+
+const QUEUE_STATUS_TONE: Record<string, PillTone> = {
+  conflict: "danger",
+  failed: "warning",
+  queued: "info",
+};
 
 interface Props {
   onClose: () => void;
@@ -70,17 +77,7 @@ export function ConflictDrawer({ onClose }: Props) {
                 <span className="font-mono text-xs text-slate-400">
                   {m.method} {m.url}
                 </span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-xs ring-1 ${
-                    m.status === "conflict"
-                      ? "bg-red-500/15 text-red-300 ring-red-500/30"
-                      : m.status === "failed"
-                        ? "bg-amber-500/15 text-amber-300 ring-amber-500/30"
-                        : "bg-blue-500/15 text-blue-300 ring-blue-500/30"
-                  }`}
-                >
-                  {m.status}
-                </span>
+                <StatusPill tone={QUEUE_STATUS_TONE[m.status] ?? "neutral"}>{m.status}</StatusPill>
               </div>
               <p className="text-xs text-slate-400">
                 Enqueued {formatDateTime(new Date(m.enqueuedAt).toISOString())} · attempts:{" "}

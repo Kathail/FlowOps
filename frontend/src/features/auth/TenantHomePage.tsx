@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { StatusPill, type PillTone } from "../../components/StatusPill";
 import { type DashboardResponse, getDashboard } from "../dashboard/api";
 import { useAuth } from "./useAuth";
 
@@ -167,9 +168,7 @@ function Kpi({
       to={to}
       className={`block rounded-md border ${a.border} ${a.bg} p-2.5 transition-colors hover:border-blue-500/50`}
     >
-      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-        {label}
-      </p>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{label}</p>
       <p className={`mt-0.5 text-xl font-semibold ${a.text} tabular-nums`}>{value}</p>
       {sub && <p className="text-[10px] text-slate-500">{sub}</p>}
     </Link>
@@ -190,9 +189,7 @@ function Stat({
   const a = ACCENT[accent];
   return (
     <div className={`rounded-md border ${a.border} ${a.bg} p-2.5`}>
-      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">
-        {label}
-      </p>
+      <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{label}</p>
       <p className={`mt-0.5 text-xl font-semibold ${a.text} tabular-nums`}>{value}</p>
       {sub && <p className="text-[10px] text-slate-500">{sub}</p>}
     </div>
@@ -201,19 +198,11 @@ function Stat({
 
 // ============== TODAY'S QUEUE ==============
 
-function TodayQueue({
-  items,
-  slug,
-}: {
-  items: DashboardResponse["today_queue"];
-  slug: string;
-}) {
+function TodayQueue({ items, slug }: { items: DashboardResponse["today_queue"]; slug: string }) {
   return (
     <section className="rounded-md border border-slate-800 bg-slate-900 p-3">
       <div className="flex items-baseline justify-between">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          Your queue
-        </h2>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">Your queue</h2>
         <Link
           to={`/${slug}/work-orders?assigned_to=me`}
           className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
@@ -222,14 +211,11 @@ function TodayQueue({
         </Link>
       </div>
       {items.length === 0 ? (
-        <p className="mt-2 text-sm text-slate-500">
-          Nothing assigned today. Take a breath ☕
-        </p>
+        <p className="mt-2 text-sm text-slate-500">Nothing assigned today. Take a breath ☕</p>
       ) : (
         <ul className="mt-2 space-y-1.5">
           {items.map((q) => {
-            const pct =
-              q.asset_total === 0 ? 0 : Math.round((q.asset_done / q.asset_total) * 100);
+            const pct = q.asset_total === 0 ? 0 : Math.round((q.asset_done / q.asset_total) * 100);
             return (
               <li key={q.wo_number}>
                 <Link
@@ -268,27 +254,22 @@ function TodayQueue({
   );
 }
 
+const PRIORITY_TONE: Record<string, PillTone> = {
+  emergency: "danger",
+  high: "warning",
+  normal: "neutral",
+  low: "muted",
+};
+
 function PriorityChip({ priority, overdue }: { priority: string; overdue: boolean }) {
-  const palette: Record<string, string> = {
-    emergency: "bg-red-500/15 text-red-200 ring-red-500/40",
-    high: "bg-amber-500/15 text-amber-200 ring-amber-500/30",
-    normal: "bg-slate-700/40 text-slate-300 ring-slate-600/40",
-    low: "bg-slate-800 text-slate-500 ring-slate-700",
-  };
   return (
     <div className="flex items-center gap-1">
       {overdue && (
-        <span className="rounded bg-red-500/20 px-1 py-0.5 text-[9px] font-medium uppercase text-red-200 ring-1 ring-red-500/40">
+        <StatusPill tone="danger" dot>
           Overdue
-        </span>
+        </StatusPill>
       )}
-      <span
-        className={`rounded px-1.5 py-0.5 text-[9px] font-medium uppercase ring-1 ${
-          palette[priority] ?? palette.normal
-        }`}
-      >
-        {priority}
-      </span>
+      <StatusPill tone={PRIORITY_TONE[priority] ?? "neutral"}>{priority}</StatusPill>
     </div>
   );
 }
@@ -302,25 +283,14 @@ const AREA_KIND_GROUP: Record<string, string> = {
   storm_system: "Storm drainage",
 };
 
-function ByArea({
-  rows,
-  slug,
-}: {
-  rows: DashboardResponse["by_area"];
-  slug: string;
-}) {
+function ByArea({ rows, slug }: { rows: DashboardResponse["by_area"]; slug: string }) {
   if (rows.length === 0) {
     return (
       <section className="rounded-md border border-slate-800 bg-slate-900 p-3">
-        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">
-          By area
-        </h2>
+        <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">By area</h2>
         <p className="mt-2 text-sm text-slate-500">
           No service areas configured yet.{" "}
-          <Link
-            to={`/${slug}/admin`}
-            className="text-blue-400 hover:text-blue-300 hover:underline"
-          >
+          <Link to={`/${slug}/admin`} className="text-blue-400 hover:text-blue-300 hover:underline">
             Set up districts and systems →
           </Link>
         </p>
@@ -334,9 +304,7 @@ function ByArea({
 
   return (
     <section className="rounded-md border border-slate-800 bg-slate-900 p-3">
-      <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">
-        By area
-      </h2>
+      <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">By area</h2>
       <div className="mt-2 space-y-3">
         {Object.entries(byKind).map(([kind, kindRows]) => (
           <div key={kind}>
@@ -345,10 +313,7 @@ function ByArea({
             </p>
             <ul className="mt-1 divide-y divide-slate-800/60">
               {kindRows.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-center gap-3 py-1.5 text-sm"
-                >
+                <li key={a.id} className="flex items-center gap-3 py-1.5 text-sm">
                   <span
                     className="inline-block h-2 w-2 shrink-0 rounded-full"
                     style={{ backgroundColor: a.color ?? "#475569" }}
@@ -357,11 +322,7 @@ function ByArea({
                   <ByAreaStat label="WOs" value={a.active_wos} accent="blue" />
                   <ByAreaStat label="SRs" value={a.active_srs} accent="amber" />
                   {a.overdue_wos > 0 && (
-                    <ByAreaStat
-                      label="overdue"
-                      value={a.overdue_wos}
-                      accent="red"
-                    />
+                    <ByAreaStat label="overdue" value={a.overdue_wos} accent="red" />
                   )}
                 </li>
               ))}
@@ -383,11 +344,7 @@ function ByAreaStat({
   accent: "blue" | "amber" | "red";
 }) {
   const cls =
-    accent === "red"
-      ? "text-red-300"
-      : accent === "amber"
-        ? "text-amber-300"
-        : "text-blue-300";
+    accent === "red" ? "text-red-300" : accent === "amber" ? "text-amber-300" : "text-blue-300";
   if (value === 0) {
     return (
       <span className="inline-flex items-baseline gap-1 text-[11px] tabular-nums text-slate-600">
@@ -406,11 +363,7 @@ function ByAreaStat({
 
 // ============== CATEGORY CHART ==============
 
-function CategoryChart({
-  buckets,
-}: {
-  buckets: DashboardResponse["wo_by_category_30d"];
-}) {
+function CategoryChart({ buckets }: { buckets: DashboardResponse["wo_by_category_30d"] }) {
   const total = buckets.reduce((sum, b) => sum + b.count, 0);
   const max = Math.max(1, ...buckets.map((b) => b.count));
 
@@ -521,15 +474,7 @@ function SrPulse({
   );
 }
 
-function SrChip({
-  label,
-  value,
-  to,
-}: {
-  label: string;
-  value: number;
-  to: string;
-}) {
+function SrChip({ label, value, to }: { label: string; value: number; to: string }) {
   return (
     <Link
       to={to}
