@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from flask import Blueprint, Response, abort, jsonify
+from flask import Blueprint, Response, jsonify
 from flask_login import current_user, login_required
 from sqlalchemy import bindparam, func, select
 
+from app.errors import ValidationError
 from app.extensions import db
 from app.models import AssetClass
 
@@ -48,7 +49,9 @@ def list_tile_layers():
 @login_required
 def get_assets_tile(z: int, x: int, y: int):
     if z < 0 or z > 24 or x < 0 or y < 0 or x >= (1 << z) or y >= (1 << z):
-        abort(400)
+        # Tile servers return 400 for invalid coords (XYZ contract); keep
+        # parity rather than the typed-error default 422.
+        raise ValidationError("tile coords out of range", code="bad_tile", status_code=400)
 
     stmt = select(
         func.assets_mvt(

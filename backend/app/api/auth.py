@@ -5,10 +5,10 @@ from datetime import UTC, datetime
 
 from flask import Blueprint, current_app, g, jsonify, request
 from flask_login import current_user, login_required, login_user, logout_user
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 
 from app.errors import AuthError, ConflictError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import csrf, db, limiter
 from app.models import Role, Tenant, User, UserRole
 from app.schemas.auth import (
@@ -34,12 +34,6 @@ DEFAULT_ROLES: list[tuple[str, str]] = [
     ("intake", "Service intake"),
 ]
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _user_payload(user: User) -> dict:

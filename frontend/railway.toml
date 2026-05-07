@@ -1,0 +1,16 @@
+# Per-service Railway config for the frontend SPA.
+# Railway picks this up when the service's Source path points at this
+# directory. Most config still lives in the dashboard (env vars,
+# domains) but startCommand + healthcheck are nice to source-control.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+# nginx already binds to ${PORT} via the entrypoint envsubst, so no
+# explicit start command is needed — Docker CMD handles it.
+healthcheckPath = "/healthz"
+healthcheckTimeout = 10
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

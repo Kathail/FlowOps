@@ -5,11 +5,11 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import Asset, ServiceRequest, WorkOrder
 from app.schemas.service_request import (
@@ -33,12 +33,6 @@ from app.services.wo_number import next_wo_number
 
 service_requests_bp = Blueprint("service_requests", __name__, url_prefix="/api/v1/service-requests")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _user_roles() -> set[str]:

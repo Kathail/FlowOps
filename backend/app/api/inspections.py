@@ -12,6 +12,7 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import Asset, WorkOrder
 from app.models.inspection import Inspection
@@ -39,12 +40,6 @@ KIND_ASSET_COMPATIBILITY: dict[str, set[str]] = {
     "cctv": {"SAN_MAIN", "STM_MAIN"},
 }
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _user_roles() -> set[str]:

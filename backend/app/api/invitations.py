@@ -12,11 +12,11 @@ from datetime import UTC, datetime, timedelta
 
 from flask import Blueprint, current_app, g, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import csrf, db, limiter
 from app.models import Invitation, Role, Tenant, User, UserRole
 from app.schemas.invitation import (
@@ -37,12 +37,6 @@ logger = logging.getLogger(__name__)
 
 invitations_bp = Blueprint("invitations", __name__, url_prefix="/api/v1/invitations")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _accept_url(token: str) -> str:

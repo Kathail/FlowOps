@@ -7,7 +7,7 @@ import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
-import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { StatusPill } from "../../components/StatusPill";
 import { SummaryBar } from "../../components/SummaryBar";
 import { formatDateTime } from "../../lib/format";
 import { translateApiError } from "../../lib/translateApiError";
@@ -21,6 +21,7 @@ import {
   type SrStatus,
 } from "./api";
 import { useServiceRequests } from "./hooks";
+import { SR_PRIORITY_TONE as PRIORITY_TONE, SR_STATUS_TONE as STATUS_TONE } from "./tones";
 
 const STATUSES: SrStatus[] = ["new", "triaged", "dispatched", "closed", "duplicate"];
 const DOMAINS: SrDomain[] = ["water", "sewer", "storm"];
@@ -35,21 +36,6 @@ const CATEGORIES: SrCategory[] = [
   "water_quality",
   "other",
 ];
-
-const STATUS_TONE: Record<SrStatus, PillTone> = {
-  new: "info",
-  triaged: "warning",
-  dispatched: "info",
-  closed: "muted",
-  duplicate: "muted",
-};
-
-const PRIORITY_TONE: Record<SrPriority, PillTone> = {
-  emergency: "danger",
-  high: "warning",
-  normal: "neutral",
-  low: "muted",
-};
 
 /** SRs that need supervisor attention (the default scope). */
 const ATTENTION_STATUSES: SrStatus[] = ["new", "triaged"];

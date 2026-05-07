@@ -12,10 +12,10 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 
 from app.errors import ForbiddenError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import Comment, Inspection, Schedule, ServiceRequest, User, WorkOrder
 from app.schemas.comment import (
@@ -28,12 +28,6 @@ from app.services.audit import emit_event
 
 comments_bp = Blueprint("comments", __name__, url_prefix="/api/v1/comments")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _verify_entity(kind: str, entity_id: int) -> None:

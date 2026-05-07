@@ -113,7 +113,7 @@ In the Railway dashboard, on the **`frontend`** service:
 4. Deploy frontend; verify nginx is up via Railway's subdomain.
 5. Add the custom domain `app.citywater.ca`; wait for cert.
 6. From your machine: `curl https://app.citywater.ca/healthz` should return JSON, and the SPA should load at the root.
-7. Register a real tenant via `/register` (the `/register` route is rate-limited at 5/min — adjust in env if needed for bulk testing).
+7. Register a real tenant via the `/register` page in the SPA (it POSTs to `/api/v1/auth/register-tenant`, which is rate-limited at 5 / minute by default — tune via the `RATE_LIMIT_REGISTER` env var if needed for bulk testing).
 8. Optionally seed the demo tenant for the "Try the demo →" button:
    ```
    railway run --service backend flask --app app.wsgi seed-demo

@@ -5,11 +5,11 @@ from typing import Any
 
 from flask import Blueprint, Response, jsonify, request, stream_with_context
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import Asset, AssetClass, AuditLog, User
 from app.schemas.asset import AssetCreate, AssetUpdate
@@ -22,12 +22,6 @@ from app.services.permissions import require_roles
 
 assets_bp = Blueprint("assets", __name__, url_prefix="/api/v1/assets")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _payload(asset: Asset) -> dict[str, Any]:
@@ -341,9 +335,11 @@ def import_assets():
     size = file.stream.tell()
     file.stream.seek(0)
     if size > 10 * 1024 * 1024:
-        from flask import abort
-
-        abort(413)
+        raise ValidationError(
+            "import file exceeds the 10 MiB per-request cap",
+            code="too_large",
+            status_code=413,
+        )
 
     on_conflict = request.form.get("on_conflict", "skip")
     if on_conflict not in ("skip", "update"):

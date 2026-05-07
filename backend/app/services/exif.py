@@ -12,7 +12,7 @@ _GPS_TAG_ID = next((tag for tag, name in ExifTags.TAGS.items() if name == "GPSIn
 def _ratio_to_float(value) -> float | None:
     try:
         return float(value)
-    except Exception:
+    except (TypeError, ValueError):
         return None
 
 
@@ -25,7 +25,7 @@ def _dms_to_decimal(dms, ref) -> float | None:
         if ref in ("S", "W"):
             decimal = -decimal
         return decimal
-    except Exception:
+    except (TypeError, ValueError):
         return None
 
 
@@ -38,7 +38,8 @@ def extract_metadata(stream: BinaryIO) -> tuple[tuple[float, float] | None, date
     try:
         img = Image.open(stream)
         exif = img._getexif() if hasattr(img, "_getexif") else None
-    except Exception:
+    except (OSError, AttributeError, Image.UnidentifiedImageError):
+        # Not a recognised image, or the EXIF block is malformed.
         stream.seek(pos)
         return None, None
 

@@ -59,7 +59,3 @@ def find_duplicates(
 
     rows = db.session.execute(stmt).all()
     return [(row[0], float(row[1])) for row in rows]
-
-
-def now_utc() -> datetime:
-    return datetime.now(UTC)

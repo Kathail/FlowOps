@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DndContext,
   type DragEndEvent,
+  KeyboardSensor,
   PointerSensor,
   useDroppable,
   useDraggable,
@@ -27,7 +28,14 @@ interface Props {
 
 export function KanbanBoard({ items, slug }: Props) {
   const queryClient = useQueryClient();
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+  // Pointer for mouse/touch + Keyboard so drag & drop is reachable
+  // without a pointer (Tab to a card, Space to pick up, arrows to move,
+  // Space again to drop). dnd-kit's default coordinate-getter picks the
+  // nearest droppable on each arrow press.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor),
+  );
 
   const grouped = useMemo(() => {
     const m: Record<string, WorkOrderListItem[]> = {};

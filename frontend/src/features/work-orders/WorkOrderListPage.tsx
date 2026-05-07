@@ -6,7 +6,7 @@ import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
-import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { StatusPill } from "../../components/StatusPill";
 import { SummaryBar } from "../../components/SummaryBar";
 import { formatDate, formatRelative } from "../../lib/format";
 import { translateApiError } from "../../lib/translateApiError";
@@ -21,23 +21,7 @@ import {
   type WorkOrderListParams,
 } from "./api";
 import { useWorkOrders } from "./hooks";
-
-const STATUS_TONE: Record<WoStatus, PillTone> = {
-  draft: "muted",
-  open: "info",
-  assigned: "info",
-  in_progress: "info",
-  on_hold: "warning",
-  completed: "success",
-  cancelled: "neutral",
-};
-
-const PRIORITY_TONE: Record<WoPriority, PillTone> = {
-  low: "muted",
-  normal: "neutral",
-  high: "warning",
-  emergency: "danger",
-};
+import { WO_PRIORITY_TONE as PRIORITY_TONE, WO_STATUS_TONE as STATUS_TONE } from "./tones";
 
 const STATUSES: WoStatus[] = [
   "draft",

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s http://localhost:*)",
+      "Bash(curl -s http://127.0.0.1:*)",
+      "Bash(curl -fsS http://localhost:*)",
+      "Bash(curl -fsS http://127.0.0.1:*)",
+      "Bash(curl -s *)",
+      "Bash(curl -sI *)",
+      "Bash(uv run pytest)",
+      "Bash(uv run pytest -q)",
+      "Bash(uv run pytest -x -q)",
+      "Bash(uv run pytest -x)",
+      "Bash(uv run pytest --tb=no)",
+      "Bash(uv run pytest -q --tb=no)",
+      "Bash(uv run pytest --co -q)",
+      "Bash(uv run pytest -q --co)",
+      "Bash(npx vitest run)",
+      "Bash(npx tsc -b)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(npm run build)",
+      "Bash(npm run lint)",
+      "Bash(npm run test)",
+      "Bash(npm run format:check)",
+      "Bash(railway logs --service *)",
+      "Bash(railway variable list *)",
+      "Bash(railway variables *)"
+    ]
+  }
+}

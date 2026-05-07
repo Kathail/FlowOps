@@ -4,11 +4,11 @@ from datetime import UTC, datetime
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import Role, User, UserRole
 from app.schemas.user import (
@@ -24,12 +24,6 @@ from app.utils.uids import generate_user_uid
 
 users_bp = Blueprint("users", __name__, url_prefix="/api/v1/users")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _user_payload(user: User) -> dict:

@@ -5,7 +5,7 @@ import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
 import { ErrorState, LoadingState } from "../../components/States";
-import { StatusPill as SharedStatusPill, type PillTone } from "../../components/StatusPill";
+import { StatusPill as SharedStatusPill } from "../../components/StatusPill";
 import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { formatDateTime } from "../../lib/format";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
@@ -27,6 +27,7 @@ import {
   type WorkOrderDetail,
 } from "./api";
 import { useWorkOrder } from "./hooks";
+import { WO_STATUS_TONE } from "./tones";
 
 const TRANSITIONS: Record<WoStatus, WoStatus[]> = {
   draft: ["open", "cancelled"],
@@ -252,21 +253,9 @@ function TaskSection({
   );
 }
 
-// Tone mapping kept in sync with WorkOrderListPage's STATUS_TONE — both
-// surface the same WoStatus so the pill should read identically.
-const STATUS_TONE: Record<WoStatus, PillTone> = {
-  draft: "muted",
-  open: "info",
-  assigned: "info",
-  in_progress: "info",
-  on_hold: "warning",
-  completed: "success",
-  cancelled: "neutral",
-};
-
 function StatusPill({ status }: { status: WoStatus }) {
   return (
-    <SharedStatusPill tone={STATUS_TONE[status]} dot>
+    <SharedStatusPill tone={WO_STATUS_TONE[status]} dot>
       {status.replace("_", " ")}
     </SharedStatusPill>
   );

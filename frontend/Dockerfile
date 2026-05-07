@@ -33,6 +33,10 @@ EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD wget -q --spider http://localhost:${PORT}/ || exit 1
+# Note: deliberately probes /, not /healthz. /healthz proxies to backend
+# — if backend is down the frontend can still serve the cached SPA shell,
+# so coupling the two healthchecks would unnecessarily route traffic
+# away from a working frontend.
 
 # nginx:alpine's entrypoint runs envsubst over /etc/nginx/templates/*.template
 # into /etc/nginx/conf.d/ before launching nginx — exactly what we want.

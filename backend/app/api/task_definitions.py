@@ -15,11 +15,11 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import TaskDefinition
 from app.schemas.task_definition import (
@@ -39,12 +39,6 @@ from app.services.tasks.match import find_matching_task
 
 task_definitions_bp = Blueprint("task_definitions", __name__, url_prefix="/api/v1/task-definitions")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _read_payload(td: TaskDefinition) -> dict[str, Any]:

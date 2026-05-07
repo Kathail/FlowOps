@@ -304,3 +304,37 @@ def test_dispatched_sr_links_back_to_wo(admin_client):
     wo = db.session.scalar(db.select(WorkOrder).where(WorkOrder.wo_number == wo_number))
     assert wo is not None
     assert wo.service_request_id is not None
+
+
+def test_q_search_does_not_500(admin_client, tenant):
+    """Regression for the P0 ServiceRequest.address AttributeError —
+    `q` filter referenced a column renamed to `reported_address` in 0022."""
+    _insert_sr(tenant, reported_address="42 Hydrant Lane")
+    db.session.commit()
+    resp = admin_client.get("/api/v1/service-requests?q=Hydrant")
+    assert resp.status_code == 200
+    items = resp.get_json()["items"]
+    assert any(i["reported_address"] == "42 Hydrant Lane" for i in items)
+
+
+def test_q_search_matches_caller_and_description(admin_client, tenant):
+    _insert_sr(tenant, caller_name="Maria Lopez", description="No water in the bathroom.")
+    db.session.commit()
+    by_caller = admin_client.get("/api/v1/service-requests?q=Lopez").get_json()["items"]
+    by_desc = admin_client.get("/api/v1/service-requests?q=bathroom").get_json()["items"]
+    assert any(i["caller_name"] == "Maria Lopez" for i in by_caller)
+    assert by_desc, "description should be searchable"
+
+
+def test_priority_filter_in_list(admin_client, tenant):
+    _insert_sr(tenant, sr_number="SR-2026-99001", priority="emergency")
+    _insert_sr(tenant, sr_number="SR-2026-99002", priority="low")
+    db.session.commit()
+    # Backend list endpoint doesn't filter by priority server-side yet —
+    # the dashboard pulls into the SR list and filters client-side. This
+    # test asserts the priority data is present in the response so the
+    # client filter works.
+    items = admin_client.get("/api/v1/service-requests").get_json()["items"]
+    priorities = {i["priority"] for i in items}
+    assert "emergency" in priorities
+    assert "low" in priorities

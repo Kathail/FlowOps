@@ -13,10 +13,10 @@ from typing import Any
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
-from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import or_, select
 
 from app.errors import ConflictError, NotFoundError, ValidationError
+from app.api import validate_request as _validate
 from app.extensions import db
 from app.models import EntityLink, Inspection, ServiceRequest, WorkOrder
 from app.schemas.links import LinkCreate, LinkListResponse, LinkRead
@@ -24,12 +24,6 @@ from app.services.audit import emit_event
 
 links_bp = Blueprint("links", __name__, url_prefix="/api/v1/links")
 
-
-def _validate(model_cls, data):
-    try:
-        return model_cls.model_validate(data)
-    except PydanticValidationError as e:
-        raise ValidationError(str(e.errors())) from e
 
 
 def _verify_entity(kind: str, entity_id: int) -> str:
