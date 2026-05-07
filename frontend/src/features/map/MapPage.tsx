@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl, { type Map as MapLibreMap, type MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { getAsset } from "../assets/api";
 import { useMapOverlays, useTileLayers } from "./hooks";
 import { LayerPanel } from "./LayerPanel";
 import type { BasemapId } from "./basemap";
@@ -64,11 +65,69 @@ const BASEMAP_STYLES: Record<BasemapId, maplibregl.StyleSpecification> = {
 const DEFAULT_CENTER: [number, number] = [-76.5, 39.3];
 const DEFAULT_ZOOM = 11;
 
+/** Pull a representative lon/lat out of a GeoJSON geometry. Point uses
+ * its own coords; Line/Polygon use the first vertex (good enough for
+ * "fly to this asset" navigation; full centroid would be nicer but
+ * isn't worth a turf dependency for v1). */
+function representativePoint(
+  geom: { type: string; coordinates: unknown } | null | undefined,
+): [number, number] | null {
+  if (!geom) return null;
+  const c = geom.coordinates;
+  if (geom.type === "Point" && Array.isArray(c) && typeof c[0] === "number") {
+    return [c[0] as number, c[1] as number];
+  }
+  if (geom.type === "LineString" && Array.isArray(c) && Array.isArray(c[0])) {
+    const first = c[0] as number[];
+    return [first[0], first[1]];
+  }
+  if (geom.type === "Polygon" && Array.isArray(c) && Array.isArray(c[0])) {
+    const ring = c[0] as number[][];
+    if (ring.length > 0) return [ring[0][0], ring[0][1]];
+  }
+  return null;
+}
+
+/** Parse a `?ll=lon,lat&z=zoom` pair from the URL. Returns the default
+ * pair when missing or malformed. */
+function readCenterZoom(search: URLSearchParams): { center: [number, number]; zoom: number } {
+  const ll = search.get("ll");
+  const z = search.get("z");
+  let center = DEFAULT_CENTER;
+  let zoom = DEFAULT_ZOOM;
+  if (ll) {
+    const parts = ll.split(",").map((p) => Number(p.trim()));
+    if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) {
+      center = [parts[0], parts[1]];
+    }
+  }
+  if (z) {
+    const n = Number(z);
+    if (Number.isFinite(n) && n >= 0 && n <= 24) zoom = n;
+  }
+  return { center, zoom };
+}
+
 export function MapPage() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const tileLayersQuery = useTileLayers();
   const overlaysQuery = useMapOverlays();
+  // URL state — `?ll=lon,lat&z=zoom&focus=ASSET-UID` makes the current
+  // map view sharable. Center/zoom round-trip through `moveend` so the
+  // back button replays panning history. `?focus=` opens the side
+  // panel for a specific asset on first paint.
+  const [search, setSearch] = useSearchParams();
+  // Snapshot the URL params at mount — we don't want to re-read them
+  // on every render because the listener writes back to the URL
+  // continuously and that would create a feedback loop.
+  const initialView = useRef(readCenterZoom(search));
+  const initialFocus = useRef(search.get("focus"));
+  // Suppresses the URL-write effect when we're moving the map in
+  // response to a URL change (e.g. external link). Without this, the
+  // very first moveend after a navigation would overwrite the URL the
+  // user just clicked.
+  const suppressUrlWrite = useRef(false);
 
   // Layer toggles persist across refresh — operators routinely turn off
   // entire domains (e.g. only show storm assets while triaging a flood)
@@ -119,18 +178,112 @@ export function MapPage() {
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: BASEMAP_STYLES.osm,
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
+      // Initial view from `?ll=&z=` if present, otherwise our default
+      // center/zoom. Captured at mount via useRef so panning the map
+      // afterwards doesn't reset on re-renders.
+      center: initialView.current.center,
+      zoom: initialView.current.zoom,
     });
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: false }));
     map.addControl(new maplibregl.ScaleControl({ unit: "metric" }));
     mapRef.current = map;
 
+    // Push center/zoom to the URL on every moveend, debounced so a
+    // smooth pan doesn't generate dozens of history entries. Replace
+    // (not push) so the back button doesn't accumulate every nudge.
+    let urlWriteTimer: number | null = null;
+    function onMoveEnd() {
+      if (suppressUrlWrite.current) {
+        suppressUrlWrite.current = false;
+        return;
+      }
+      if (urlWriteTimer !== null) window.clearTimeout(urlWriteTimer);
+      urlWriteTimer = window.setTimeout(() => {
+        const c = map.getCenter();
+        const z = map.getZoom();
+        // setSearch via the latest setSearch reference — captured by
+        // effect closure on each render via the urlSyncRef.
+        urlSyncRef.current?.(c.lng.toFixed(5), c.lat.toFixed(5), z.toFixed(2));
+      }, 300);
+    }
+    map.on("moveend", onMoveEnd);
+
     return () => {
+      if (urlWriteTimer !== null) window.clearTimeout(urlWriteTimer);
+      map.off("moveend", onMoveEnd);
       map.remove();
       mapRef.current = null;
     };
   }, []);
+
+  // Latest setSearch reference for the moveend handler (so we don't
+  // rebind it every render). The handler reads through this ref.
+  const urlSyncRef = useRef<(lng: string, lat: string, z: string) => void>(() => {});
+  useEffect(() => {
+    urlSyncRef.current = (lng, lat, z) => {
+      const next = new URLSearchParams(search);
+      next.set("ll", `${lng},${lat}`);
+      next.set("z", z);
+      setSearch(next, { replace: true });
+    };
+  }, [search, setSearch]);
+
+  // ?focus=ASSET-UID — fly + open the side panel for a specific asset
+  // on first paint. Only runs once; subsequent ?focus changes from URL
+  // navigation are handled by the search bar / context menu paths.
+  const focusRan = useRef(false);
+  useEffect(() => {
+    if (focusRan.current) return;
+    const uid = initialFocus.current;
+    if (!uid) return;
+    focusRan.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        const asset = await getAsset(uid);
+        if (cancelled) return;
+        const map = mapRef.current;
+        const point = representativePoint(asset.geometry);
+        if (!map || !point) return;
+        // Suppress the moveend → URL write so flyTo doesn't overwrite
+        // the ?focus= we just landed on.
+        suppressUrlWrite.current = true;
+        map.flyTo({ center: point, zoom: Math.max(map.getZoom(), 16) });
+        setSelected({
+          kind: "asset",
+          asset_uid: asset.asset_uid,
+          class_code: asset.class_code,
+          domain: asset.domain,
+          status: asset.status ?? "",
+          condition: asset.condition ?? null,
+        });
+      } catch {
+        // Asset not found / unauthorized — silently leave the map at
+        // its default view rather than throw a confusing error overlay.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Sync `?focus=` to the selected asset so the URL stays sharable as
+  // the operator navigates between assets via the search bar / clicks.
+  useEffect(() => {
+    const next = new URLSearchParams(search);
+    if (selected?.kind === "asset") {
+      if (next.get("focus") === selected.asset_uid) return;
+      next.set("focus", selected.asset_uid);
+    } else {
+      if (!next.has("focus")) return;
+      next.delete("focus");
+    }
+    setSearch(next, { replace: true });
+    // search/setSearch intentionally omitted — selected is the trigger;
+    // search is read inside but we only want to fire on selection
+    // changes, not URL nudges from the moveend handler.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected]);
 
   // Switch basemap style; re-add the assets source/layers after style loads
   useEffect(() => {
