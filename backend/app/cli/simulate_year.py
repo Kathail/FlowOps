@@ -194,6 +194,12 @@ SR_CATEGORY_TASK = {
     "sewer_backup": "SEW-TASK-BACKUP",
     "odour": "SEW-TASK-ODOR",
     "flooding": "STM-TASK-CB-CLOGGED",
+    # Catch-all: every SR category in VALID_CATEGORIES needs an entry
+    # here so simulate-year populates task_definition_id and the
+    # comment composer renders smart-comment chips. tests/test_smart_
+    # comments.py asserts the catalog covers every SR category; this
+    # map is the simulator's local view of that mapping.
+    "other": "GEN-TASK-CUSTOMER-COMPLAINT",
 }
 
 # Citizen-issue task data presets — applied to the SR's task_data when

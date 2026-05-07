@@ -161,3 +161,19 @@ def test_every_sr_category_has_a_matching_task() -> None:
         f"SR categories with no matching task definition (smart comments "
         f"won't render in the comment composer): {sorted(missing)}"
     )
+
+
+def test_simulate_year_covers_every_sr_category() -> None:
+    """simulate-year populates `task_definition_id` from a local map
+    rather than calling find_matching_task. Categories missing from that
+    map silently come out with task_definition_id=None → no smart
+    comments. Assert every category is covered."""
+    from app.cli.simulate_year import SR_CATEGORY_TASK
+    from app.models.service_request import VALID_CATEGORIES
+
+    missing = set(VALID_CATEGORIES) - set(SR_CATEGORY_TASK)
+    assert not missing, (
+        f"SR_CATEGORY_TASK in simulate_year.py is missing entries for: "
+        f"{sorted(missing)}. Add them so simulated SRs in those "
+        f"categories get smart comments."
+    )

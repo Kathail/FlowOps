@@ -615,7 +615,14 @@ def _seed() -> None:
             notes="Schedule structural rehab — Quick Rating 4.",
         )
 
-    # Service requests — assorted statuses + a true duplicate pair
+    # Service requests — assorted statuses + a true duplicate pair.
+    # Match each SR to its citizen-issue task definition the same way
+    # POST /api/v1/service-requests does, so the comment composer
+    # renders smart-comment chips on these showcase rows. Without this,
+    # every demo SR carried task_definition_id=None and the chips
+    # silently never showed up.
+    from app.services.tasks.match import find_matching_task
+
     def _sr(**kwargs) -> ServiceRequest:
         n = next_sr_number(tenant_id=tenant.id)
         defaults = {
@@ -626,6 +633,14 @@ def _seed() -> None:
         }
         for k, v in defaults.items():
             kwargs.setdefault(k, v)
+        if "task_definition_id" not in kwargs:
+            matched = find_matching_task(
+                tenant_id=tenant.id,
+                source="service_request",
+                payload={"category": kwargs["category"], "domain": kwargs["domain"]},
+            )
+            if matched is not None:
+                kwargs["task_definition_id"] = matched.id
         sr = ServiceRequest(tenant_id=tenant.id, sr_number=n, **kwargs)
         db.session.add(sr)
         db.session.flush()
