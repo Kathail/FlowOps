@@ -214,6 +214,15 @@ def update_asset(asset_uid: str):
         asset.geom = geojson_to_wkb(geom_dict)
 
     update_data = data.model_dump(exclude_unset=True, exclude={"geometry"})
+
+    # ASSETS-P0-2: AssetUpdate.attrs is dict|None for "field omitted"
+    # vs "explicit clear" semantics. Asset.attrs is NOT NULL with
+    # default=dict, so writing None straight through would 500 with
+    # IntegrityError. Coerce explicit nulls back to {} (which is what
+    # "clear" should mean) and fail loud on anything else.
+    if "attrs" in update_data and update_data["attrs"] is None:
+        update_data["attrs"] = {}
+
     for field, value in update_data.items():
         setattr(asset, field, value)
 
@@ -239,6 +248,20 @@ def soft_delete_asset(asset_uid: str):
     # And drop the M:N rows that reference the deleted asset — they'd
     # render as orphan stops with no readable display name otherwise.
     db.session.execute(WorkOrderAsset.__table__.delete().where(WorkOrderAsset.asset_id == asset.id))
+
+    # ASSETS-P0-1: extend the sweep to every other table that references
+    # asset_id with ondelete="SET NULL". The FK only fires on hard delete,
+    # so without this the inspection/SR/schedule detail pages keep showing
+    # "Hydrant HYD-00421" pointing at a soft-deleted row whose Asset.deleted_at
+    # filter hides everything else about it. Better to null the pointer
+    # than to keep a ghost reference.
+    from app.models import Inspection, Schedule, ServiceRequest
+
+    db.session.execute(Inspection.__table__.update().where(Inspection.asset_id == asset.id).values(asset_id=None))
+    db.session.execute(
+        ServiceRequest.__table__.update().where(ServiceRequest.asset_id == asset.id).values(asset_id=None)
+    )
+    db.session.execute(Schedule.__table__.update().where(Schedule.asset_id == asset.id).values(asset_id=None))
 
     db.session.commit()
     return "", 204

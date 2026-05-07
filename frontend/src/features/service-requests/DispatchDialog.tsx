@@ -34,6 +34,8 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
     category: "repair",
     priority: defaultPriority,
     asset_uid: "",
+    scheduled_for: "",
+    due_by: "",
   });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -48,6 +50,13 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
           category: form.category,
           priority: form.priority,
           asset_uid: form.asset_uid || undefined,
+          // SR-P1: surface scheduled_for + due_by so dispatchers don't
+          // have to bounce into the WO detail page just to set a date
+          // after dispatching. Local datetime-input values are passed
+          // straight to the backend, which interprets them as the
+          // tenant's local timezone.
+          scheduled_for: form.scheduled_for || undefined,
+          due_by: form.due_by || undefined,
         },
       });
       if (sr.work_order_number) onDispatched(sr.work_order_number);
@@ -150,6 +159,27 @@ export function DispatchDialog({ srNumber, defaultPriority, onClose, onDispatche
             className={inputClass}
           />
         </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block text-sm">
+            <span className="text-slate-200">Scheduled for (optional)</span>
+            <input
+              type="datetime-local"
+              value={form.scheduled_for ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, scheduled_for: e.target.value }))}
+              className={inputClass}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-200">Due by (optional)</span>
+            <input
+              type="datetime-local"
+              value={form.due_by ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, due_by: e.target.value }))}
+              className={inputClass}
+            />
+          </label>
+        </div>
 
         <label className="block text-sm">
           <span className="text-slate-200">Description</span>

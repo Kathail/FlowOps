@@ -42,12 +42,31 @@ DECIMAL_FIELDS = {"length_m", "depth_m"}
 DATE_FIELDS = {"install_date", "decommission_date", "warranty_until"}
 FLUSH_BATCH = 100
 
+# 1-5 scale matches AssetCreate/AssetUpdate Pydantic validators. Without
+# this, an importer can stuff `condition=99` into a CSV cell and the row
+# is accepted (the DB column is just BIGINT). The single-asset POST/PATCH
+# path rejects the same value with a 422 — keep the import path honest.
+_RANGED_INT: dict[str, tuple[int, int]] = {
+    "condition": (1, 5),
+    "criticality": (1, 5),
+    "diameter_mm": (0, 10000),
+}
+
 
 def _coerce(field: str, raw: Any) -> Any:
     if raw is None or raw == "":
         return None
     if field in INT_FIELDS:
-        return int(raw)
+        v = int(raw)
+        bounds = _RANGED_INT.get(field)
+        if bounds is not None:
+            lo, hi = bounds
+            if v < lo or v > hi:
+                raise ValidationError(
+                    f"{field}={v} out of range (must be between {lo} and {hi})",
+                    code=f"{field}_out_of_range",
+                )
+        return v
     if field in DECIMAL_FIELDS:
         # SQLAlchemy Numeric accepts strings; let it parse
         return str(raw)
@@ -203,6 +222,11 @@ def import_csv(stream: BinaryIO, *, on_conflict: OnConflict = "skip", dry_run: b
 
         props = {f: row[f] for f in EDITABLE_FIELDS if f in row and row[f] != ""}
 
+        # Per-row SAVEPOINT. The previous code called db.session.rollback()
+        # on row failure, which discarded *every prior row in the batch* —
+        # one bad row at line 4000 would silently undo 3999 successful
+        # creates. begin_nested() scopes the rollback to this row only.
+        savepoint = db.session.begin_nested()
         try:
             outcome, err = _process(
                 class_code=class_code,
@@ -211,8 +235,9 @@ def import_csv(stream: BinaryIO, *, on_conflict: OnConflict = "skip", dry_run: b
                 props=props,
                 on_conflict=on_conflict,
             )
+            savepoint.commit()
         except Exception as e:
-            db.session.rollback()
+            savepoint.rollback()
             errors.append({"row": row_num, "code": "row_error", "message": str(e), "raw": row})
             summary["failed"] += 1
             continue
@@ -276,6 +301,8 @@ def import_geojson(stream: BinaryIO, *, on_conflict: OnConflict = "skip", dry_ru
             asset_uid = str(asset_uid)
         asset_uid = asset_uid.strip() if asset_uid else None
 
+        # Per-row SAVEPOINT — see import_csv for rationale.
+        savepoint = db.session.begin_nested()
         try:
             outcome, err = _process(
                 class_code=class_code if isinstance(class_code, str) else "",
@@ -284,8 +311,9 @@ def import_geojson(stream: BinaryIO, *, on_conflict: OnConflict = "skip", dry_ru
                 props=props,
                 on_conflict=on_conflict,
             )
+            savepoint.commit()
         except Exception as e:
-            db.session.rollback()
+            savepoint.rollback()
             errors.append({"row": row_num, "code": "row_error", "message": str(e)})
             summary["failed"] += 1
             continue

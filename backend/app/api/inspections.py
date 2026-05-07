@@ -57,6 +57,19 @@ def _is_supervisor_or_admin() -> bool:
     return bool(_user_roles() & {"admin", "supervisor"})
 
 
+def _derive_pass_for_cctv(data: dict[str, Any] | None) -> bool | None:
+    """Pull the CCTV ratings out of normalized inspection data and run them
+    through the documented `derive_pass` rule. Returns None when the survey
+    didn't include either rating — keeping the PATCH/POST distinction
+    between "field omitted" and "explicit clear" honest."""
+    if not data:
+        return None
+    from app.services.cctv_validation import derive_pass
+
+    ratings = data.get("ratings") or {}
+    return derive_pass(ratings.get("structural_qr"), ratings.get("om_qr"))
+
+
 def _normalize_data(kind: InspectionKind, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the kind-specific data shape and (for hydrant_flow) compute the
     NFPA 291 derived fields server-side. CCTV uses cctv_validation directly."""
@@ -216,6 +229,13 @@ def create_inspection():
     asset_id = _resolve_asset_id(data.asset_uid, data.kind)
     work_order_id = _resolve_wo_id(data.work_order_number)
 
+    # INS-P1: when a CCTV inspection is created without an explicit pass
+    # field, infer pass/fail from the survey's structural/O&M ratings.
+    # The caller-supplied value still wins.
+    derived_pass = data.pass_
+    if data.kind == "cctv" and data.pass_ is None:
+        derived_pass = _derive_pass_for_cctv(normalized_data)
+
     inspection_number = next_inspection_number(current_user.tenant_id)
     last_error: IntegrityError | None = None
     for _attempt in range(3):
@@ -228,7 +248,7 @@ def create_inspection():
             performed_at=data.performed_at,
             performed_by=current_user.id,
             overall_condition=data.overall_condition,
-            pass_=data.pass_,
+            pass_=derived_pass,
             notes=data.notes,
             data=normalized_data,
             attrs=data.attrs,
@@ -262,16 +282,30 @@ def update_inspection(inspection_number: str):
     data = _validate(InspectionUpdate, request.get_json(silent=True) or {})
     ins = _get_inspection(inspection_number)
 
-    if data.performed_at is not None:
+    # INS-P1: distinguish "field omitted" from "explicit null". The previous
+    # `is not None` checks meant a tech who set pass=true by mistake had no
+    # way to clear it back to "not yet recorded" — every PATCH with pass=null
+    # was a no-op. Use the Pydantic `model_fields_set` set so we honour
+    # explicit clears for the nullable scalars (pass, overall_condition,
+    # notes, performed_at). data/task_data still guard `is not None` because
+    # their model defaults are dict, not None.
+    fields_set = data.model_fields_set
+    if "performed_at" in fields_set:
         ins.performed_at = data.performed_at
-    if data.overall_condition is not None:
+    if "overall_condition" in fields_set:
         ins.overall_condition = data.overall_condition
-    if data.pass_ is not None:
+    if "pass_" in fields_set or "pass" in fields_set:
         ins.pass_ = data.pass_
-    if data.notes is not None:
+    if "notes" in fields_set:
         ins.notes = data.notes
     if data.data is not None:
         ins.data = _normalize_data(ins.kind, data.data)
+        # INS-P1: when CCTV data lands, recompute the auto-pass field so
+        # the inspection matches its own observations. Ops can still
+        # override via an explicit `pass` field on the same PATCH —
+        # `pass_` was applied above and overrides this default.
+        if ins.kind == "cctv" and "pass_" not in fields_set and "pass" not in fields_set:
+            ins.pass_ = _derive_pass_for_cctv(ins.data)
     if data.task_data is not None:
         ins.task_data = data.task_data
 

@@ -124,11 +124,7 @@ def _sr_areas(*, location: Any, asset_id: int | None) -> list[dict[str, Any]]:
     return areas_for_wo_or_sr(location=location, asset_id=asset_id)
 
 
-def _list_item(sr: ServiceRequest) -> dict[str, Any]:
-    wo_number = None
-    if sr.work_order_id:
-        wo = db.session.scalar(select(WorkOrder).where(WorkOrder.id == sr.work_order_id))
-        wo_number = wo.wo_number if wo else None
+def _list_item(sr: ServiceRequest, *, wo_number: str | None = None) -> dict[str, Any]:
     return {
         "sr_number": sr.sr_number,
         "category": sr.category,
@@ -141,6 +137,16 @@ def _list_item(sr: ServiceRequest) -> dict[str, Any]:
         "work_order_number": wo_number,
         "created_at": sr.created_at.isoformat(),
     }
+
+
+def _wo_numbers_for(srs: list[ServiceRequest]) -> dict[int, str]:
+    """Batch the work_order_id → wo_number lookup so the list endpoint
+    doesn't hit Postgres once per dispatched SR (N+1)."""
+    wo_ids = {s.work_order_id for s in srs if s.work_order_id}
+    if not wo_ids:
+        return {}
+    rows = db.session.execute(select(WorkOrder.id, WorkOrder.wo_number).where(WorkOrder.id.in_(wo_ids))).all()
+    return {row[0]: row[1] for row in rows}
 
 
 def _get_sr(sr_number: str) -> ServiceRequest:
@@ -182,6 +188,14 @@ def list_service_requests():
             since_dt = datetime.fromisoformat(since)
         except ValueError as e:
             raise ValidationError("`since` must be ISO-8601", code="bad_since") from e
+        # SR-P1: reported_at is TIMESTAMPTZ, comparison against a naive
+        # datetime makes Postgres assume UTC silently — but that "silent"
+        # behavior actually depends on session timezone. Coerce to UTC
+        # before the compare so a `?since=2026-05-01T00:00:00` filter
+        # means the same thing for every client regardless of how their
+        # browser formats the iso string.
+        if since_dt.tzinfo is None:
+            since_dt = since_dt.replace(tzinfo=UTC)
         stmt = stmt.where(ServiceRequest.reported_at >= since_dt)
 
     q = (request.args.get("q") or "").strip()
@@ -200,10 +214,16 @@ def list_service_requests():
     items = db.session.scalars(
         stmt.order_by(ServiceRequest.reported_at.desc()).offset((page - 1) * page_size).limit(page_size)
     ).all()
+    wo_numbers = _wo_numbers_for(list(items))
 
     return jsonify(
         ServiceRequestListResponse(
-            items=[ServiceRequestListItem.model_validate(_list_item(s)) for s in items],
+            items=[
+                ServiceRequestListItem.model_validate(
+                    _list_item(s, wo_number=wo_numbers.get(s.work_order_id) if s.work_order_id else None)
+                )
+                for s in items
+            ],
             page=page,
             page_size=page_size,
             total=total,
@@ -436,6 +456,16 @@ def update_service_request(sr_number: str):
 
     if data.location is not None:
         sr.location = geojson_to_wkb(data.location.model_dump())
+    elif data.reported_address is not None and data.reported_address != "" and sr.location is None:
+        # SR-P1: parity with create_service_request — if the caller updated
+        # the address but never gave us coordinates and the SR has no
+        # location yet, attempt the same reverse-geocode pass create does.
+        # Without this, a triage user fixing a missing address never
+        # populates the map pin, even though the new address would resolve.
+        coords = reverse_geocode(data.reported_address)
+        if coords is not None:
+            lon, lat = coords
+            sr.location = geojson_to_wkb({"type": "Point", "coordinates": [lon, lat]})
 
     if data.status is not None and data.status != prev_status:
         emit_event(

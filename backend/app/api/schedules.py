@@ -143,6 +143,15 @@ def update_schedule(schedule_id: int):
     if data.description is not None:
         s.description = data.description
     if data.spec is not None:
+        # INS-P1: post-merge spec validation against the schedule's
+        # actual kind. ScheduleUpdate doesn't carry kind, so the schema
+        # can't validate it itself — do it here once we know the row.
+        from app.schemas.schedule import _validate_inspection_spec_kind
+
+        try:
+            _validate_inspection_spec_kind(s.kind, data.spec)
+        except ValueError as e:
+            raise ValidationError(str(e), code="bad_spec_kind") from e
         s.spec = data.spec
     if data.next_run_at is not None:
         s.next_run_at = data.next_run_at

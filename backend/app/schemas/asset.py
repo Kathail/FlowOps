@@ -30,6 +30,11 @@ class AssetClassRead(BaseModel):
 
 
 class AssetCreate(BaseModel):
+    # extra="forbid" so a typo'd or unknown field (`tenant_id`, `deleted_at`,
+    # `id`, ...) returns 422 with a clear message instead of being silently
+    # dropped. Keeps the API contract honest.
+    model_config = ConfigDict(extra="forbid")
+
     class_code: str = Field(min_length=1, max_length=32)
     asset_uid: str | None = Field(default=None, min_length=1, max_length=64)
     geometry: GeometryUnion
@@ -51,6 +56,10 @@ class AssetCreate(BaseModel):
 
 
 class AssetUpdate(BaseModel):
+    # See AssetCreate — same rationale: a typo on PATCH should fail
+    # loud, not silently no-op.
+    model_config = ConfigDict(extra="forbid")
+
     install_date: date | None = None
     decommission_date: date | None = None
     material: str | None = Field(default=None, max_length=200)
