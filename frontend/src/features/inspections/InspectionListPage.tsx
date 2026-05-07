@@ -104,7 +104,20 @@ export function InspectionListPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-100">Inspections</h1>
         <div className="flex gap-2">
-          <a href={exportInspectionsUrl(params.kind)} download className="btn-ghost">
+          <a
+            href={exportInspectionsUrl(params.kind)}
+            download
+            className="btn-ghost"
+            title={
+              // Hover hint so the operator knows the export respects
+              // the kind filter — "I exported all but only see CCTV"
+              // is a common surprise without it. (The backend export
+              // endpoint only accepts kind today, not pass/asset_uid.)
+              params.kind
+                ? `Exports kind=${params.kind} only`
+                : "Exports every inspection in the tenant"
+            }
+          >
             Export CSV
           </a>
           <Button variant="ghost" onClick={() => setImportOpen(true)}>

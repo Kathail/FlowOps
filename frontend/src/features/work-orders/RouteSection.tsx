@@ -124,15 +124,18 @@ export function RouteSection({
           Assets ({completed}/{total})
         </h2>
         <div className="flex items-center gap-2">
-          {completed > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowCompleted((v) => !v)}
-              className="text-xs text-slate-400 hover:text-blue-300"
-            >
-              {showCompleted ? "Hide completed" : `Show ${completed} completed`}
-            </button>
-          )}
+          {/* Always-rendered so the affordance is discoverable on the
+              first ticked stop. Disabled when no stops are completed
+              yet — clicking would do nothing, so don't pretend it's
+              live. */}
+          <button
+            type="button"
+            onClick={() => setShowCompleted((v) => !v)}
+            disabled={completed === 0}
+            className="text-xs text-slate-400 hover:text-blue-300 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:text-slate-600"
+          >
+            {showCompleted ? "Hide completed" : `Show ${completed} completed`}
+          </button>
           <Button onClick={() => setPickerOpen(true)}>+ Add assets</Button>
         </div>
       </div>

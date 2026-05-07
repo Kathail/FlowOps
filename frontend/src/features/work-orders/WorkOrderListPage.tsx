@@ -173,7 +173,13 @@ export function WorkOrderListPage() {
           High/emergency without a backend filter) were removed because
           they lied on tenants with more rows than fit on one page. */}
       <SummaryBar>
-        <SummaryBar.Stat label="Active" value={summary.active} tone="default" to="?scope=active" />
+        <SummaryBar.Stat
+          label="Active"
+          value={summary.active}
+          tone="default"
+          to="?scope=active"
+          active={scope === "active" && !overdueOnly}
+        />
         <SummaryBar.Stat label="On this page" value={visibleItems.length} tone="muted" />
         <SummaryBar.Stat label="Total in dataset" value={woQuery.data?.total ?? 0} tone="muted" />
       </SummaryBar>

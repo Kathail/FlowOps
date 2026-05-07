@@ -41,10 +41,15 @@ interface StatProps {
   tone?: keyof typeof TONE;
   /** Tiny secondary line below the value — e.g. "of 32 active". */
   sub?: string;
+  /** Visual indication that this stat matches the page's current view —
+   * e.g. when scope=active the "Active" stat renders with a blue ring
+   * so the operator doesn't second-guess what filter is applied. */
+  active?: boolean;
 }
 
-function Stat({ label, value, to, tone = "default", sub }: StatProps) {
+function Stat({ label, value, to, tone = "default", sub, active = false }: StatProps) {
   const cls = TONE[tone] ?? TONE.default;
+  const ring = active ? "ring-1 ring-blue-500/40 bg-blue-500/5" : "";
   const inner = (
     <>
       <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">{label}</p>
@@ -54,12 +59,15 @@ function Stat({ label, value, to, tone = "default", sub }: StatProps) {
   );
   if (to) {
     return (
-      <Link to={to} className="block rounded px-1 -mx-1 transition-colors hover:bg-slate-800/50">
+      <Link
+        to={to}
+        className={`block rounded px-1 -mx-1 transition-colors hover:bg-slate-800/50 ${ring}`}
+      >
         {inner}
       </Link>
     );
   }
-  return <div>{inner}</div>;
+  return <div className={ring ? `rounded ${ring} px-1 -mx-1` : ""}>{inner}</div>;
 }
 
 export const SummaryBar = Object.assign(Root, { Stat });
