@@ -101,10 +101,10 @@ export function DemoLoginPage() {
         <p className="text-xs text-slate-500">
           Questions?{" "}
           <a
-            href="mailto:klc.cahill@gmail.com"
+            href="mailto:contact@citywater.ca"
             className="text-blue-400 hover:text-blue-300 hover:underline"
           >
-            klc.cahill@gmail.com
+            contact@citywater.ca
           </a>
         </p>
       </div>

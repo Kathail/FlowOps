@@ -28,10 +28,10 @@ export function DemoBanner() {
       <p className="flex items-center gap-3 text-xs">
         <span className="text-emerald-200/70">Questions?</span>
         <a
-          href="mailto:klc.cahill@gmail.com"
+          href="mailto:contact@citywater.ca"
           className="font-medium text-emerald-100 underline-offset-2 hover:text-white hover:underline"
         >
-          klc.cahill@gmail.com
+          contact@citywater.ca
         </a>
         <span aria-hidden="true" className="text-emerald-500/40">
           ·
