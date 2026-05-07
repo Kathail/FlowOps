@@ -222,6 +222,7 @@ dependencies = [
     { name = "geoalchemy2" },
     { name = "geojson-pydantic" },
     { name = "gunicorn" },
+    { name = "httpx" },
     { name = "jsonschema" },
     { name = "pillow" },
     { name = "psycopg", extra = ["binary"] },
@@ -237,7 +238,6 @@ dependencies = [
 dev = [
     { name = "factory-boy" },
     { name = "faker" },
-    { name = "httpx" },
     { name = "moto" },
     { name = "pytest" },
     { name = "pytest-flask" },
@@ -261,6 +261,7 @@ requires-dist = [
     { name = "geoalchemy2", specifier = ">=0.15" },
     { name = "geojson-pydantic", specifier = ">=1.1" },
     { name = "gunicorn", specifier = ">=21.2" },
+    { name = "httpx", specifier = ">=0.27" },
     { name = "jsonschema", specifier = ">=4" },
     { name = "pillow", specifier = ">=10" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.1" },
@@ -276,7 +277,6 @@ requires-dist = [
 dev = [
     { name = "factory-boy", specifier = ">=3.3" },
     { name = "faker", specifier = ">=24" },
-    { name = "httpx", specifier = ">=0.27" },
     { name = "moto", specifier = ">=5" },
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-flask", specifier = ">=1.3" },

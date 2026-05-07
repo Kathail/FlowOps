@@ -29,6 +29,7 @@ dependencies = [
     "flask-limiter>=3.7",       # rate limit auth + invite-accept endpoints (S12; SPEC §8 NFR security)
     "gunicorn>=21.2",           # production WSGI server on Railway
     "python-json-logger>=2.0,<3", # structured JSON logs in production
+    "httpx>=0.27",              # used by services/email.py (Resend driver) and services/geocode.py (Nominatim) — runtime, not just tests
 ]
 
 [dependency-groups]
@@ -39,7 +40,6 @@ dev = [
     "pytest-postgresql>=6",     # ephemeral test DBs against an existing Postgres
     "factory-boy>=3.3",         # model factories (CLAUDE.md; no models in S0 yet)
     "faker>=24",                # fake data for factories
-    "httpx>=0.27",              # alt test client (request-style API)
     "moto>=5",                  # mock S3 for attachment tests (industry standard)
 ]
 
