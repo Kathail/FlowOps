@@ -20,10 +20,12 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Anything else — single-page brochure today, but try_files keeps
-    # the door open if you ever add /faq, /pricing, etc. without
-    # needing an nginx restart.
+    # Brochure is a real single page — return a proper 404 for unknown
+    # paths rather than silently serving index.html with a 200. SEO
+    # benefit (no duplicate-content over fake URLs) and clearer errors
+    # for typos. If you ever add /faq, /pricing, etc. as separate HTML
+    # files, they'll be served by `try_files $uri $uri/` directly.
     location / {
-        try_files $uri $uri/ /index.html;
+        try_files $uri $uri/ =404;
     }
 }

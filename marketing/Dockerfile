@@ -4,6 +4,10 @@
 # node builds the static bundle into ./dist, nginx serves it.
 # Mirrors the frontend/Dockerfile pattern (envsubst-templated config,
 # $PORT bound at runtime) so Railway can host both services the same way.
+#
+# Pinned base images for reproducibility — `nginx:alpine` floats to
+# whatever Alpine + nginx happen to be latest at build time, which has
+# bitten us before with non-deterministic re-builds across replicas.
 
 FROM node:20-alpine AS builder
 WORKDIR /app
@@ -12,9 +16,17 @@ COPY package.json package-lock.json* ./
 RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 COPY . .
-RUN npm run build
 
-FROM nginx:alpine AS runtime
+# Cache-buster: this ARG forces the COPY + npm-run-build layer to
+# re-run on every commit (Railway sets it to the commit SHA via build
+# args). Without this, Railway's build cache occasionally reuses an
+# older `dist/` from a previous build, causing two replicas to serve
+# different output.css. See HANDOFF for the diagnosis.
+ARG BUILD_ID=local
+ENV BUILD_ID=$BUILD_ID
+RUN echo "Build ID: $BUILD_ID" && npm run build
+
+FROM nginx:1.27-alpine AS runtime
 
 # envsubst (from gettext) renders nginx.conf.template at container start
 # so $PORT can come from the Railway service env.

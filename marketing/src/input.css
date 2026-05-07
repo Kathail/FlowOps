@@ -17,16 +17,20 @@
   --color-paper-2: #efe9dc;
   --color-ink: #1a1815;
   --color-ink-soft: #4a463f;
-  --color-ink-faint: #8a847a;
+  /* Bumped from #8a847a → #6e6960 to clear WCAG AA (~4.6:1 on paper).
+     Used for section markers + footer copy + the "or email me directly"
+     secondary lines. Old value sat at ~3:1, fine for large text but
+     borderline for small. */
+  --color-ink-faint: #6e6960;
   --color-rule: #2a282510;
   --color-rule-strong: #2a282530;
 
   --color-blueprint: #1e3a5f;
   --color-blueprint-deep: #122541;
   --color-ochre: #b85c26;
-
-  /* Subtle — for backgrounds that need a touch of warmth */
-  --color-paper-shadow: #2a282508;
+  /* Muted ochre — used by .annotation-muted to neutralise the dot on
+     the "Not for you" pill. Was previously an inline style override. */
+  --color-ochre-muted: #8a847a;
 
   /* Faint blueprint-blue for the body's graph-paper grid. Hex with
      low alpha (≈3%) so the grid reads as paper texture, not as lines.
@@ -47,6 +51,34 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "ss01", "cv11"; /* Public Sans stylistic alternates */
+  /* Smooth in-page nav for the #what / #setup / #who anchors. Disabled
+     automatically in prefers-reduced-motion below. */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+/* Skip-to-content link — hidden until keyboard focus. Anchored top-left. */
+.skip-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.5rem 1rem;
+  background: var(--color-blueprint);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  border-radius: 0 0 4px 0;
+  transform: translateY(-100%);
+  transition: transform 120ms ease;
+  z-index: 100;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--color-ochre);
+  outline-offset: 2px;
 }
 
 body {
@@ -72,7 +104,10 @@ body {
     ),
     radial-gradient(ellipse at top, var(--color-paper) 0%, var(--color-paper-2) 100%);
   background-size: 32px 32px, 32px 32px, 100% 100%;
-  background-attachment: fixed, fixed, scroll;
+  /* All layers `scroll` (not `fixed`) — `fixed` causes a known repaint
+     perf issue on iOS Safari with long pages. With `scroll`, the grid
+     does scroll with the content; visually still reads as paper texture. */
+  background-attachment: scroll, scroll, scroll;
 }
 
 /* Alternating section bands — every other top-level <section> on the
@@ -100,6 +135,13 @@ body > footer {
   font-optical-sizing: auto;
   font-variation-settings: "SOFT" 30, "WONK" 0;
   letter-spacing: -0.02em;
+}
+
+/* Wonkier italic — used on the hero's "small water utilities" so the
+   italic feels distinct from the upright. Pairs with <em class="italic">
+   for the slant. Was previously an inline style on the <em>. */
+.font-display-wonk {
+  font-variation-settings: "SOFT" 100, "WONK" 1;
 }
 
 /* Mono section numbers */
@@ -139,6 +181,12 @@ body > footer {
   height: 6px;
   background: var(--color-ochre);
   border-radius: 50%;
+}
+
+/* Muted variant — same pill, neutral grey dot. Used on the
+   "Not for you" annotation on the audience section. */
+.annotation-muted::before {
+  background: var(--color-ochre-muted);
 }
 
 /* Primary CTA button — blueprint blue, slight letterpress feel */

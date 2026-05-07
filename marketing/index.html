@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-CA">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +8,7 @@
       name="description"
       content="Work orders, inspections, and asset records — built specifically for municipal water, sewer, and storm crews. Without the consultants, the procurement, or the six-figure price tag."
     />
+    <link rel="canonical" href="https://citywater.ca/" />
 
     <!-- Open Graph / social -->
     <meta property="og:title" content="CityWater — Public-works software for small water utilities" />
@@ -17,7 +18,16 @@
     />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://citywater.ca" />
-    <!-- TODO: og:image once you have one. 1200x630 PNG, ideally a screenshot crop. -->
+    <meta property="og:site_name" content="CityWater" />
+    <meta property="og:locale" content="en_CA" />
+    <!-- og:image: SVG card with the brand droplet on the paper colour. Some
+         platforms (LinkedIn) prefer raster — TODO: replace with a 1200×630
+         PNG screenshot crop once the dashboard is populated and a real
+         capture exists. -->
+    <meta property="og:image" content="https://citywater.ca/og-image.svg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="CityWater — public-works software for small water utilities" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="CityWater — Public-works software for small water utilities" />
@@ -25,9 +35,11 @@
       name="twitter:description"
       content="Modern work-management for municipal water, sewer, and storm crews."
     />
+    <meta name="twitter:image" content="https://citywater.ca/og-image.svg" />
 
     <!-- Favicon — same SVG droplet the app uses for visual continuity. -->
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./favicon.svg" />
 
     <!-- Fonts: Fraunces (display) + Public Sans (body) + JetBrains Mono (accent) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -38,9 +50,38 @@
     />
 
     <link rel="stylesheet" href="./dist/output.css" />
+
+    <!-- Structured data — SoftwareApplication so Google + LinkedIn show
+         a richer card. Audience is municipal utilities, not consumers. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "CityWater",
+        "url": "https://citywater.ca",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Work orders, inspections, and asset records for municipal water, sewer, and storm crews.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "CAD",
+          "availability": "https://schema.org/PreOrder"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "CityWater",
+          "url": "https://citywater.ca",
+          "email": "contact@citywater.ca"
+        }
+      }
+    </script>
   </head>
 
   <body class="min-h-screen">
+    <!-- Skip-to-content for keyboard users; pushed off-screen until focused. -->
+    <a href="#main" class="skip-link">Skip to content</a>
+
     <!-- Header -->
     <header class="border-b border-[var(--color-rule)]">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 md:px-10">
@@ -64,11 +105,16 @@
           <span class="font-display text-2xl font-semibold tracking-tight">CityWater</span>
           <span class="section-num">CA</span>
         </a>
-        <nav class="flex items-center gap-6 md:gap-8">
+        <nav aria-label="Primary" class="flex items-center gap-6 md:gap-8">
           <a
             href="#what"
             class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
             >What's in the box</a
+          >
+          <a
+            href="#setup"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >Setup</a
           >
           <a
             href="#who"
@@ -76,20 +122,20 @@
             >Who it's for</a
           >
           <a
-            href="https://app.citywater.ca"
+            href="https://app.citywater.ca/login"
             class="btn-primary text-sm"
             >Try the demo
-            <span class="arrow">→</span></a
+            <span class="arrow" aria-hidden="true">→</span></a
           >
         </nav>
       </div>
     </header>
 
     <!-- Hero -->
-    <section class="mx-auto max-w-6xl px-6 pb-20 pt-16 md:px-10 md:pb-32 md:pt-24">
+    <section id="main" class="mx-auto max-w-6xl px-6 pb-20 pt-16 md:px-10 md:pb-32 md:pt-24">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num reveal reveal-1">§ 01 / Hero</span>
+          <span class="section-num reveal reveal-1" aria-hidden="true">§ 01 / Hero</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <span class="annotation reveal reveal-1">Now in beta</span>
@@ -98,9 +144,7 @@
             class="font-display reveal reveal-2 mt-6 text-5xl font-medium leading-[1.05] tracking-tight md:text-7xl"
           >
             Modern public-works software <br class="hidden md:inline" />for
-            <em class="italic" style="font-variation-settings: 'SOFT' 100, 'WONK' 1;"
-              >small water utilities</em
-            >.
+            <em class="italic font-display-wonk">small water utilities</em>.
           </h1>
 
           <p
@@ -112,8 +156,8 @@
           </p>
 
           <div class="reveal reveal-4 mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <a href="https://app.citywater.ca" class="btn-primary"
-              >Try the demo <span class="arrow">→</span></a
+            <a href="https://app.citywater.ca/login" class="btn-primary"
+              >Try the demo <span class="arrow" aria-hidden="true">→</span></a
             >
             <a href="mailto:contact@citywater.ca" class="btn-secondary text-sm"
               >or email me directly</a
@@ -129,7 +173,7 @@
     <section class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 02 / Problem</span>
+          <span class="section-num" aria-hidden="true">§ 02 / Problem</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <h2
@@ -159,13 +203,14 @@
     <section class="mx-auto max-w-6xl px-6 pb-20 md:px-10 md:pb-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">Fig. 01</span>
+          <span class="section-num" aria-hidden="true">Fig. 01</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <div class="figure-frame aspect-video w-full overflow-hidden rounded-sm">
             <!-- Replace with actual dashboard screenshot. Recommend exporting at 2400x1350 PNG. -->
             <div
               class="flex h-full w-full items-center justify-center text-sm text-[var(--color-ink-faint)]"
+              aria-label="Placeholder for dashboard screenshot"
             >
               <span class="font-mono">[ replace with /public/screenshots/dashboard.png ]</span>
             </div>
@@ -184,7 +229,7 @@
     <section id="what" class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 03 / Features</span>
+          <span class="section-num" aria-hidden="true">§ 03 / Features</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <h2
@@ -195,7 +240,7 @@
 
           <div class="mt-12 grid grid-cols-1 gap-x-12 gap-y-12 md:grid-cols-2">
             <article>
-              <span class="pillar-num">01</span>
+              <span class="pillar-num" aria-hidden="true">01</span>
               <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
                 Work orders that match how crews actually work.
               </h3>
@@ -207,7 +252,7 @@
             </article>
 
             <article>
-              <span class="pillar-num">02</span>
+              <span class="pillar-num" aria-hidden="true">02</span>
               <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
                 Inspections with the codes you already use.
               </h3>
@@ -218,7 +263,7 @@
             </article>
 
             <article>
-              <span class="pillar-num">03</span>
+              <span class="pillar-num" aria-hidden="true">03</span>
               <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
                 A map that knows your service areas.
               </h3>
@@ -229,7 +274,7 @@
             </article>
 
             <article>
-              <span class="pillar-num">04</span>
+              <span class="pillar-num" aria-hidden="true">04</span>
               <h3 class="font-display mt-3 text-2xl font-medium leading-snug">
                 A dashboard your supervisor will actually open.
               </h3>
@@ -246,10 +291,10 @@
     <hr class="rule-dotted mx-auto max-w-6xl" />
 
     <!-- Setup -->
-    <section class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
+    <section id="setup" class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 04 / Setup</span>
+          <span class="section-num" aria-hidden="true">§ 04 / Setup</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <h2
@@ -280,7 +325,7 @@
     <section id="who" class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 05 / Audience</span>
+          <span class="section-num" aria-hidden="true">§ 05 / Audience</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <h2
@@ -299,7 +344,7 @@
             </div>
 
             <div class="border-l-2 border-[var(--color-rule-strong)] pl-6">
-              <span class="annotation" style="--color-ochre: #8a847a;">Not for you</span>
+              <span class="annotation annotation-muted">Not for you</span>
               <p class="mt-4 text-lg leading-relaxed text-[var(--color-ink-soft)]">
                 If you've got a six-figure CMMS deployment with a dedicated GIS team to run it,
                 you're not the target — and that's fine.
@@ -316,7 +361,7 @@
     <section class="mx-auto max-w-6xl px-6 py-20 md:px-10 md:py-28">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 06 / Honest beta note</span>
+          <span class="section-num" aria-hidden="true">§ 06 / Honest beta note</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <h2
@@ -341,7 +386,7 @@
     <section class="mx-auto max-w-6xl px-6 pb-32 md:px-10">
       <div class="grid grid-cols-12 gap-x-6">
         <div class="col-span-12 md:col-span-2">
-          <span class="section-num">§ 07 / Run it</span>
+          <span class="section-num" aria-hidden="true">§ 07 / Run it</span>
         </div>
         <div class="col-span-12 md:col-span-10">
           <div
@@ -356,8 +401,8 @@
               for as long as you like.
             </p>
             <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-              <a href="https://app.citywater.ca" class="btn-primary"
-                >Try the demo <span class="arrow">→</span></a
+              <a href="https://app.citywater.ca/login" class="btn-primary"
+                >Try the demo <span class="arrow" aria-hidden="true">→</span></a
               >
               <a href="mailto:contact@citywater.ca" class="btn-secondary"
                 >or email me directly: contact@citywater.ca</a
@@ -377,7 +422,7 @@
           <span class="font-display text-base font-semibold text-[var(--color-ink-soft)]"
             >CityWater</span
           >
-          <span class="section-num">© 2026 — beta</span>
+          <span class="section-num">beta</span>
         </div>
         <div class="flex items-center gap-6">
           <a href="mailto:contact@citywater.ca" class="hover:text-[var(--color-ink)]"

@@ -10,6 +10,15 @@ server {
     access_log /dev/stdout;
     error_log /dev/stderr warn;
 
+    # DNS resolver — required for nginx to re-resolve $upstream per
+    # request. Without this, nginx caches the backend's IP at startup
+    # and never refreshes; when Railway redeploys the backend, its
+    # private IP changes and we get connect-timeout 504s until the
+    # frontend itself is also redeployed. The Docker resolver inside
+    # Railway's network is reachable at the conventional 127.0.0.11.
+    resolver 127.0.0.11 valid=30s ipv6=off;
+    set $upstream "${BACKEND_URL}";
+
     # Long cache for hashed assets (Vite emits content-hashed filenames).
     location /assets/ {
         try_files $uri =404;
@@ -29,9 +38,10 @@ server {
     }
 
     # Backend healthcheck proxy — kept so the frontend's healthcheck can
-    # also exercise the backend round-trip if needed.
+    # also exercise the backend round-trip if needed. Uses $upstream so
+    # nginx re-resolves backend's IP per request (see resolver above).
     location /healthz {
-        proxy_pass ${BACKEND_URL}/healthz;
+        proxy_pass $upstream/healthz;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -40,7 +50,7 @@ server {
 
     # API proxy — same-origin so SameSite=Lax cookies work without CORS.
     location /api/ {
-        proxy_pass ${BACKEND_URL};
+        proxy_pass $upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

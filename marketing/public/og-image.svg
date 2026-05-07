@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Placeholder Open Graph card. 1200×630 SVG matching the brand palette.
+  Replace with a 1200×630 PNG screenshot crop of the supervisor dashboard
+  once the demo has data and a real capture exists.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <!-- Paper background + subtle grid -->
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M 32 0 L 0 0 0 32" fill="none" stroke="#1e3a5f" stroke-width="1" stroke-opacity="0.05"/>
+    </pattern>
+    <radialGradient id="vignette" cx="50%" cy="0%" r="100%">
+      <stop offset="0%" stop-color="#f6f2ea"/>
+      <stop offset="100%" stop-color="#efe9dc"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#vignette)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+
+  <!-- Droplet logo (same SVG as favicon, scaled up) -->
+  <g transform="translate(80, 80)">
+    <rect width="96" height="96" rx="18" fill="#0f172a"/>
+    <path d="M48 21c-10.5 13.5-18 22.5-18 33a18 18 0 0 0 36 0c0-10.5-7.5-19.5-18-33z" fill="#38bdf8"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="200" y="148" font-family="Georgia, serif" font-size="56" font-weight="600" fill="#1a1815" letter-spacing="-1">CityWater</text>
+  <text x="200" y="176" font-family="ui-monospace, monospace" font-size="14" font-weight="500" fill="#6e6960" letter-spacing="2">CA</text>
+
+  <!-- Headline -->
+  <text x="80" y="340" font-family="Georgia, serif" font-size="78" font-weight="500" fill="#1a1815" letter-spacing="-2">Modern public-works</text>
+  <text x="80" y="430" font-family="Georgia, serif" font-size="78" font-weight="500" fill="#1a1815" letter-spacing="-2">software for <tspan font-style="italic" fill="#1e3a5f">small water utilities</tspan>.</text>
+
+  <!-- Beta annotation pill -->
+  <g transform="translate(80, 510)">
+    <rect width="180" height="36" rx="2" fill="#efe9dc" stroke="#2a282530"/>
+    <circle cx="20" cy="18" r="4" fill="#b85c26"/>
+    <text x="36" y="23" font-family="ui-monospace, monospace" font-size="13" font-weight="500" fill="#4a463f" letter-spacing="2">NOW IN BETA</text>
+  </g>
+
+  <!-- Domain marker bottom-right -->
+  <text x="1120" y="595" font-family="ui-monospace, monospace" font-size="14" fill="#6e6960" letter-spacing="2" text-anchor="end">CITYWATER.CA</text>
+</svg>
