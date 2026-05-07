@@ -56,11 +56,13 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       <Route path="/login" element={<LoginPage />} />
-      {/* /try-demo (not /demo) — the seeded tenant's slug is "demo" so a
-          /demo route would collide with /:slug and the post-login navigate
-          would loop straight back to this auto-login page. */}
+      {/* /try-demo (not /demo) — the seeded tenant's slug is "demo", so
+          mounting the auto-login page at /demo would collide with /:slug.
+          Worse, redirecting /demo → /try-demo would also catch the post-
+          login navigate("/demo/"), trapping visitors in a redirect loop
+          until the rate limiter blocked them. The path here must not
+          equal any tenant slug. */}
       <Route path="/try-demo" element={<DemoLoginPage />} />
-      <Route path="/demo" element={<Navigate to="/try-demo" replace />} />
       <Route path="/register" element={<RegisterTenantPage />} />
       <Route path="/accept-invitation/:token" element={<AcceptInvitationPage />} />
       <Route
