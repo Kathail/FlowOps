@@ -11,8 +11,9 @@ server {
     access_log /dev/stdout;
     error_log /dev/stderr warn;
 
-    # Security headers for the brochure. Marketing renders no scripts
-    # of its own, so a strict CSP is cheap.
+    # Security headers for the brochure. Marketing renders only one
+    # tiny inline script per page (footer-year auto-update); a CSP that
+    # allows 'unsafe-inline' for scripts is fine for a no-fetch brochure.
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
     add_header X-Frame-Options "DENY" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -28,12 +29,13 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Brochure is a real single page — return a proper 404 for unknown
-    # paths rather than silently serving index.html with a 200. SEO
-    # benefit (no duplicate-content over fake URLs) and clearer errors
-    # for typos. If you ever add /faq, /pricing, etc. as separate HTML
-    # files, they'll be served by `try_files $uri $uri/` directly.
+    # Brochure pages are real files; unknown paths get a proper 404
+    # instead of silently serving index.html (SEO + clearer errors).
+    # `$uri.html` lets us link to clean /privacy and /terms while the
+    # files on disk are still privacy.html / terms.html. Both URLs
+    # resolve; the <link rel="canonical"> in each page tells search
+    # engines which to index.
     location / {
-        try_files $uri $uri/ =404;
+        try_files $uri $uri.html $uri/ =404;
     }
 }

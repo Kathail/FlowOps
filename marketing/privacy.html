@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en-CA">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Privacy — CityWater</title>
+    <meta
+      name="description"
+      content="What CityWater collects, why, and what you can do about it."
+    />
+    <link rel="canonical" href="https://citywater.ca/privacy" />
+    <meta name="robots" content="index,follow" />
+
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./favicon.svg" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400;9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./dist/output.css" />
+  </head>
+
+  <body class="min-h-screen">
+    <a href="#main" class="skip-link">Skip to content</a>
+
+    <header class="border-b border-[var(--color-rule)]">
+      <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 md:px-10">
+        <a href="/" class="flex items-center gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 64"
+            width="28"
+            height="28"
+            aria-hidden="true"
+          >
+            <rect width="64" height="64" rx="12" fill="#0f172a" />
+            <path
+              d="M32 14c-7 9-12 15-12 22a12 12 0 0 0 24 0c0-7-5-13-12-22z"
+              fill="#38bdf8"
+            />
+          </svg>
+          <span class="font-display text-2xl font-semibold tracking-tight">CityWater</span>
+          <span class="section-num">CA</span>
+        </a>
+        <nav aria-label="Primary" class="flex items-center gap-6 md:gap-8">
+          <a
+            href="/#what"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >What's in the box</a
+          >
+          <a
+            href="/#setup"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >Setup</a
+          >
+          <a
+            href="/#who"
+            class="hidden text-sm text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] md:inline"
+            >Who it's for</a
+          >
+          <a href="https://app.citywater.ca/try-demo" class="btn-primary text-sm"
+            >Try the demo
+            <span class="arrow" aria-hidden="true">→</span></a
+          >
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="mx-auto max-w-3xl px-6 py-16 md:px-10 md:py-24">
+      <p class="section-num">§ Legal</p>
+      <h1
+        class="font-display mt-2 text-4xl font-medium leading-tight tracking-tight md:text-5xl"
+      >
+        Privacy.
+      </h1>
+      <p class="mt-3 text-sm text-[var(--color-ink-faint)]">
+        Last updated <time datetime="2026-05-07">2026-05-07</time>.
+      </p>
+      <nav aria-label="Legal" class="mt-4 flex gap-5 text-sm">
+        <span class="text-[var(--color-ink)]" aria-current="page">Privacy</span>
+        <a href="/terms" class="text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+          >Terms</a
+        >
+      </nav>
+
+      <hr class="rule-dotted mt-10" />
+
+      <p class="mt-10 leading-relaxed text-[var(--color-ink-soft)]">
+        CityWater is a software platform for municipal water, sewer, and storm utilities. This
+        page describes what we collect, why, and what you can do about it. It applies to
+        <a href="https://citywater.ca" class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+          >citywater.ca</a
+        >
+        (this site) and
+        <a
+          href="https://app.citywater.ca"
+          class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+          >app.citywater.ca</a
+        >
+        (the application).
+      </p>
+
+      <section class="mt-12">
+        <p class="section-num">§ 01 — Who we are</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          The party responsible for your data.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          CityWater is built and operated by
+          <a
+            href="https://kathail.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >Kathail</a
+          >, based in Ontario, Canada. We are the controller of personal information collected
+          through our website and the processor of tenant operational data created in our
+          application. Privacy questions and requests should go to
+          <a
+            href="mailto:contact@citywater.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >contact@citywater.ca</a
+          >. A mailing address for written privacy requests is available on request from the
+          same email.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 02 — What we collect</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          Account info, operational data, and standard web logs.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          <strong class="font-medium text-[var(--color-ink)]">Account information.</strong>
+          When you or your employer creates a user account, we store your name, work email,
+          password (hashed with Argon2 — never in plaintext), assigned roles, and the tenant you
+          belong to.
+        </p>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          <strong class="font-medium text-[var(--color-ink)]">Operational data.</strong>
+          When your utility uses the platform, we store the records you create: assets (water
+          mains, hydrants, manholes), work orders, inspections, service requests, photos, and
+          the geometries that locate them on a map. This data belongs to your tenant — we act
+          as a processor on your behalf.
+        </p>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          <strong class="font-medium text-[var(--color-ink)]">Activity logs.</strong>
+          Every state-changing action — creating, updating, or deleting records, signing in,
+          sending invitations — is recorded in an internal audit log so administrators can
+          answer "who did what, when." Logs include user ID, timestamp, and a summary of the
+          change.
+        </p>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          <strong class="font-medium text-[var(--color-ink)]">Technical data.</strong>
+          Standard web logs (IP address, user agent, request path) are collected by our hosting
+          provider and retained for security and debugging.
+        </p>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          We do not use third-party analytics, advertising trackers, or behavioural profiling
+          cookies. The only cookie we set is a session cookie required to keep you signed in.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 03 — How we use it</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          To run the service. Not to profile you.
+        </h2>
+        <ul class="mt-4 space-y-2 leading-relaxed text-[var(--color-ink-soft)]">
+          <li>— Operate, maintain, and secure the service.</li>
+          <li>— Authenticate users and authorize access to tenant data.</li>
+          <li>— Investigate incidents and respond to support requests.</li>
+          <li>
+            — Communicate about your account: security alerts, service changes, and (once
+            commercial pricing begins) billing.
+          </li>
+          <li>
+            — Improve the product in aggregate. We do not analyze individual tenant data for
+            product purposes, and we do not use tenant data to train machine-learning models.
+          </li>
+        </ul>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          We do not sell personal information.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 04 — Sub-processors</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          The vendors who help us run the service.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          We use a small number of sub-processors. Each is contractually bound to handle data
+          consistent with this policy.
+        </p>
+        <div class="mt-6 overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-[var(--color-rule-strong)] text-[var(--color-ink-faint)]">
+              <tr>
+                <th class="py-2 pr-4 font-medium">Sub-processor</th>
+                <th class="py-2 pr-4 font-medium">Purpose</th>
+                <th class="py-2 font-medium">Region</th>
+              </tr>
+            </thead>
+            <tbody class="text-[var(--color-ink-soft)]">
+              <tr class="border-b border-[var(--color-rule)]">
+                <td class="py-2 pr-4">Railway</td>
+                <td class="py-2 pr-4">Application + database hosting</td>
+                <td class="py-2">United States (us-east)</td>
+              </tr>
+              <tr class="border-b border-[var(--color-rule)]">
+                <td class="py-2 pr-4">Backblaze B2 or Cloudflare R2</td>
+                <td class="py-2 pr-4">Photo and file attachment storage</td>
+                <td class="py-2">United States</td>
+              </tr>
+              <tr>
+                <td class="py-2 pr-4">Resend</td>
+                <td class="py-2 pr-4">Transactional email</td>
+                <td class="py-2">United States</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          If we add a sub-processor, this list updates before they begin handling data. We
+          disclose information when required by law (subpoena, court order, regulatory request)
+          and will notify the affected tenant unless prohibited from doing so.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 05 — Where your data lives</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          Hosted in the United States.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          Application data is hosted in the United States on Railway (us-east). File
+          attachments are stored in the United States. Because hosting is outside Canada, your
+          data crosses borders; sub-processors are contractually bound to handle it consistent
+          with this policy.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 06 — Retention</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          Kept while you're a customer; deleted on request.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          We retain account and operational data for as long as the tenant is an active
+          customer. After cancellation, data is retained for 30 days to allow account recovery
+          and export, then permanently deleted. Audit logs are retained for 2 years as a
+          security record. You can request earlier deletion in writing.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 07 — Security</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          What we do, and what we don't promise.
+        </h2>
+        <ul class="mt-4 space-y-2 leading-relaxed text-[var(--color-ink-soft)]">
+          <li>— Passwords are hashed with Argon2 — never stored in plaintext or recoverable form.</li>
+          <li>— Application traffic is served over HTTPS with HSTS.</li>
+          <li>
+            — Tenant data is logically separated. Database queries are scoped to the
+            authenticated user's tenant at the session level; cross-tenant access is treated as
+            a P0 incident.
+          </li>
+          <li>— Access to production systems is restricted to operations staff and audited.</li>
+          <li>
+            — Session cookies are marked <code>Secure</code>, <code>HttpOnly</code>, and
+            <code>SameSite=Lax</code>. State-changing requests are CSRF-protected.
+          </li>
+        </ul>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          No system is perfectly secure. If you believe an account is compromised, contact us
+          immediately at
+          <a
+            href="mailto:contact@citywater.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >contact@citywater.ca</a
+          >.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 08 — Your rights</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">
+          Access, correct, delete.
+        </h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          Depending on where you live, you may have the right to access the personal information
+          we hold about you, correct inaccuracies, request deletion of your account, object to
+          or restrict certain processing, and file a complaint with a data protection authority.
+          In Canada, that's the
+          <a
+            href="https://www.priv.gc.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >Office of the Privacy Commissioner</a
+          >.
+        </p>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          To exercise any of these, write to
+          <a
+            href="mailto:contact@citywater.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >contact@citywater.ca</a
+          >. We respond within 30 days.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 09 — Cookies</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">One cookie. No tracking.</h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          We set one cookie — a session cookie — required to keep you signed in. It is removed
+          when you sign out or your session expires. We do not use analytics cookies, tracking
+          pixels, or third-party advertising cookies.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 10 — Changes</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">If we change this, we'll tell you.</h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          If we materially change this policy, we will notify tenant administrators by email
+          and update the "last updated" date above. Continued use after the change constitutes
+          acceptance.
+        </p>
+      </section>
+
+      <hr class="rule-dotted mt-12" />
+
+      <section class="mt-12">
+        <p class="section-num">§ 11 — Contact</p>
+        <h2 class="font-display mt-2 text-2xl font-medium leading-snug">Reach a human.</h2>
+        <p class="mt-4 leading-relaxed text-[var(--color-ink-soft)]">
+          Questions, requests, or concerns:
+          <a
+            href="mailto:contact@citywater.ca"
+            class="underline decoration-[var(--color-ochre)] decoration-2 underline-offset-2"
+            >contact@citywater.ca</a
+          >.
+        </p>
+      </section>
+    </main>
+
+    <footer class="border-t border-[var(--color-rule)]">
+      <div class="mx-auto max-w-6xl px-6 py-8 text-sm text-[var(--color-ink-faint)] md:px-10">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="flex items-center gap-4">
+            <a
+              href="/"
+              class="font-display text-base font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)]"
+              >CityWater</a
+            >
+            <span class="section-num">beta</span>
+          </div>
+          <nav aria-label="Footer" class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <a href="/privacy" class="hover:text-[var(--color-ink)]">Privacy</a>
+            <a href="/terms" class="hover:text-[var(--color-ink)]">Terms</a>
+            <a href="https://app.citywater.ca/try-demo" class="hover:text-[var(--color-ink)]"
+              >Try the demo</a
+            >
+            <a href="https://app.citywater.ca/login" class="hover:text-[var(--color-ink)]"
+              >Sign in</a
+            >
+            <a href="mailto:contact@citywater.ca" class="hover:text-[var(--color-ink)]"
+              >contact@citywater.ca</a
+            >
+          </nav>
+        </div>
+        <p class="mt-6 border-t border-[var(--color-rule)] pt-4 text-xs">
+          © <span id="footer-year">2026</span> CityWater
+        </p>
+      </div>
+    </footer>
+    <script>
+      document.getElementById("footer-year").textContent = new Date().getFullYear();
+    </script>
+  </body>
+</html>

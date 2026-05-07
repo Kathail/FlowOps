@@ -535,21 +535,35 @@
 
     <!-- Footer -->
     <footer class="border-t border-[var(--color-rule)]">
-      <div
-        class="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 text-sm text-[var(--color-ink-faint)] md:flex-row md:items-center md:justify-between md:px-10"
-      >
-        <div class="flex items-center gap-4">
-          <span class="font-display text-base font-semibold text-[var(--color-ink-soft)]"
-            >CityWater</span
-          >
-          <span class="section-num">beta</span>
+      <div class="mx-auto max-w-6xl px-6 py-8 text-sm text-[var(--color-ink-faint)] md:px-10">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="flex items-center gap-4">
+            <span class="font-display text-base font-semibold text-[var(--color-ink-soft)]"
+              >CityWater</span
+            >
+            <span class="section-num">beta</span>
+          </div>
+          <nav aria-label="Footer" class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <a href="/privacy" class="hover:text-[var(--color-ink)]">Privacy</a>
+            <a href="/terms" class="hover:text-[var(--color-ink)]">Terms</a>
+            <a href="https://app.citywater.ca/try-demo" class="hover:text-[var(--color-ink)]"
+              >Try the demo</a
+            >
+            <a href="https://app.citywater.ca/login" class="hover:text-[var(--color-ink)]"
+              >Sign in</a
+            >
+            <a href="mailto:contact@citywater.ca" class="hover:text-[var(--color-ink)]"
+              >contact@citywater.ca</a
+            >
+          </nav>
         </div>
-        <div class="flex items-center gap-6">
-          <a href="mailto:contact@citywater.ca" class="hover:text-[var(--color-ink)]"
-            >contact@citywater.ca</a
-          >
-        </div>
+        <p class="mt-6 border-t border-[var(--color-rule)] pt-4 text-xs">
+          © <span id="footer-year">2026</span> CityWater
+        </p>
       </div>
     </footer>
+    <script>
+      document.getElementById("footer-year").textContent = new Date().getFullYear();
+    </script>
   </body>
 </html>
