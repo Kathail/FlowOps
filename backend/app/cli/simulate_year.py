@@ -628,7 +628,11 @@ def _simulate(tenant: Tenant, *, seed: int, today: datetime) -> dict[str, int]:
     db.session.flush()
 
     # ---- Citizen SRs ----
-    target_srs = 200
+    # Bumped from 200 → 600/year to match the heavier-utilisation
+    # demo seed (50 of every asset class, ~1200 assets total). 600
+    # SRs/year ≈ 50/month, which reads as a moderately busy 30k-pop
+    # municipality.
+    target_srs = 600
     for i in range(target_srs):
         day_offset = rng.randint(0, 364)
         when = _random_business_dt(rng, start_day + timedelta(days=day_offset))

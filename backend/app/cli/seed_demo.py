@@ -216,117 +216,133 @@ def _seed() -> None:
     db.session.add(crew)
     db.session.flush()
 
-    # Assets — realistic spread
-    # 12 hydrants in a grid
-    for i in range(12):
-        col, row = divmod(i, 4)
-        _make_asset(
-            tenant_id=tenant.id,
-            class_code="WAT_HYD",
-            geom=_point(LON + col * 0.004, LAT + row * 0.003),
-            material="ductile iron",
-            diameter_mm=150,
-            install_date=datetime(2010 + i, 4, 15).date(),
-            condition=random.choice([1, 2, 2, 3]),
-            criticality=random.choice([2, 3, 3, 4]),
+    # Assets — 50 of each class so the year of simulated activity has
+    # plenty of targets. Layout strategy:
+    #
+    #   - Point assets: jittered around the LON/LAT centroid in a
+    #     ~0.04° box (~4km). Hydrants on a grid for visual coherence on
+    #     the map; everything else random within the box.
+    #   - LineString assets: short multi-vertex segments connecting two
+    #     random nearby points within the box.
+    #   - Polygon assets: small rectangles within the box.
+    #
+    # The generator covers all 24 asset classes from migration 0006.
+    POINT_CLASSES = [
+        ("WAT_HYD", "water", "ductile iron", 150),
+        ("WAT_VLV", "water", "ductile iron", 200),
+        ("WAT_MTR", "water", "brass", 25),
+        ("WAT_PMP", "water", None, None),
+        ("WAT_PRV", "water", None, None),
+        ("SAN_MH",  "sewer", "concrete", None),
+        ("SAN_LFT", "sewer", None, None),
+        ("SAN_CO",  "sewer", "PVC", 100),
+        ("SAN_GT",  "sewer", "concrete", None),
+        ("STM_CB",  "storm", "concrete", None),
+        ("STM_MH",  "storm", "concrete", None),
+        ("STM_OUT", "storm", "concrete", None),
+        ("STM_INL", "storm", "concrete", None),
+    ]
+    LINE_CLASSES = [
+        ("WAT_MAIN", "water", "PVC",        300),
+        ("WAT_SVC",  "water", "copper",     25),
+        ("SAN_MAIN", "sewer", "PVC",        250),
+        ("SAN_FM",   "sewer", "ductile iron", 200),
+        ("SAN_LAT",  "sewer", "PVC",        100),
+        ("STM_MAIN", "storm", "HDPE",       600),
+        ("STM_CULV", "storm", "HDPE",       900),
+        ("STM_DTCH", "storm", None,         None),
+    ]
+    POLYGON_CLASSES = [
+        ("WAT_RES", "water", "reinforced concrete"),
+        ("STM_BMP", "storm", "earth"),
+    ]
+    TARGET_PER_CLASS = 50
+    BBOX_W = 0.04   # ~4 km E-W
+    BBOX_H = 0.03   # ~3 km N-S
+
+    def _rand_point() -> tuple[float, float]:
+        return (
+            LON + random.uniform(-BBOX_W / 2, BBOX_W / 2),
+            LAT + random.uniform(-BBOX_H / 2, BBOX_H / 2),
         )
 
-    # 4 water valves
-    for _i in range(4):
-        _make_asset(
-            tenant_id=tenant.id,
-            class_code="WAT_VLV",
-            geom=_point(_jitter(LON + 0.005, 0.008), _jitter(LAT + 0.002, 0.005)),
-            material="ductile iron",
-            diameter_mm=200,
-            condition=2,
-            attrs={"subtype": random.choice(["gate", "butterfly", "check"])},
-        )
+    def _rand_line() -> list[tuple[float, float]]:
+        # 3-vertex line: start + intermediate + end, all within the box.
+        a = _rand_point()
+        b = (a[0] + random.uniform(-0.005, 0.005), a[1] + random.uniform(-0.004, 0.004))
+        c = (b[0] + random.uniform(-0.005, 0.005), b[1] + random.uniform(-0.004, 0.004))
+        return [a, b, c]
 
-    # 2 water mains (lines)
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="WAT_MAIN",
-        geom=_line([(LON, LAT), (LON + 0.012, LAT + 0.001), (LON + 0.018, LAT + 0.005)]),
-        material="PVC",
-        diameter_mm=300,
-        length_m=Decimal("1820.5"),
-        condition=2,
-    )
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="WAT_MAIN",
-        geom=_line(
-            [(LON + 0.005, LAT - 0.002), (LON + 0.010, LAT + 0.004), (LON + 0.015, LAT + 0.008)]
-        ),
-        material="ductile iron",
-        diameter_mm=400,
-        length_m=Decimal("1240.0"),
-        condition=3,
-    )
+    def _rand_polygon() -> list[tuple[float, float]]:
+        cx, cy = _rand_point()
+        w = random.uniform(0.0008, 0.002)
+        h = random.uniform(0.0008, 0.002)
+        return [(cx - w, cy - h), (cx + w, cy - h), (cx + w, cy + h), (cx - w, cy + h)]
 
-    # 1 reservoir (polygon)
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="WAT_RES",
-        geom=_polygon(
-            [
-                (LON - 0.005, LAT + 0.008),
-                (LON - 0.001, LAT + 0.008),
-                (LON - 0.001, LAT + 0.011),
-                (LON - 0.005, LAT + 0.011),
-            ]
-        ),
-        material="reinforced concrete",
-        condition=2,
-    )
+    def _line_length_m(coords: list[tuple[float, float]]) -> Decimal:
+        # Rough planar approximation — fine for synthetic data, the
+        # backend stores PostGIS geometry so spatial queries remain
+        # correct regardless of this scalar.
+        total = 0.0
+        for (x1, y1), (x2, y2) in zip(coords, coords[1:]):
+            dx = (x2 - x1) * 88_000  # m per degree lon at ~38° N
+            dy = (y2 - y1) * 111_000  # m per degree lat
+            total += (dx * dx + dy * dy) ** 0.5
+        return Decimal(str(round(total, 1)))
 
-    # 8 sanitary manholes
-    for _i in range(8):
-        _make_asset(
-            tenant_id=tenant.id,
-            class_code="SAN_MH",
-            geom=_point(_jitter(LON + 0.003, 0.012), _jitter(LAT - 0.001, 0.008)),
-            depth_m=Decimal(str(round(random.uniform(2.0, 5.5), 1))),
-            condition=random.choice([1, 2, 3, 3, 4]),
-        )
+    for class_code, _domain, default_material, default_diameter in POINT_CLASSES:
+        for i in range(TARGET_PER_CLASS):
+            install_year = random.randint(1985, 2024)
+            _make_asset(
+                tenant_id=tenant.id,
+                class_code=class_code,
+                geom=_point(*_rand_point()),
+                material=default_material,
+                diameter_mm=default_diameter,
+                # Depth is meaningful for buried infrastructure (manholes,
+                # catch basins, cleanouts). Surface assets (hydrants,
+                # meters) leave it null.
+                depth_m=(
+                    Decimal(str(round(random.uniform(1.5, 6.0), 1)))
+                    if class_code in {"SAN_MH", "STM_CB", "STM_MH", "SAN_CO", "STM_INL"}
+                    else None
+                ),
+                install_date=datetime(install_year, random.randint(1, 12), 15).date(),
+                condition=random.choices([1, 2, 3, 4, 5], weights=[10, 35, 30, 18, 7])[0],
+                criticality=random.choices([1, 2, 3, 4, 5], weights=[5, 25, 35, 25, 10])[0],
+                # First hydrant gets a stable UID for muscle-memory in
+                # tests / screenshots.
+                asset_uid=("HYD-00001" if class_code == "WAT_HYD" and i == 0 else None),
+            )
 
-    # 1 lift station
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="SAN_LFT",
-        geom=_point(LON + 0.020, LAT - 0.004),
-        manufacturer="Smith Pump",
-        model="LP-2400",
-        install_date=datetime(2015, 6, 1).date(),
-        condition=2,
-    )
+    for class_code, _domain, default_material, default_diameter in LINE_CLASSES:
+        for _i in range(TARGET_PER_CLASS):
+            coords = _rand_line()
+            install_year = random.randint(1980, 2023)
+            _make_asset(
+                tenant_id=tenant.id,
+                class_code=class_code,
+                geom=_line(coords),
+                material=default_material,
+                diameter_mm=default_diameter,
+                length_m=_line_length_m(coords),
+                install_date=datetime(install_year, random.randint(1, 12), 15).date(),
+                condition=random.choices([1, 2, 3, 4, 5], weights=[8, 30, 35, 20, 7])[0],
+                criticality=random.choices([1, 2, 3, 4, 5], weights=[5, 20, 35, 30, 10])[0],
+            )
 
-    # 6 storm catch basins
-    for _ in range(6):
-        _make_asset(
-            tenant_id=tenant.id,
-            class_code="STM_CB",
-            geom=_point(_jitter(LON + 0.004, 0.010), _jitter(LAT + 0.005, 0.006)),
-            condition=random.choice([2, 2, 3, 4]),
-        )
-
-    # 1 outfall + 1 storm main
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="STM_OUT",
-        geom=_point(LON - 0.008, LAT - 0.005),
-        condition=3,
-    )
-    _make_asset(
-        tenant_id=tenant.id,
-        class_code="STM_MAIN",
-        geom=_line([(LON - 0.008, LAT - 0.005), (LON, LAT - 0.002), (LON + 0.005, LAT)]),
-        material="HDPE",
-        diameter_mm=600,
-        length_m=Decimal("1680.0"),
-        condition=2,
-    )
+    for class_code, _domain, default_material in POLYGON_CLASSES:
+        for _i in range(TARGET_PER_CLASS):
+            install_year = random.randint(1995, 2020)
+            _make_asset(
+                tenant_id=tenant.id,
+                class_code=class_code,
+                geom=_polygon(_rand_polygon()),
+                material=default_material,
+                install_date=datetime(install_year, random.randint(1, 12), 15).date(),
+                condition=random.choices([1, 2, 3, 4, 5], weights=[5, 30, 40, 20, 5])[0],
+                criticality=random.choices([1, 2, 3, 4, 5], weights=[5, 20, 30, 30, 15])[0],
+            )
 
     db.session.flush()
 
@@ -354,6 +370,99 @@ def _seed() -> None:
         instructions="Run for at least 5 minutes or until water clears.",
     )
     db.session.add(template)
+    db.session.flush()
+
+    # Recurring schedules — RRULE-driven generators that the
+    # `schedules-tick` CLI advances daily. Seeding live ones gives the
+    # demo tenant a realistic Maintenance Planner view: quarterly
+    # hydrant flushing, annual valve exercising, monthly catch-basin
+    # cleaning, quarterly lift-station rounds, annual hydrant flow
+    # tests.
+    from app.models import Schedule
+
+    def _next_run(rrule: str, anchor: datetime) -> datetime:
+        from app.services.schedules import parse_rrule
+
+        rule = parse_rrule(rrule, dtstart=anchor)
+        nxt = rule.after(datetime.now(UTC), inc=False)
+        return nxt or (datetime.now(UTC) + timedelta(days=7))
+
+    schedule_specs = [
+        {
+            "name": "Quarterly hydrant flushing — North grid",
+            "description": "Flush the northern hydrant cluster every quarter to manage chlorine residual.",
+            "kind": "work_order",
+            "rrule": "FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=1",
+            "spec": {
+                "category": "flushing",
+                "priority": "normal",
+                "title": "Quarterly hydrant flush — N grid",
+                "applies_to_classes": ["WAT_HYD"],
+            },
+        },
+        {
+            "name": "Annual valve exercising program",
+            "description": "Exercise every distribution valve annually to keep them operable.",
+            "kind": "work_order",
+            "rrule": "FREQ=YEARLY;BYMONTH=4;BYMONTHDAY=15",
+            "spec": {
+                "category": "valve_exercise",
+                "priority": "normal",
+                "title": "Annual valve exercising round",
+                "applies_to_classes": ["WAT_VLV"],
+            },
+        },
+        {
+            "name": "Monthly catch-basin cleaning",
+            "description": "Storm catch basins cleaned once per month during the wet season.",
+            "kind": "work_order",
+            "rrule": "FREQ=MONTHLY;BYMONTHDAY=15",
+            "spec": {
+                "category": "cleaning",
+                "priority": "normal",
+                "title": "Monthly catch-basin cleaning",
+                "applies_to_classes": ["STM_CB"],
+            },
+        },
+        {
+            "name": "Lift-station weekly round",
+            "description": "Field tech logs a lift-station round every Monday morning.",
+            "kind": "inspection",
+            "rrule": "FREQ=WEEKLY;BYDAY=MO",
+            "spec": {"kind": "lift_station_round"},
+            "asset_uid": None,  # picked at runtime if needed
+        },
+        {
+            "name": "Annual hydrant flow testing",
+            "description": "AWWA-mandated flow test on every hydrant once a year.",
+            "kind": "inspection",
+            "rrule": "FREQ=YEARLY;BYMONTH=6;BYMONTHDAY=1",
+            "spec": {"kind": "hydrant_flow"},
+        },
+        {
+            "name": "Quarterly manhole inspection sweep",
+            "description": "Walk every collection-system manhole quarterly to catch I/I + structural issues.",
+            "kind": "inspection",
+            "rrule": "FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=10",
+            "spec": {"kind": "manhole"},
+        },
+    ]
+
+    schedule_anchor = datetime(2026, 1, 1, tzinfo=UTC)
+    for s in schedule_specs:
+        sch = Schedule(
+            tenant_id=tenant.id,
+            name=s["name"],
+            description=s.get("description"),
+            kind=s["kind"],
+            rrule=s["rrule"],
+            spec=s["spec"],
+            asset_id=None,
+            next_run_at=_next_run(s["rrule"], schedule_anchor),
+            active=True,
+            created_by=admin.id,
+        )
+        db.session.add(sch)
     db.session.flush()
 
     # Work orders — mix of statuses
