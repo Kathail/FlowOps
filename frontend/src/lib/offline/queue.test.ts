@@ -64,9 +64,7 @@ describe("offline mutation queue", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue(
-        new Response(JSON.stringify({ ok: true }), { status: 201 }),
-      ),
+      vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 201 })),
     );
 
     const result = await drainQueue();
@@ -84,11 +82,7 @@ describe("offline mutation queue", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response("conflict body", { status: 409 }),
-        ),
+      vi.fn().mockResolvedValue(new Response("conflict body", { status: 409 })),
     );
 
     const result = await drainQueue();
@@ -107,10 +101,7 @@ describe("offline mutation queue", () => {
       body: "{}",
       contentType: "application/json",
     });
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(new Response("oops", { status: 503 })),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("oops", { status: 503 })));
 
     await drainQueue();
     const remaining = await listMutations();

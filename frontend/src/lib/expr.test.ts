@@ -46,9 +46,7 @@ describe("interpolate", () => {
   });
 
   it("substitutes dotted paths", () => {
-    expect(
-      interpolate("class {a.b.c}", { a: { b: { c: "WAT_HYD" } } }),
-    ).toBe("class WAT_HYD");
+    expect(interpolate("class {a.b.c}", { a: { b: { c: "WAT_HYD" } } })).toBe("class WAT_HYD");
   });
 
   it("renders missing keys as ?", () => {

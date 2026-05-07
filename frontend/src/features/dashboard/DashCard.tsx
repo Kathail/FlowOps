@@ -46,10 +46,7 @@ export function DashCard({
               className="group inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] font-medium text-blue-300 transition-colors hover:bg-blue-500/10 hover:text-blue-200"
             >
               {linkLabel}
-              <span
-                aria-hidden="true"
-                className="transition-transform group-hover:translate-x-0.5"
-              >
+              <span aria-hidden="true" className="transition-transform group-hover:translate-x-0.5">
                 →
               </span>
             </Link>

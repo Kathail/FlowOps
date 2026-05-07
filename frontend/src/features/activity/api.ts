@@ -1,10 +1,6 @@
 import { apiJson } from "../../lib/apiClient";
 
-export type ActivityEntityType =
-  | "work_order"
-  | "inspection"
-  | "service_request"
-  | "schedule";
+export type ActivityEntityType = "work_order" | "inspection" | "service_request" | "schedule";
 
 // ----- Comments -----
 

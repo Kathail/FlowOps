@@ -77,10 +77,7 @@ describe("apiClient", () => {
   describe("offline behaviour", () => {
     it("queues a mutation and returns a 202 sentinel when offline", async () => {
       vi.stubGlobal("navigator", { onLine: false });
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockRejectedValue(new Error("should not be called")),
-      );
+      vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("should not be called")));
       const resp = await apiFetch("/api/v1/work-orders", {
         method: "POST",
         body: JSON.stringify({ title: "Field-logged" }),
@@ -110,10 +107,7 @@ describe("apiClient", () => {
 
     it("does not enqueue when online", async () => {
       vi.stubGlobal("navigator", { onLine: true });
-      vi.stubGlobal(
-        "fetch",
-        vi.fn().mockResolvedValue(new Response("{}", { status: 201 })),
-      );
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("{}", { status: 201 })));
       await apiFetch("/api/v1/work-orders", {
         method: "POST",
         body: JSON.stringify({ title: "Live save" }),
@@ -124,9 +118,7 @@ describe("apiClient", () => {
     it("rethrows when fetch fails on a non-cacheable URL", async () => {
       vi.stubGlobal("navigator", { onLine: true });
       vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
-      await expect(apiFetch("/api/v1/work-orders/WO-99")).rejects.toThrow(
-        "offline",
-      );
+      await expect(apiFetch("/api/v1/work-orders/WO-99")).rejects.toThrow("offline");
     });
   });
 });

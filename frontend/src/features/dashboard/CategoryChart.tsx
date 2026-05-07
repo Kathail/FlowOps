@@ -2,11 +2,7 @@ import { DashCard } from "./DashCard";
 import type { DashboardResponse } from "./api";
 
 /** Horizontal bar chart of WO categories over the last 30 days. */
-export function CategoryChart({
-  buckets,
-}: {
-  buckets: DashboardResponse["wo_by_category_30d"];
-}) {
+export function CategoryChart({ buckets }: { buckets: DashboardResponse["wo_by_category_30d"] }) {
   const total = buckets.reduce((sum, b) => sum + b.count, 0);
   const max = Math.max(1, ...buckets.map((b) => b.count));
 

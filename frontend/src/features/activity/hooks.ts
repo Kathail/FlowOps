@@ -12,10 +12,8 @@ import {
   updateComment,
 } from "./api";
 
-const commentsKey = (t: ActivityEntityType, id: number) =>
-  ["comments", t, id] as const;
-const historyKey = (t: ActivityEntityType, id: number) =>
-  ["history", t, id] as const;
+const commentsKey = (t: ActivityEntityType, id: number) => ["comments", t, id] as const;
+const historyKey = (t: ActivityEntityType, id: number) => ["history", t, id] as const;
 
 export function useComments(t: ActivityEntityType, id: number | undefined) {
   return useQuery<CommentListResponse, Error>({

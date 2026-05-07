@@ -176,12 +176,7 @@ export function ReportsPage() {
           </header>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {reports.map((r) => (
-              <ReportCard
-                key={r.slug}
-                report={r}
-                iconKey={group.iconKey}
-                {...sharedCardProps}
-              />
+              <ReportCard key={r.slug} report={r} iconKey={group.iconKey} {...sharedCardProps} />
             ))}
           </div>
         </section>
@@ -288,10 +283,7 @@ function ReportCard({ report, slug, iconKey, favs, runs }: ReportCardProps) {
             Run report
           </Link>
           {lastRun && (
-            <span
-              className="text-[10px] text-slate-500"
-              title={new Date(lastRun).toLocaleString()}
-            >
+            <span className="text-[10px] text-slate-500" title={new Date(lastRun).toLocaleString()}>
               Last run {formatRelative(lastRun)}
             </span>
           )}

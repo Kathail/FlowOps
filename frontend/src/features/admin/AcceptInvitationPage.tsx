@@ -25,8 +25,7 @@ export function AcceptInvitationPage() {
     onSuccess: (resp) => {
       setAccepted({ tenant_slug: resp.tenant_slug, email: resp.email });
     },
-    onError: (e) =>
-      setErrorMessage(e instanceof ApiError ? e.message : String(e)),
+    onError: (e) => setErrorMessage(e instanceof ApiError ? e.message : String(e)),
   });
 
   if (!token) {
@@ -52,8 +51,7 @@ export function AcceptInvitationPage() {
           </p>
           <button
             onClick={() => {
-              if (accepted.tenant_slug)
-                navigate(`/login?slug=${accepted.tenant_slug}`);
+              if (accepted.tenant_slug) navigate(`/login?slug=${accepted.tenant_slug}`);
               else navigate("/login");
             }}
             className="btn-primary mt-4"
@@ -99,9 +97,7 @@ export function AcceptInvitationPage() {
               minLength={12}
               className="input mt-1"
             />
-            <span className="mt-1 block text-xs text-slate-400">
-              At least 12 characters.
-            </span>
+            <span className="mt-1 block text-xs text-slate-400">At least 12 characters.</span>
           </label>
           {errorMessage && (
             <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">

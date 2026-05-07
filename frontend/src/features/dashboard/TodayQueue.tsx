@@ -41,8 +41,7 @@ export function TodayQueue({
       ) : (
         <ul className="space-y-1.5">
           {items.map((q) => {
-            const pct =
-              q.asset_total === 0 ? 0 : Math.round((q.asset_done / q.asset_total) * 100);
+            const pct = q.asset_total === 0 ? 0 : Math.round((q.asset_done / q.asset_total) * 100);
             return (
               <li key={q.wo_number}>
                 <Link

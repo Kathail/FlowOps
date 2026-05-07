@@ -65,10 +65,7 @@ export function createSchedule(input: ScheduleCreateInput): Promise<ScheduleRead
   });
 }
 
-export function updateSchedule(
-  id: number,
-  patch: ScheduleUpdateInput,
-): Promise<ScheduleRead> {
+export function updateSchedule(id: number, patch: ScheduleUpdateInput): Promise<ScheduleRead> {
   return apiJson<ScheduleRead>(`/api/v1/schedules/${id}`, {
     method: "PATCH",
     body: JSON.stringify(patch),

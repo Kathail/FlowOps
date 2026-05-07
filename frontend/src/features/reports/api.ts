@@ -1,10 +1,6 @@
 import { apiJson } from "../../lib/apiClient";
 
-export type ReportFilterType =
-  | "date"
-  | "asset_class_code"
-  | "inspection_kind"
-  | "domain";
+export type ReportFilterType = "date" | "asset_class_code" | "inspection_kind" | "domain";
 
 export interface ReportFilter {
   name: string;
@@ -31,16 +27,11 @@ export function listReports(): Promise<ReportCatalogEntry[]> {
   return apiJson<ReportCatalogEntry[]>("/api/v1/reports");
 }
 
-export function runReport(
-  slug: string,
-  params: Record<string, string>,
-): Promise<ReportPayload> {
+export function runReport(slug: string, params: Record<string, string>): Promise<ReportPayload> {
   const search = new URLSearchParams(params);
   search.delete("format");
   const qs = search.toString();
-  return apiJson<ReportPayload>(
-    `/api/v1/reports/${slug}${qs ? `?${qs}` : ""}`,
-  );
+  return apiJson<ReportPayload>(`/api/v1/reports/${slug}${qs ? `?${qs}` : ""}`);
 }
 
 export function downloadUrl(

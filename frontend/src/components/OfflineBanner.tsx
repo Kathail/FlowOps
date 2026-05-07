@@ -1,10 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  type QueueListener,
-  drainQueue,
-  queueCounts,
-  subscribeQueue,
-} from "../lib/offline/queue";
+import { type QueueListener, drainQueue, queueCounts, subscribeQueue } from "../lib/offline/queue";
 
 interface Props {
   onOpenConflicts: () => void;
@@ -61,7 +56,8 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
         <span>
           {online ? "Pending sync" : "Offline"}
           {counts.queued > 0 && ` · ${counts.queued} queued`}
-          {counts.conflict > 0 && ` · ${counts.conflict} conflict${counts.conflict === 1 ? "" : "s"}`}
+          {counts.conflict > 0 &&
+            ` · ${counts.conflict} conflict${counts.conflict === 1 ? "" : "s"}`}
           {counts.failed > 0 && ` · ${counts.failed} failed`}
         </span>
       </div>

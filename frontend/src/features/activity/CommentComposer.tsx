@@ -32,12 +32,7 @@ interface Props {
   taskData?: Record<string, unknown>;
 }
 
-export function CommentComposer({
-  entityType,
-  entityId,
-  task,
-  taskData,
-}: Props) {
+export function CommentComposer({ entityType, entityId, task, taskData }: Props) {
   const [body, setBody] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [assetQuery, setAssetQuery] = useState("");
@@ -108,9 +103,7 @@ export function CommentComposer({
         className="block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
       />
 
-      {task && (
-        <ChecklistDraft task={task} taskData={taskData ?? {}} onPick={applySuggestion} />
-      )}
+      {task && <ChecklistDraft task={task} taskData={taskData ?? {}} onPick={applySuggestion} />}
 
       {task?.smart_comments && task.smart_comments.length > 0 && (
         <SmartCommentChips
@@ -170,11 +163,7 @@ export function CommentComposer({
             {assets.data && assets.data.items.length === 0 && assetQuery && (
               <p className="text-xs text-slate-500">No matching assets.</p>
             )}
-            {!assetQuery && (
-              <p className="text-xs text-slate-500">
-                Start typing to search.
-              </p>
-            )}
+            {!assetQuery && <p className="text-xs text-slate-500">Start typing to search.</p>}
           </div>
         </div>
       )}

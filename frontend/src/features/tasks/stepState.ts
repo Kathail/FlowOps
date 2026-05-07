@@ -18,10 +18,7 @@ export function getStepState(taskData: Record<string, unknown>): StepState {
   return (taskData._steps as StepState | undefined) ?? {};
 }
 
-export function isStepChecked(
-  step: ProcedureStep,
-  taskData: Record<string, unknown>,
-): boolean {
+export function isStepChecked(step: ProcedureStep, taskData: Record<string, unknown>): boolean {
   const override = getStepState(taskData)[step.n];
   if (override === true || override === false) return override;
   if (step.auto_complete_when) {
@@ -30,10 +27,7 @@ export function isStepChecked(
   return false;
 }
 
-export function autoChecked(
-  step: ProcedureStep,
-  taskData: Record<string, unknown>,
-): boolean {
+export function autoChecked(step: ProcedureStep, taskData: Record<string, unknown>): boolean {
   if (!step.auto_complete_when) return false;
   return safeEvaluate(step.auto_complete_when, taskData, false);
 }

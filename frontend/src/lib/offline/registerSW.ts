@@ -19,15 +19,16 @@ export function registerServiceWorker(onUpdate: (apply: () => void) => void): vo
   const moduleName = "virtual" + ":" + "pwa-register";
   import(/* @vite-ignore */ moduleName)
     .then((mod) => {
-      const updateSW = (mod as { registerSW: (opts: unknown) => (reload?: boolean) => void })
-        .registerSW({
-          onNeedRefresh() {
-            onUpdate(() => updateSW(true));
-          },
-          onOfflineReady() {
-            /* cached shell ready — banner reflects state */
-          },
-        });
+      const updateSW = (
+        mod as { registerSW: (opts: unknown) => (reload?: boolean) => void }
+      ).registerSW({
+        onNeedRefresh() {
+          onUpdate(() => updateSW(true));
+        },
+        onOfflineReady() {
+          /* cached shell ready — banner reflects state */
+        },
+      });
     })
     .catch(() => {
       /* no SW in this environment — fine */

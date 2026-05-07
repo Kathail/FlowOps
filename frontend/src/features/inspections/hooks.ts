@@ -27,8 +27,7 @@ export function useInspection(n: string | undefined) {
 export function useUpdateInspection(n: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Parameters<typeof updateInspection>[1]) =>
-      updateInspection(n, patch),
+    mutationFn: (patch: Parameters<typeof updateInspection>[1]) => updateInspection(n, patch),
     onSuccess: (next) => {
       queryClient.setQueryData(["inspection", n], next);
     },

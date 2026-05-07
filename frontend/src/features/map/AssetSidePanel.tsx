@@ -75,9 +75,7 @@ export function AssetSidePanel({ feature, onClose }: Props) {
           <Tag label="Category" value={feature.category} />
           <Tag label="Priority" value={feature.priority} priority={feature.priority} />
           <Tag label="Status" value={feature.status} />
-          {feature.reported_address && (
-            <Tag label="Reported at" value={feature.reported_address} />
-          )}
+          {feature.reported_address && <Tag label="Reported at" value={feature.reported_address} />}
           {feature.asset_uid && (
             <Tag
               label="Asset"
@@ -182,7 +180,7 @@ function Tag({
     normal: "text-blue-300",
     low: "text-slate-400",
   };
-  const cls = priority ? palette[priority] ?? "text-slate-100" : "text-slate-100";
+  const cls = priority ? (palette[priority] ?? "text-slate-100") : "text-slate-100";
   return (
     <>
       <dt className="text-slate-400">{label}</dt>

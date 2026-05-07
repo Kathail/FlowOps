@@ -11,10 +11,7 @@ function renderPage() {
     <QueryClientProvider client={client}>
       <MemoryRouter initialEntries={["/acme/admin/invitations"]}>
         <Routes>
-          <Route
-            path="/:slug/admin/invitations"
-            element={<AdminInvitationsPage />}
-          />
+          <Route path="/:slug/admin/invitations" element={<AdminInvitationsPage />} />
         </Routes>
       </MemoryRouter>
     </QueryClientProvider>,
@@ -98,14 +95,8 @@ describe("AdminInvitationsPage", () => {
     await user.click(screen.getByRole("button", { name: /send invitation/i }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/Invitation created for bob@acme\.io/i),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Invitation created for bob@acme\.io/i)).toBeInTheDocument();
     });
-    expect(
-      screen.getByText(
-        /accept-invitation\/tok12345-rest-of-token/,
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/accept-invitation\/tok12345-rest-of-token/)).toBeInTheDocument();
   });
 });

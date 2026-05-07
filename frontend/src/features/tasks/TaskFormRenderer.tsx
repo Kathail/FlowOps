@@ -82,17 +82,11 @@ function FieldRow({
           *
         </span>
       )}
-      {field.unit && (
-        <span className="ml-2 text-xs text-slate-500">({field.unit})</span>
-      )}
+      {field.unit && <span className="ml-2 text-xs text-slate-500">({field.unit})</span>}
     </span>
   );
-  const helpEl = field.help ? (
-    <p className="mt-1 text-xs text-slate-500">{field.help}</p>
-  ) : null;
-  const errorEl = error ? (
-    <p className="mt-1 text-xs text-red-400">{error}</p>
-  ) : null;
+  const helpEl = field.help ? <p className="mt-1 text-xs text-slate-500">{field.help}</p> : null;
+  const errorEl = error ? <p className="mt-1 text-xs text-red-400">{error}</p> : null;
 
   switch (field.type) {
     case "boolean":
@@ -121,9 +115,7 @@ function FieldRow({
             type="number"
             inputMode="numeric"
             value={typeof value === "number" ? value : ""}
-            onChange={(e) =>
-              onChange(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
             min={field.min}
             max={field.max}
             step={field.step ?? "any"}
@@ -172,9 +164,7 @@ function FieldRow({
         <fieldset>
           <legend className="text-sm font-medium text-slate-200">
             {field.label}
-            {field.required_for_complete && (
-              <span className="ml-1 text-blue-400">*</span>
-            )}
+            {field.required_for_complete && <span className="ml-1 text-blue-400">*</span>}
           </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {(field.choices ?? []).map((choice) => {
@@ -217,9 +207,7 @@ function FieldRow({
                   onClick={() => {
                     if (disabled) return;
                     onChange(
-                      selected
-                        ? arr.filter((v) => v !== choice.value)
-                        : [...arr, choice.value],
+                      selected ? arr.filter((v) => v !== choice.value) : [...arr, choice.value],
                     );
                   }}
                   disabled={disabled}
@@ -251,13 +239,9 @@ function FieldRow({
           {labelEl}
           <input
             type="text"
-            placeholder={
-              field.asset_class ? `Asset UID (${field.asset_class})` : "Asset UID"
-            }
+            placeholder={field.asset_class ? `Asset UID (${field.asset_class})` : "Asset UID"}
             value={typeof value === "string" ? value : ""}
-            onChange={(e: ChangeEvent<HTMLInputElement>) =>
-              onChange(e.target.value || null)
-            }
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value || null)}
             disabled={disabled}
             className={`${inputClass} mt-2 font-mono`}
           />
@@ -292,9 +276,7 @@ function FieldRow({
             inputMode="numeric"
             placeholder="minutes"
             value={typeof value === "number" ? value : ""}
-            onChange={(e) =>
-              onChange(e.target.value === "" ? null : Number(e.target.value))
-            }
+            onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))}
             disabled={disabled}
             className={`${inputClass} mt-2`}
           />
@@ -310,8 +292,8 @@ function FieldRow({
         <div>
           {labelEl}
           <p className="mt-2 rounded border border-slate-800 bg-slate-900/40 p-3 text-xs text-slate-500">
-            {field.type === "photo" ? "Photo capture" : "Signature capture"}{" "}
-            arrives in a follow-up PR.
+            {field.type === "photo" ? "Photo capture" : "Signature capture"} arrives in a follow-up
+            PR.
           </p>
         </div>
       );

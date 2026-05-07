@@ -14,12 +14,7 @@ export type SrCategory =
 export type SrDomain = "water" | "sewer" | "storm";
 export type SrStatus = "new" | "triaged" | "dispatched" | "closed" | "duplicate";
 export type SrPriority = "low" | "normal" | "high" | "emergency";
-export type SrClosureReason =
-  | "resolved"
-  | "duplicate"
-  | "no_action"
-  | "false_alarm"
-  | "deferred";
+export type SrClosureReason = "resolved" | "duplicate" | "no_action" | "false_alarm" | "deferred";
 
 export interface ServiceRequestRead {
   id: number;
@@ -161,15 +156,11 @@ export function listServiceRequests(
     if (v !== undefined && v !== null && v !== "") search.set(k, String(v));
   }
   const qs = search.toString();
-  return apiJson<ServiceRequestListResponse>(
-    `/api/v1/service-requests${qs ? `?${qs}` : ""}`,
-  );
+  return apiJson<ServiceRequestListResponse>(`/api/v1/service-requests${qs ? `?${qs}` : ""}`);
 }
 
 export function getServiceRequest(sr_number: string): Promise<ServiceRequestRead> {
-  return apiJson<ServiceRequestRead>(
-    `/api/v1/service-requests/${encodeURIComponent(sr_number)}`,
-  );
+  return apiJson<ServiceRequestRead>(`/api/v1/service-requests/${encodeURIComponent(sr_number)}`);
 }
 
 export function createServiceRequest(
@@ -185,13 +176,10 @@ export function updateServiceRequest(
   sr_number: string,
   patch: ServiceRequestUpdateInput,
 ): Promise<ServiceRequestRead> {
-  return apiJson<ServiceRequestRead>(
-    `/api/v1/service-requests/${encodeURIComponent(sr_number)}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify(patch),
-    },
-  );
+  return apiJson<ServiceRequestRead>(`/api/v1/service-requests/${encodeURIComponent(sr_number)}`, {
+    method: "PATCH",
+    body: JSON.stringify(patch),
+  });
 }
 
 export function dispatchServiceRequest(

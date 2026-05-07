@@ -45,7 +45,9 @@ type Token =
   | { type: "STRING"; value: string }
   | { type: "IDENT"; value: string }
   | { type: "TRUE" | "FALSE" | "NULL" | "IN" | "NOT_IN" | "EOF" }
-  | { type: "(" | ")" | "[" | "]" | "," | "||" | "&&" | "!" | "==" | "!=" | "<" | "<=" | ">" | ">=" };
+  | {
+      type: "(" | ")" | "[" | "]" | "," | "||" | "&&" | "!" | "==" | "!=" | "<" | "<=" | ">" | ">=";
+    };
 
 function tokenize(src: string): Token[] {
   const out: Token[] = [];
@@ -145,7 +147,10 @@ function tokenize(src: string): Token[] {
 const COMP_OPS = new Set(["==", "!=", "<", "<=", ">", ">=", "IN", "NOT_IN"]);
 
 class Parser {
-  constructor(private toks: Token[], private i = 0) {}
+  constructor(
+    private toks: Token[],
+    private i = 0,
+  ) {}
 
   private peek(): Token {
     return this.toks[this.i];
@@ -304,9 +309,7 @@ function compare(op: string, a: unknown, b: unknown): boolean {
   }
   if (a == null || b == null) return false;
   if (typeof a !== typeof b) {
-    throw new ExpressionEvalError(
-      `cannot compare ${typeof a} ${op} ${typeof b}`,
-    );
+    throw new ExpressionEvalError(`cannot compare ${typeof a} ${op} ${typeof b}`);
   }
   // After the type guard, both are the same primitive type and comparable.
   const ax = a as number | string;

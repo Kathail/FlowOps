@@ -32,9 +32,7 @@ describe("SmartCommentChips", () => {
     );
     expect(screen.getByText("Cleared after 8 min.")).toBeInTheDocument();
     expect(screen.queryByText("Still discoloured.")).not.toBeInTheDocument();
-    expect(
-      screen.getByText("No condition — always shown."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No condition — always shown.")).toBeInTheDocument();
   });
 
   it("renders missing variables as ?", () => {
@@ -64,9 +62,7 @@ describe("SmartCommentChips", () => {
   it("renders nothing when no chips would show", () => {
     const { container } = render(
       <SmartCommentChips
-        smartComments={[
-          { id: "x", condition: "outcome == 'never'", text: "hidden" },
-        ]}
+        smartComments={[{ id: "x", condition: "outcome == 'never'", text: "hidden" }]}
         taskData={{}}
         onPick={() => {}}
       />,

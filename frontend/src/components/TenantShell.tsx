@@ -96,11 +96,7 @@ export function TenantShell() {
   // drawer + desktop fixed sidebar) so we extract it.
   const sidebarBody = (
     <>
-      <Link
-        to={`/${slug}/`}
-        className="mb-6 flex items-center gap-2.5"
-        title={tenant.name}
-      >
+      <Link to={`/${slug}/`} className="mb-6 flex items-center gap-2.5" title={tenant.name}>
         <Logo size={32} className="shrink-0" />
         <div className="min-w-0">
           <h1 className="text-sm font-semibold text-slate-100 leading-tight line-clamp-2 break-words">

@@ -21,8 +21,8 @@ export function DemoBanner() {
           Demo
         </span>
         <span>
-          You're exploring a sandbox tenant pre-populated with simulated work. Changes are
-          real but the data resets periodically.
+          You're exploring a sandbox tenant pre-populated with simulated work. Changes are real but
+          the data resets periodically.
         </span>
       </p>
       <p className="flex items-center gap-3 text-xs">

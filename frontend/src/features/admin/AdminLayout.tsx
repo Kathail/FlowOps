@@ -21,8 +21,8 @@ export function AdminLayout() {
       <div className="p-8 text-slate-200">
         <h1 className="text-2xl font-semibold">Admin</h1>
         <p className="mt-2 text-sm">
-          You need the <code className="rounded bg-slate-800 px-1">admin</code>{" "}
-          role to access this section.
+          You need the <code className="rounded bg-slate-800 px-1">admin</code> role to access this
+          section.
         </p>
       </div>
     );

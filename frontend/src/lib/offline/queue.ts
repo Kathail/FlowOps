@@ -2,11 +2,7 @@ import { type QueuedMutation, getDB } from "./db";
 
 const MAX_QUEUE = 200;
 
-export type QueueListener = (counts: {
-  queued: number;
-  conflict: number;
-  failed: number;
-}) => void;
+export type QueueListener = (counts: { queued: number; conflict: number; failed: number }) => void;
 
 const listeners = new Set<QueueListener>();
 
@@ -153,17 +149,11 @@ export async function drainQueue(): Promise<{
   return { replayed, conflict, remaining };
 }
 
-async function markStatus(
-  id: number,
-  status: QueuedMutation["status"],
-): Promise<void> {
+async function markStatus(id: number, status: QueuedMutation["status"]): Promise<void> {
   await updateRecord(id, { status });
 }
 
-async function updateRecord(
-  id: number,
-  patch: Partial<QueuedMutation>,
-): Promise<void> {
+async function updateRecord(id: number, patch: Partial<QueuedMutation>): Promise<void> {
   const db = await getDB();
   const tx = db.transaction("mutations", "readwrite");
   const current = await tx.store.get(id);

@@ -31,11 +31,7 @@ const DEMO_LOGIN = {
   password: "DemoPassword123!",
 };
 
-type Step =
-  | "starting"
-  | "posting"
-  | "navigating"
-  | "done";
+type Step = "starting" | "posting" | "navigating" | "done";
 
 type Phase =
   | { kind: "loading"; step: Step }

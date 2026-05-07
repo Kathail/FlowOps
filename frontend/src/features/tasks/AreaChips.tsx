@@ -34,9 +34,7 @@ export function AreaChips({
   className?: string;
 }) {
   const primaryKind = systemKindForDomain(domain);
-  const visible = (areas ?? []).filter(
-    (a) => a.kind === "maintenance" || a.kind === primaryKind,
-  );
+  const visible = (areas ?? []).filter((a) => a.kind === "maintenance" || a.kind === primaryKind);
   if (visible.length === 0) return null;
 
   return (

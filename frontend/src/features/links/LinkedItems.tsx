@@ -51,26 +51,16 @@ export function LinkedItems({ entityType, entityId }: Props) {
       </div>
 
       {adding && (
-        <AddLinkForm
-          sourceType={entityType}
-          sourceId={entityId}
-          onDone={() => setAdding(false)}
-        />
+        <AddLinkForm sourceType={entityType} sourceId={entityId} onDone={() => setAdding(false)} />
       )}
 
       <ul className="mt-3 divide-y divide-slate-800">
-        {links.isLoading && (
-          <li className="py-3 text-sm text-slate-400">Loading…</li>
-        )}
+        {links.isLoading && <li className="py-3 text-sm text-slate-400">Loading…</li>}
         {links.isError && (
-          <li className="py-3 text-sm text-red-400">
-            Failed to load linked items.
-          </li>
+          <li className="py-3 text-sm text-red-400">Failed to load linked items.</li>
         )}
         {links.data && links.data.items.length === 0 && (
-          <li className="py-3 text-sm text-slate-500">
-            No linked items yet.
-          </li>
+          <li className="py-3 text-sm text-slate-500">No linked items yet.</li>
         )}
         {links.data?.items.map((link) => (
           <LinkRow
@@ -96,12 +86,12 @@ function LinkRow({
 }) {
   const { slug } = useParams<{ slug: string }>();
   // Determine which side of the link is "the other" relative to `self`.
-  const showingOther =
-    link.source_type === self.type && link.source_id === self.id;
+  const showingOther = link.source_type === self.type && link.source_id === self.id;
   const otherType = showingOther ? link.target_type : link.source_type;
   const otherRef = showingOther ? link.target_ref : link.source_ref;
-  const directionLabel =
-    showingOther ? KIND_LABELS[link.kind] : `${KIND_LABELS[link.kind]} (incoming)`;
+  const directionLabel = showingOther
+    ? KIND_LABELS[link.kind]
+    : `${KIND_LABELS[link.kind]} (incoming)`;
 
   const path = otherRef
     ? otherType === "work_order"
@@ -129,20 +119,12 @@ function LinkRow({
               {otherRef}
             </Link>
           ) : (
-            <span className="font-mono text-slate-500">
-              {otherRef ?? "(deleted)"}
-            </span>
+            <span className="font-mono text-slate-500">{otherRef ?? "(deleted)"}</span>
           )}
         </p>
-        {link.note && (
-          <p className="mt-1 text-xs text-slate-400">{link.note}</p>
-        )}
+        {link.note && <p className="mt-1 text-xs text-slate-400">{link.note}</p>}
       </div>
-      <button
-        onClick={onRemove}
-        className="btn-ghost px-2 py-1 text-xs"
-        title="Remove link"
-      >
+      <button onClick={onRemove} className="btn-ghost px-2 py-1 text-xs" title="Remove link">
         Unlink
       </button>
     </li>
@@ -215,10 +197,10 @@ function AddLinkForm({
   // Datalist hints — show recent codes for the chosen target type.
   const hints =
     targetType === "work_order"
-      ? wos.data?.items.map((w) => w.wo_number) ?? []
+      ? (wos.data?.items.map((w) => w.wo_number) ?? [])
       : targetType === "service_request"
-        ? srs.data?.items.map((s) => s.sr_number) ?? []
-        : ins.data?.items.map((i) => i.inspection_number) ?? [];
+        ? (srs.data?.items.map((s) => s.sr_number) ?? [])
+        : (ins.data?.items.map((i) => i.inspection_number) ?? []);
 
   return (
     <form
@@ -296,11 +278,14 @@ function AddLinkForm({
         <button type="button" onClick={onDone} className="btn-ghost px-3 py-1.5 text-xs">
           Cancel
         </button>
-        <button type="submit" disabled={create.isPending} className="btn-primary px-3 py-1.5 text-xs">
+        <button
+          type="submit"
+          disabled={create.isPending}
+          className="btn-primary px-3 py-1.5 text-xs"
+        >
           {create.isPending ? "Linking…" : "Link"}
         </button>
       </div>
     </form>
   );
 }
-

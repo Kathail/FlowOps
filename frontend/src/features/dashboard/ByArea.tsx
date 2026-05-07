@@ -18,10 +18,7 @@ import type { DashboardResponse } from "./api";
  *   zero active counts — saves the eye scanning a wall of "0 0 0".
  */
 
-const DOMAIN_META: Record<
-  string,
-  { label: string; chip: string }
-> = {
+const DOMAIN_META: Record<string, { label: string; chip: string }> = {
   maintenance: { label: "Maintenance districts", chip: "bg-amber-500" },
   water_system: { label: "Water systems", chip: "bg-blue-500" },
   sewer_system: { label: "Wastewater systems", chip: "bg-emerald-500" },
@@ -35,8 +32,8 @@ export function ByArea({ rows, slug }: { rows: DashboardResponse["by_area"]; slu
     return (
       <DashCard title="Service areas" to={`/${slug}/admin`} linkLabel="Configure">
         <p className="text-sm text-slate-500">
-          No service areas configured yet. Add maintenance districts and
-          water/sewer/storm systems in admin to drive workload by area.
+          No service areas configured yet. Add maintenance districts and water/sewer/storm systems
+          in admin to drive workload by area.
         </p>
       </DashCard>
     );
@@ -92,13 +89,7 @@ export function ByArea({ rows, slug }: { rows: DashboardResponse["by_area"]; slu
  * counts on the right. Zero counts disappear entirely so the row
  * reads as cleanly as possible — supervisor only sees what matters.
  */
-function AreaRow({
-  row,
-  slug,
-}: {
-  row: DashboardResponse["by_area"][number];
-  slug: string;
-}) {
+function AreaRow({ row, slug }: { row: DashboardResponse["by_area"][number]; slug: string }) {
   const isQuiet = row.active_wos === 0 && row.overdue_wos === 0 && row.active_srs === 0;
   return (
     <Link

@@ -107,10 +107,7 @@ export function WorkOrderListPage() {
     if (overdueOnly) {
       const nowIso = new Date().toISOString();
       items = items.filter(
-        (w) =>
-          w.due_by != null
-          && w.due_by < nowIso
-          && ACTIVE_STATUSES.includes(w.status),
+        (w) => w.due_by != null && w.due_by < nowIso && ACTIVE_STATUSES.includes(w.status),
       );
     }
     return items;
@@ -335,11 +332,7 @@ export function WorkOrderListPage() {
                       </td>
                       <td className="px-3 py-2 font-mono text-xs">{w.asset_uid ?? <Dash />}</td>
                       <td className="px-3 py-2">
-                        {w.due_by ? (
-                          <DueCell iso={w.due_by} overdue={overdue} />
-                        ) : (
-                          <Dash />
-                        )}
+                        {w.due_by ? <DueCell iso={w.due_by} overdue={overdue} /> : <Dash />}
                       </td>
                       <td className="px-3 py-2 text-right">
                         <RowActions label={`${w.wo_number} actions`}>
@@ -358,9 +351,7 @@ export function WorkOrderListPage() {
                               every active state → on_hold. */}
                           {canTransition(w.status, "assigned") && (
                             <RowActions.Action
-                              onClick={() =>
-                                transition.mutate({ wo: w.wo_number, to: "assigned" })
-                              }
+                              onClick={() => transition.mutate({ wo: w.wo_number, to: "assigned" })}
                             >
                               Assign (advance)
                             </RowActions.Action>
@@ -430,9 +421,7 @@ function DueCell({ iso, overdue }: { iso: string; overdue: boolean }) {
   }
   return (
     <div className="leading-tight">
-      <p className={`text-xs ${overdue ? "text-red-300 font-medium" : "text-slate-200"}`}>
-        {chip}
-      </p>
+      <p className={`text-xs ${overdue ? "text-red-300 font-medium" : "text-slate-200"}`}>{chip}</p>
       <p className="text-[10px] text-slate-500">{formatDate(iso)}</p>
     </div>
   );

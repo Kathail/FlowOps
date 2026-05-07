@@ -38,9 +38,7 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
 
   return (
     <section className="surface space-y-4 p-4">
-      <h2 className="text-xs font-medium uppercase tracking-wider text-slate-500">
-        Procedure
-      </h2>
+      <h2 className="text-xs font-medium uppercase tracking-wider text-slate-500">Procedure</h2>
 
       {(proc.preconditions ?? []).length > 0 && (
         <Block label="Preconditions">
@@ -72,9 +70,7 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
 
       {steps.length > 0 && (
         <div>
-          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-            Steps
-          </p>
+          <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">Steps</p>
           <ol className="space-y-2">
             {steps.map((step) => {
               const checked = isStepChecked(step, taskData);
@@ -93,9 +89,7 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
                   >
                     <span
                       className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded ${
-                        checked
-                          ? "bg-blue-500 text-white"
-                          : "border border-slate-600"
+                        checked ? "bg-blue-500 text-white" : "border border-slate-600"
                       }`}
                       aria-hidden
                     >
@@ -103,19 +97,12 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
                     </span>
                     <div className="flex-1">
                       <p className="text-sm text-slate-100">
-                        <span className="text-slate-500">{step.n}.</span>{" "}
-                        {step.title}
+                        <span className="text-slate-500">{step.n}.</span> {step.title}
                         {overridden && wouldAuto !== checked && (
-                          <span className="ml-2 text-xs text-slate-500">
-                            (override)
-                          </span>
+                          <span className="ml-2 text-xs text-slate-500">(override)</span>
                         )}
                       </p>
-                      {step.detail && (
-                        <p className="mt-1 text-xs text-slate-400">
-                          {step.detail}
-                        </p>
-                      )}
+                      {step.detail && <p className="mt-1 text-xs text-slate-400">{step.detail}</p>}
                     </div>
                   </button>
                 </li>
@@ -143,9 +130,7 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
 function Block({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">
-        {label}
-      </p>
+      <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">{label}</p>
       {children}
     </div>
   );

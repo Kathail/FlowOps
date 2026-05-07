@@ -23,10 +23,7 @@ export function Logo({
       aria-hidden="true"
     >
       {showBackground && <rect width="64" height="64" rx="12" fill="#0f172a" />}
-      <path
-        d="M32 14c-7 9-12 15-12 22a12 12 0 0 0 24 0c0-7-5-13-12-22z"
-        fill="#38bdf8"
-      />
+      <path d="M32 14c-7 9-12 15-12 22a12 12 0 0 0 24 0c0-7-5-13-12-22z" fill="#38bdf8" />
     </svg>
   );
 }

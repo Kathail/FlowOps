@@ -30,10 +30,7 @@ export interface LinkCreateInput {
   note?: string;
 }
 
-export function listLinks(
-  entityType: LinkEntityType,
-  entityId: number,
-): Promise<LinkListResponse> {
+export function listLinks(entityType: LinkEntityType, entityId: number): Promise<LinkListResponse> {
   const qs = new URLSearchParams({
     entity_type: entityType,
     entity_id: String(entityId),

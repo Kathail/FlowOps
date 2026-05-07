@@ -76,9 +76,7 @@ export function listInvitations(): Promise<InvitationListResponse> {
   return apiJson<InvitationListResponse>("/api/v1/invitations");
 }
 
-export function createInvitation(
-  input: InvitationCreateInput,
-): Promise<InvitationCreateResponse> {
+export function createInvitation(input: InvitationCreateInput): Promise<InvitationCreateResponse> {
   return apiJson<InvitationCreateResponse>("/api/v1/invitations", {
     method: "POST",
     body: JSON.stringify(input),
@@ -108,10 +106,7 @@ export function listUsers(): Promise<UserListResponse> {
   return apiJson<UserListResponse>("/api/v1/users?page_size=200");
 }
 
-export function updateUserRoles(
-  user_uid: string,
-  role_codes: string[],
-): Promise<UserRead> {
+export function updateUserRoles(user_uid: string, role_codes: string[]): Promise<UserRead> {
   return apiJson<UserRead>(`/api/v1/users/${user_uid}/roles`, {
     method: "POST",
     body: JSON.stringify({ role_codes }),

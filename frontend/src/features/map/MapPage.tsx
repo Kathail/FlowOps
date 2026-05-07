@@ -71,9 +71,7 @@ export function MapPage() {
   const [visibleClasses, setVisibleClasses] = useState<Set<string>>(new Set());
   const [showWos, setShowWos] = useState(true);
   const [showSrs, setShowSrs] = useState(true);
-  const [areaKindsVisible, setAreaKindsVisible] = useState<Set<string>>(
-    new Set(),
-  );
+  const [areaKindsVisible, setAreaKindsVisible] = useState<Set<string>>(new Set());
   const areaKindsInited = useRef(false);
   const [selected, setSelected] = useState<ClickedFeature | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -215,10 +213,14 @@ export function MapPage() {
       const priorityColor: maplibregl.ExpressionSpecification = [
         "match",
         ["get", "priority"],
-        "emergency", "#ef4444",
-        "high", "#f59e0b",
-        "normal", "#3b82f6",
-        "low", "#94a3b8",
+        "emergency",
+        "#ef4444",
+        "high",
+        "#f59e0b",
+        "normal",
+        "#3b82f6",
+        "low",
+        "#94a3b8",
         "#94a3b8",
       ];
       map.addLayer({
@@ -274,9 +276,7 @@ export function MapPage() {
     if (!map || !overlays) return;
     function update() {
       if (!map || !overlays) return;
-      (map.getSource("op-wos") as maplibregl.GeoJSONSource | undefined)?.setData(
-        overlays.open_wos,
-      );
+      (map.getSource("op-wos") as maplibregl.GeoJSONSource | undefined)?.setData(overlays.open_wos);
       (map.getSource("op-srs") as maplibregl.GeoJSONSource | undefined)?.setData(
         overlays.active_srs,
       );
@@ -328,9 +328,7 @@ export function MapPage() {
     const onClick = (e: MapMouseEvent) => {
       // First look for WO/SR pins — they're drawn on top and almost
       // always what the operator means to click.
-      const opLayers = ["op-wos-layer", "op-srs-layer"].filter((id) =>
-        map.getLayer(id),
-      );
+      const opLayers = ["op-wos-layer", "op-srs-layer"].filter((id) => map.getLayer(id));
       const opFeatures = opLayers.length
         ? map.queryRenderedFeatures(e.point, { layers: opLayers })
         : [];
@@ -355,9 +353,7 @@ export function MapPage() {
             category: String(props.category ?? ""),
             priority: String(props.priority ?? ""),
             status: String(props.status ?? ""),
-            reported_address: props.reported_address
-              ? String(props.reported_address)
-              : null,
+            reported_address: props.reported_address ? String(props.reported_address) : null,
             asset_uid: props.asset_uid ? String(props.asset_uid) : null,
           });
         }

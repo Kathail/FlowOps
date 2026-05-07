@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  type ReportCatalogEntry,
-  type ReportPayload,
-  listReports,
-  runReport,
-} from "./api";
+import { type ReportCatalogEntry, type ReportPayload, listReports, runReport } from "./api";
 
 export function useReportCatalog() {
   return useQuery<ReportCatalogEntry[], Error>({

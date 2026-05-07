@@ -38,9 +38,7 @@ const baseTask = {
 describe("ProcedureRunner — clickability", () => {
   it("clicks toggle a step that has an auto rule (manual override wins)", () => {
     const onChange = vi.fn();
-    render(
-      <ProcedureRunner task={baseTask} taskData={{}} onChange={onChange} />,
-    );
+    render(<ProcedureRunner task={baseTask} taskData={{}} onChange={onChange} />);
     // Step one: button by accessible name (matches the title)
     const stepOne = screen.getByRole("button", { name: /Step one/ });
     expect(stepOne).not.toBeDisabled();
@@ -51,9 +49,7 @@ describe("ProcedureRunner — clickability", () => {
 
   it("clicks toggle a step that has no auto rule", () => {
     const onChange = vi.fn();
-    render(
-      <ProcedureRunner task={baseTask} taskData={{}} onChange={onChange} />,
-    );
+    render(<ProcedureRunner task={baseTask} taskData={{}} onChange={onChange} />);
     const stepThree = screen.getByRole("button", { name: /Step three/ });
     fireEvent.click(stepThree);
     expect(onChange).toHaveBeenCalledWith({ _steps: { 3: true } });
@@ -62,11 +58,7 @@ describe("ProcedureRunner — clickability", () => {
   it("un-ticks an auto-checked step on first click", () => {
     const onChange = vi.fn();
     render(
-      <ProcedureRunner
-        task={baseTask}
-        taskData={{ flush_completed: true }}
-        onChange={onChange}
-      />,
+      <ProcedureRunner task={baseTask} taskData={{ flush_completed: true }} onChange={onChange} />,
     );
     const stepOne = screen.getByRole("button", { name: /Step one/ });
     fireEvent.click(stepOne);
@@ -80,11 +72,7 @@ describe("ProcedureRunner — clickability", () => {
   it("flips back when clicked again (true → false)", () => {
     const onChange = vi.fn();
     render(
-      <ProcedureRunner
-        task={baseTask}
-        taskData={{ _steps: { 1: true } }}
-        onChange={onChange}
-      />,
+      <ProcedureRunner task={baseTask} taskData={{ _steps: { 1: true } }} onChange={onChange} />,
     );
     const stepOne = screen.getByRole("button", { name: /Step one/ });
     fireEvent.click(stepOne);

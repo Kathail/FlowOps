@@ -105,27 +105,25 @@ export interface ValidateResponse {
   unmet_requirements: string[];
 }
 
-export function listTaskDefinitions(params: {
-  status?: TaskStatus;
-  domain?: string;
-  cls?: string;
-  q?: string;
-} = {}): Promise<TaskListResponse> {
+export function listTaskDefinitions(
+  params: {
+    status?: TaskStatus;
+    domain?: string;
+    cls?: string;
+    q?: string;
+  } = {},
+): Promise<TaskListResponse> {
   const search = new URLSearchParams();
   if (params.status) search.set("status", params.status);
   if (params.domain) search.set("domain", params.domain);
   if (params.cls) search.set("class", params.cls);
   if (params.q) search.set("q", params.q);
   const qs = search.toString();
-  return apiJson<TaskListResponse>(
-    `/api/v1/task-definitions${qs ? `?${qs}` : ""}`,
-  );
+  return apiJson<TaskListResponse>(`/api/v1/task-definitions${qs ? `?${qs}` : ""}`);
 }
 
 export function getTaskDefinition(code: string): Promise<TaskDefinitionRead> {
-  return apiJson<TaskDefinitionRead>(
-    `/api/v1/task-definitions/${encodeURIComponent(code)}`,
-  );
+  return apiJson<TaskDefinitionRead>(`/api/v1/task-definitions/${encodeURIComponent(code)}`);
 }
 
 export function validateTaskData(

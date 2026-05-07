@@ -71,12 +71,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   // can keep flowing. We deliberately don't queue FormData (attachments)
   // because it can't be reliably re-encoded after IDB round-trip; field
   // techs photograph evidence online or wait until reconnect.
-  if (
-    !isOnline() &&
-    MUTATING_METHODS.has(method) &&
-    !isFormData &&
-    typeof init.body === "string"
-  ) {
+  if (!isOnline() && MUTATING_METHODS.has(method) && !isFormData && typeof init.body === "string") {
     await enqueueMutation({
       method: method as "POST" | "PATCH" | "PUT" | "DELETE",
       url: path,

@@ -9,8 +9,7 @@ import {
   listLinks,
 } from "./api";
 
-export const linkQueryKey = (type: LinkEntityType, id: number) =>
-  ["links", type, id] as const;
+export const linkQueryKey = (type: LinkEntityType, id: number) => ["links", type, id] as const;
 
 export function useLinks(type: LinkEntityType, id: number | undefined) {
   return useQuery<LinkListResponse, Error>({

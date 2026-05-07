@@ -206,16 +206,13 @@ export function addWoAssets(
   asset_uids: string[],
   role: WoAssetRole = "affected",
 ): Promise<WorkOrderDetail> {
-  return apiJson<WorkOrderDetail>(
-    `/api/v1/work-orders/${encodeURIComponent(wo_number)}/assets`,
-    { method: "POST", body: JSON.stringify({ asset_uids, role }) },
-  );
+  return apiJson<WorkOrderDetail>(`/api/v1/work-orders/${encodeURIComponent(wo_number)}/assets`, {
+    method: "POST",
+    body: JSON.stringify({ asset_uids, role }),
+  });
 }
 
-export function removeWoAsset(
-  wo_number: string,
-  asset_uid: string,
-): Promise<WorkOrderDetail> {
+export function removeWoAsset(wo_number: string, asset_uid: string): Promise<WorkOrderDetail> {
   return apiJson<WorkOrderDetail>(
     `/api/v1/work-orders/${encodeURIComponent(wo_number)}/assets/${encodeURIComponent(asset_uid)}`,
     { method: "DELETE" },

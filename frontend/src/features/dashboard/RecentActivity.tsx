@@ -29,10 +29,7 @@ const ENTITY_CHIP: Record<"wo" | "sr" | "ins", string> = {
   ins: "bg-purple-500/15 text-purple-200 ring-purple-500/30",
 };
 
-const KIND_CHIP: Record<
-  "comment" | "transition",
-  { glyph: string; cls: string; label: string }
-> = {
+const KIND_CHIP: Record<"comment" | "transition", { glyph: string; cls: string; label: string }> = {
   comment: {
     glyph: "“",
     cls: "bg-slate-700/70 text-slate-200",
@@ -86,7 +83,9 @@ export function RecentActivity({
 function ActivityRow({ item, slug }: ItemProps) {
   const meta = entityMeta(slug, item.entity_type);
   const kind =
-    item.kind === "comment" || item.kind === "transition" ? KIND_CHIP[item.kind] : KIND_CHIP.comment;
+    item.kind === "comment" || item.kind === "transition"
+      ? KIND_CHIP[item.kind]
+      : KIND_CHIP.comment;
   return (
     <li>
       <Link

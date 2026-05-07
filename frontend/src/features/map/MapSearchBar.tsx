@@ -61,11 +61,7 @@ interface MapOverlaysResp {
   >;
 }
 
-export function MapSearchBar({
-  onPick,
-}: {
-  onPick: (hit: MapSearchHit) => void;
-}) {
+export function MapSearchBar({ onPick }: { onPick: (hit: MapSearchHit) => void }) {
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<MapSearchHit[]>([]);
   const [active, setActive] = useState(0);
@@ -91,18 +87,10 @@ export function MapSearchBar({
     let cancelled = false;
     const timer = setTimeout(async () => {
       const trimmed = q.trim();
-      const promises: [
-        Promise<MapSearchHit[]>,
-        MapSearchHit[],
-        MapSearchHit[],
-      ] = [
-        apiJson<AssetListResp>(
-          `/api/v1/assets?q=${encodeURIComponent(trimmed)}&page_size=8`,
-        )
+      const promises: [Promise<MapSearchHit[]>, MapSearchHit[], MapSearchHit[]] = [
+        apiJson<AssetListResp>(`/api/v1/assets?q=${encodeURIComponent(trimmed)}&page_size=8`)
           .then((d) =>
-            d.items
-              .map((a) => assetToHit(a))
-              .filter((h): h is MapSearchHit => h !== null),
+            d.items.map((a) => assetToHit(a)).filter((h): h is MapSearchHit => h !== null),
           )
           .catch(() => [] as MapSearchHit[]),
         searchOverlay(overlaysRef.current?.open_wos.features ?? [], trimmed, "wo"),
@@ -207,9 +195,7 @@ function KindBadge({ kind }: { kind: MapSearchHit["kind"] }) {
     service_request: "SR",
   };
   return (
-    <span
-      className={`mr-1.5 inline-block rounded px-1 text-[9px] font-medium ${palette[kind]}`}
-    >
+    <span className={`mr-1.5 inline-block rounded px-1 text-[9px] font-medium ${palette[kind]}`}>
       {labels[kind]}
     </span>
   );
@@ -247,7 +233,9 @@ function representativePoint(geom: GeoJSON.Geometry | null | undefined): [number
       const ring = geom.coordinates[0];
       if (!ring || ring.length === 0) return null;
       // Average vertices as a cheap centroid; good enough for navigation.
-      let sx = 0, sy = 0, n = 0;
+      let sx = 0,
+        sy = 0,
+        n = 0;
       for (const [x, y] of ring) {
         sx += x;
         sy += y;

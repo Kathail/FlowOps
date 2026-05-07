@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  getMapOverlays,
-  listTileLayers,
-  type MapOverlays,
-  type TileLayerDescriptor,
-} from "./api";
+import { getMapOverlays, listTileLayers, type MapOverlays, type TileLayerDescriptor } from "./api";
 
 export function useTileLayers() {
   return useQuery<TileLayerDescriptor[], Error>({

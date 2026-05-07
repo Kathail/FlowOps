@@ -52,8 +52,7 @@ export function SystemPulse({
       title="System pulse"
       trailing={
         <span className="text-[11px] tabular-nums text-slate-500">
-          {completedThisWeek}{" "}
-          <span className="text-slate-600">closed this wk</span>
+          {completedThisWeek} <span className="text-slate-600">closed this wk</span>
         </span>
       }
     >
@@ -197,11 +196,7 @@ function SrStatusTile({
   tone: "amber" | "info" | "neutral";
 }) {
   const text =
-    tone === "amber"
-      ? "text-amber-200"
-      : tone === "info"
-        ? "text-blue-200"
-        : "text-slate-200";
+    tone === "amber" ? "text-amber-200" : tone === "info" ? "text-blue-200" : "text-slate-200";
   const accent =
     tone === "amber"
       ? "hover:border-amber-500/40"
