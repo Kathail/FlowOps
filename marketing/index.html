@@ -26,11 +26,8 @@
       content="Modern work-management for municipal water, sewer, and storm crews."
     />
 
-    <!-- Favicon — placeholder. Generate a real one once branding is set. -->
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='12' fill='%231e3a5f'/%3E%3Ctext x='50' y='62' text-anchor='middle' font-family='Georgia,serif' font-size='52' font-weight='bold' fill='%23f6f2ea'%3EC%3C/text%3E%3C/svg%3E"
-    />
+    <!-- Favicon — same SVG droplet the app uses for visual continuity. -->
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
 
     <!-- Fonts: Fraunces (display) + Public Sans (body) + JetBrains Mono (accent) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -47,7 +44,23 @@
     <!-- Header -->
     <header class="border-b border-[var(--color-rule)]">
       <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-5 md:px-10">
-        <a href="/" class="flex items-baseline gap-2">
+        <a href="/" class="flex items-center gap-2">
+          <!-- Same droplet SVG as frontend/public/favicon.svg + the in-app
+               <Logo /> component, kept in sync visually so the brochure
+               and the app read as the same product. -->
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 64 64"
+            width="28"
+            height="28"
+            aria-hidden="true"
+          >
+            <rect width="64" height="64" rx="12" fill="#0f172a" />
+            <path
+              d="M32 14c-7 9-12 15-12 22a12 12 0 0 0 24 0c0-7-5-13-12-22z"
+              fill="#38bdf8"
+            />
+          </svg>
           <span class="font-display text-2xl font-semibold tracking-tight">CityWater</span>
           <span class="section-num">CA</span>
         </a>
