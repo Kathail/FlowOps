@@ -55,7 +55,7 @@ export function KpiHero({ data, slug }: Props) {
           quickAction={
             wo.overdue > 0
               ? {
-                  to: `/${slug}/work-orders?scope=active`,
+                  to: `/${slug}/work-orders?overdue=1`,
                   label: "Review overdue →",
                 }
               : undefined

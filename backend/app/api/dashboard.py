@@ -169,11 +169,14 @@ def _sr_kpis(week_ago: datetime, month_ago: datetime) -> dict[str, Any]:
         .select_from(ServiceRequest)
         .where(ServiceRequest.status == "dispatched")
     ) or 0
+    # Excludes "duplicate" so this agrees with avg_resolution_hours
+    # below — both metrics now read "actual dispatch / resolution work,"
+    # not "anything that left the inbox." DASH-P1-3.
     closed_week = db.session.scalar(
         select(func.count())
         .select_from(ServiceRequest)
         .where(
-            ServiceRequest.status.in_(("closed", "duplicate")),
+            ServiceRequest.status == "closed",
             ServiceRequest.closed_at >= week_ago,
         )
     ) or 0
@@ -221,21 +224,29 @@ def _today_queue(today_start: datetime, now: datetime) -> list[dict[str, Any]]:
         .order_by(WorkOrder.scheduled_for.asc().nullslast(), WorkOrder.id.asc())
         .limit(8)
     ).all()
+    if not rows:
+        return []
+
+    # One GROUP BY query for all queue rows — was 2 count queries per
+    # row (16 round-trips for an 8-row queue) before DASH-P1-5.
+    # func.count(col) skips nulls so completed_at IS NOT NULL is the
+    # natural "done" count — no separate filter needed.
+    wo_ids = [wo.id for wo in rows]
+    by_wo: dict[int, tuple[int, int]] = {}
+    for wo_id, total, done in db.session.execute(
+        select(
+            WorkOrderAsset.work_order_id,
+            func.count().label("total"),
+            func.count(WorkOrderAsset.completed_at).label("done"),
+        )
+        .where(WorkOrderAsset.work_order_id.in_(wo_ids))
+        .group_by(WorkOrderAsset.work_order_id)
+    ).all():
+        by_wo[wo_id] = (int(total), int(done))
+
     out: list[dict[str, Any]] = []
     for wo in rows:
-        total = db.session.scalar(
-            select(func.count())
-            .select_from(WorkOrderAsset)
-            .where(WorkOrderAsset.work_order_id == wo.id)
-        ) or 0
-        done = db.session.scalar(
-            select(func.count())
-            .select_from(WorkOrderAsset)
-            .where(
-                WorkOrderAsset.work_order_id == wo.id,
-                WorkOrderAsset.completed_at.isnot(None),
-            )
-        ) or 0
+        total, done = by_wo.get(wo.id, (0, 0))
         out.append({
             "wo_number": wo.wo_number,
             "title": wo.title,
@@ -245,8 +256,8 @@ def _today_queue(today_start: datetime, now: datetime) -> list[dict[str, Any]]:
             "scheduled_for": wo.scheduled_for.isoformat() if wo.scheduled_for else None,
             "due_by": wo.due_by.isoformat() if wo.due_by else None,
             "is_overdue": bool(wo.due_by and wo.due_by < now),
-            "asset_total": int(total),
-            "asset_done": int(done),
+            "asset_total": total,
+            "asset_done": done,
         })
     return out
 
@@ -390,21 +401,34 @@ def _by_area(now: datetime) -> list[dict[str, Any]]:
 
 def _throughput_7d(week_ago: datetime, now: datetime) -> list[dict[str, Any]]:
     """7-day completion bucket for the sparkline-like trend in the KPI
-    strip. One bucket per day, oldest first."""
+    strip. One bucket per day, oldest first.
+
+    DASH-P1-6: was 7 separate count queries; now one date_trunc GROUP BY
+    that returns at most 7 rows. Days with zero completions are filled
+    in by the Python-side bucket walk so the sparkline always has 7
+    bars regardless of activity.
+    """
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    seven_days_ago = today_start - timedelta(days=6)
+    rows = db.session.execute(
+        select(
+            func.date_trunc("day", WorkOrder.completed_at).label("day"),
+            func.count().label("n"),
+        )
+        .where(
+            WorkOrder.status == "completed",
+            WorkOrder.completed_at >= seven_days_ago,
+            WorkOrder.completed_at < today_start + timedelta(days=1),
+        )
+        .group_by("day")
+    ).all()
+    counts: dict[str, int] = {}
+    for day, n in rows:
+        counts[day.date().isoformat()] = int(n)
+
     out: list[dict[str, Any]] = []
     for i in range(6, -1, -1):
-        day_start = (now - timedelta(days=i)).replace(
-            hour=0, minute=0, second=0, microsecond=0
-        )
-        day_end = day_start + timedelta(days=1)
-        n = db.session.scalar(
-            select(func.count())
-            .select_from(WorkOrder)
-            .where(
-                WorkOrder.status == "completed",
-                WorkOrder.completed_at >= day_start,
-                WorkOrder.completed_at < day_end,
-            )
-        ) or 0
-        out.append({"date": day_start.date().isoformat(), "completed": int(n)})
+        day_start = today_start - timedelta(days=i)
+        key = day_start.date().isoformat()
+        out.append({"date": key, "completed": counts.get(key, 0)})
     return out

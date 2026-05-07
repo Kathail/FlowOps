@@ -40,7 +40,13 @@ export function Dashboard({ user, tenant }: Props) {
   const dash = useQuery<DashboardResponse, Error>({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
+    // Poll every minute. `refetchIntervalInBackground: false` is the
+    // TanStack v5 default — explicit here so it's clear that a tab in
+    // the background won't burn cycles polling. A supervisor with the
+    // dashboard in a hidden tab gets fresh data on focus instead.
+    // DASH-P1-8.
     refetchInterval: 60_000,
+    refetchIntervalInBackground: false,
   });
 
   return (
@@ -59,8 +65,13 @@ export function Dashboard({ user, tenant }: Props) {
         </p>
       </header>
 
-      {dash.isLoading && <LoadingState />}
-      {dash.isError && (
+      {/* Show the spinner only on first paint, and the error banner only
+          when there's no cached data to fall back to (DASH-P1-4). A
+          background refetch failure with cached data still good leaves
+          the prior render in place; a small "stale" affordance could
+          land here later but isn't worth the noise today. */}
+      {dash.isLoading && !dash.data && <LoadingState />}
+      {dash.isError && !dash.data && (
         <ErrorState message="Failed to load dashboard." retry={() => dash.refetch()} />
       )}
 

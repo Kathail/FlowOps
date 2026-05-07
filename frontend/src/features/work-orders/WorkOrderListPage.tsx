@@ -92,14 +92,29 @@ export function WorkOrderListPage() {
   const woQuery = useWorkOrders(params);
 
   // Apply scope filter client-side on top of any explicit status filter.
+  // ?overdue=1 deep-link from the dashboard filters to active WOs whose
+  // due_by has passed (DASH-P1-1). Backend doesn't support an overdue
+  // query param yet, so we filter client-side. When a backend `overdue`
+  // is added, swap to that and drop this branch.
+  const overdueOnly = search.get("overdue") === "1";
+
   // (Backend list endpoint accepts a single status; "active" is a set.)
   const visibleItems = useMemo(() => {
-    const items = woQuery.data?.items ?? [];
+    let items = woQuery.data?.items ?? [];
     if (scope === "active") {
-      return items.filter((w) => ACTIVE_STATUSES.includes(w.status));
+      items = items.filter((w) => ACTIVE_STATUSES.includes(w.status));
+    }
+    if (overdueOnly) {
+      const nowIso = new Date().toISOString();
+      items = items.filter(
+        (w) =>
+          w.due_by != null
+          && w.due_by < nowIso
+          && ACTIVE_STATUSES.includes(w.status),
+      );
     }
     return items;
-  }, [woQuery.data, scope]);
+  }, [woQuery.data, scope, overdueOnly]);
 
   // Summary stats — derived from the visible items.
   const summary = useMemo(() => {

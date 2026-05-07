@@ -95,7 +95,18 @@ def test_dashboard_kpis_reflect_seed(admin_client, seeded):
 
 
 def test_dashboard_is_tenant_scoped(app, admin_client, tenant):
-    """A WO in another tenant must not appear in this tenant's dashboard."""
+    """A WO in another tenant must not appear in this tenant's dashboard.
+
+    DASH-P1-10: tightened from a simple today_queue membership check
+    (which would pass even without the listener — the queue filters by
+    assigned_to and other-tenant WOs have no assigned_to in our seed)
+    to a strong assertion that wo_kpis.open does NOT increment when
+    another tenant adds an open WO. This actually exercises the
+    session-level tenant-filter listener.
+    """
+    baseline = admin_client.get("/api/v1/dashboard").get_json()
+    baseline_open = baseline["wo_kpis"]["open"]
+
     g.skip_tenant_filter = True
     other = make_tenant(slug="other-d", name="Other-D")
     db.session.add(
@@ -111,9 +122,11 @@ def test_dashboard_is_tenant_scoped(app, admin_client, tenant):
     )
     db.session.commit()
 
-    body = admin_client.get("/api/v1/dashboard").get_json()
-    queue_wos = {q["wo_number"] for q in body["today_queue"]}
+    after = admin_client.get("/api/v1/dashboard").get_json()
+    queue_wos = {q["wo_number"] for q in after["today_queue"]}
     assert "WO-2026-OTHER" not in queue_wos
+    # The cross-tenant open WO must NOT inflate this tenant's counter.
+    assert after["wo_kpis"]["open"] == baseline_open
 
 
 def test_dashboard_time_logs_are_tenant_scoped(app, admin_client, tenant, seeded):
