@@ -131,7 +131,7 @@ def create_schedule():
 @schedules_bp.get("/<int:schedule_id>")
 @login_required
 def get_schedule(schedule_id: int):
-    s = db.session.get(Schedule, schedule_id)
+    s = db.session.scalar(select(Schedule).where(Schedule.id == schedule_id))
     if not s:
         raise NotFoundError(f"schedule {schedule_id} not found")
     return jsonify(_payload(s))
@@ -141,7 +141,7 @@ def get_schedule(schedule_id: int):
 @login_required
 @require_roles("admin", "supervisor")
 def update_schedule(schedule_id: int):
-    s = db.session.get(Schedule, schedule_id)
+    s = db.session.scalar(select(Schedule).where(Schedule.id == schedule_id))
     if not s:
         raise NotFoundError(f"schedule {schedule_id} not found")
     data = _validate(ScheduleUpdate, request.get_json(silent=True) or {})
@@ -171,7 +171,7 @@ def update_schedule(schedule_id: int):
 @login_required
 @require_roles("admin", "supervisor")
 def delete_schedule(schedule_id: int):
-    s = db.session.get(Schedule, schedule_id)
+    s = db.session.scalar(select(Schedule).where(Schedule.id == schedule_id))
     if not s:
         raise NotFoundError(f"schedule {schedule_id} not found")
     s.deleted_at = datetime.now(UTC)

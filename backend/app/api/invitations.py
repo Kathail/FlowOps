@@ -173,7 +173,10 @@ def create_invitation():
 @login_required
 @require_roles("admin")
 def revoke_invitation(invitation_id: int):
-    inv = db.session.get(Invitation, invitation_id)
+    # select() routes through the tenant-filter listener; db.session.get()
+    # would hit the identity map directly and bypass it, letting an admin
+    # in tenant A revoke a row in tenant B by ID enumeration.
+    inv = db.session.scalar(select(Invitation).where(Invitation.id == invitation_id))
     if not inv:
         raise NotFoundError(f"invitation {invitation_id} not found")
     if inv.accepted_at is not None:

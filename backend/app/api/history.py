@@ -53,10 +53,16 @@ def list_history() -> Any:
     # Audit rows store `entity_id` as TEXT, so compare as string. We *also*
     # surface link/comment events that reference this entity in their
     # before/after payload — handy for "who linked X to Y" history lines.
+    #
+    # AuditLog is *not* TenantScopedMixin so the session-level tenant-filter
+    # listener doesn't scope it. We must scope explicitly here, otherwise any
+    # logged-in user could read any tenant's audit history by guessing
+    # entity_id.
     related_target = f"{entity_type}:{entity_id}"
     stmt = (
         select(AuditLog)
         .where(
+            AuditLog.tenant_id == current_user.tenant_id,
             or_(
                 (AuditLog.entity_type.in_(audit_types)) & (AuditLog.entity_id == str(entity_id)),
                 (AuditLog.entity_type == "EntityLink")
@@ -68,7 +74,7 @@ def list_history() -> Any:
                 ),
                 (AuditLog.entity_type == "Comment")
                 & (AuditLog.after["target"].astext == related_target),
-            )
+            ),
         )
         .order_by(AuditLog.occurred_at.desc())
         .limit(200)
@@ -97,5 +103,4 @@ def list_history() -> Any:
         }
         for r in rows
     ]
-    _ = current_user  # auth-only; nothing to filter further today
     return jsonify({"items": items})

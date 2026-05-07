@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
@@ -148,10 +149,15 @@ export function WorkOrderListPage() {
   // Quick-transition mutation — used by the row-actions menu so a
   // supervisor can mark a WO complete or in-progress without
   // navigating into the detail page.
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const transition = useMutation<unknown, Error, { wo: string; to: WoStatus }>({
     mutationFn: ({ wo, to }) => transitionWorkOrder(wo, to),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["work-orders"] }),
-    onError: (e) => alert(translateApiError(e)),
+    onSuccess: () => {
+      setErrorMessage(null);
+      queryClient.invalidateQueries({ queryKey: ["work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e) => setErrorMessage(translateApiError(e)),
   });
 
   return (
@@ -189,6 +195,8 @@ export function WorkOrderListPage() {
       {createOpen && (
         <CreateWorkOrderDialog onClose={handleCloseCreate} defaults={newDefaults ?? undefined} />
       )}
+
+      {errorMessage && <Alert>{errorMessage}</Alert>}
 
       {view === "list" && (
         <>

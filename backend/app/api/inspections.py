@@ -265,6 +265,7 @@ def get_inspection(inspection_number: str):
 
 @inspections_bp.patch("/<string:inspection_number>")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def update_inspection(inspection_number: str):
     data = _validate(InspectionUpdate, request.get_json(silent=True) or {})
     ins = _get_inspection(inspection_number)

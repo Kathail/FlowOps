@@ -57,7 +57,7 @@ def rate_limited_app(postgresql):
     url = f"postgresql+psycopg://{info.user}:{_PG_PASSWORD}@{info.host}:{info.port}/{info.dbname}"
     settings = Settings(
         database_url=url,
-        environment="dev",  # not "test" → rate limiting on
+        environment="development",  # not "test" → rate limiting on
         git_sha="test-sha",
         rate_limit_login="3 per minute",
     )

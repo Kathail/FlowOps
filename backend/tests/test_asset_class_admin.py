@@ -1,5 +1,28 @@
 from __future__ import annotations
 
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _enable_catalog_edits(app):
+    """AssetClass is global, so per-tenant edits are disabled by default
+    (see app/api/asset_classes.py docstring). Re-enable for these tests
+    so we can exercise the patch happy paths; the default-off behaviour
+    is covered by test_asset_class_edits_disabled_by_default below."""
+    app.config["SETTINGS"].allow_asset_class_edits = True
+    yield
+    app.config["SETTINGS"].allow_asset_class_edits = False
+
+
+def test_asset_class_edits_disabled_by_default(app, admin_client):
+    app.config["SETTINGS"].allow_asset_class_edits = False
+    resp = admin_client.patch(
+        "/api/v1/asset-classes/WAT_HYD",
+        json={"name": "should fail"},
+    )
+    assert resp.status_code == 403
+    assert resp.get_json()["error"]["code"] == "catalog_edits_disabled"
+
 
 def test_admin_can_patch_attribute_schema(admin_client):
     new_schema = {

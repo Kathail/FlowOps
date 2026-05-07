@@ -573,6 +573,7 @@ def _simulate(tenant: Tenant, *, seed: int, today: datetime) -> dict[str, int]:
                         db.session.add(WorkOrderAsset(
                             work_order_id=wo.id,
                             asset_id=a.id,
+                            tenant_id=wo.tenant_id,
                             role="primary" if seq == 1 else "affected",
                             sequence=seq,
                             completed_at=completed_stop,

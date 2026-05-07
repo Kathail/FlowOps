@@ -49,18 +49,21 @@ def healthz_deep():
     try:
         db.session.execute(text("SELECT 1"))
         checks["postgres"] = {"status": "ok"}
-    except Exception as e:
+    except Exception:
         log.exception("healthz/deep: postgres check failed")
-        checks["postgres"] = {"status": "error", "detail": str(e)[:200]}
+        # Don't echo the exception string to the unauthenticated response —
+        # it can leak DB connection strings or SQL fragments. Operators
+        # read the actual cause from logs.
+        checks["postgres"] = {"status": "error"}
         overall_ok = False
 
     # PostGIS
     try:
         version = db.session.execute(text("SELECT PostGIS_version()")).scalar_one()
         checks["postgis"] = {"status": "ok", "version": str(version)}
-    except Exception as e:
+    except Exception:
         log.exception("healthz/deep: postgis check failed")
-        checks["postgis"] = {"status": "error", "detail": str(e)[:200]}
+        checks["postgis"] = {"status": "error"}
         overall_ok = False
 
     # Redis (only meaningful when the operator configured a real URI;
@@ -82,9 +85,9 @@ def healthz_deep():
             checks["redis"] = {"status": "ok" if pong else "error"}
             if not pong:
                 overall_ok = False
-        except Exception as e:
+        except Exception:
             log.exception("healthz/deep: redis check failed")
-            checks["redis"] = {"status": "error", "detail": str(e)[:200]}
+            checks["redis"] = {"status": "error"}
             overall_ok = False
 
     body = {

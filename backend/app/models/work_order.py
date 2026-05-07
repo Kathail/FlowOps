@@ -87,7 +87,14 @@ class WorkOrder(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, Audita
     location: Mapped[Any | None] = mapped_column(
         Geometry(geometry_type="POINT", srid=4326), nullable=True
     )
-    template_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    # FK lives in migration 0015 with a deferred name to dodge the
+    # 0010↔0015 circular dependency. Declaring it here keeps autogenerate
+    # honest and lets relationships flow through `wo_template`.
+    template_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        ForeignKey("wo_template.id", ondelete="SET NULL", name="fk_work_order_template_id_wo_template"),
+        nullable=True,
+    )
     service_request_id: Mapped[int | None] = mapped_column(
         BigInteger,
         ForeignKey("service_request.id", ondelete="SET NULL"),

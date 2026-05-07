@@ -55,7 +55,7 @@ def _verify_entity(kind: str, entity_id: int) -> None:
 def _author_name(user_id: int | None) -> str | None:
     if user_id is None:
         return None
-    user = db.session.get(User, user_id)
+    user = db.session.scalar(select(User).where(User.id == user_id))
     return user.full_name if user else None
 
 
@@ -137,7 +137,9 @@ def create_comment():
 @comments_bp.patch("/<int:comment_id>")
 @login_required
 def update_comment(comment_id: int):
-    comment = db.session.get(Comment, comment_id)
+    # select() routes through the tenant-filter listener; db.session.get()
+    # would hit the identity map directly and bypass it.
+    comment = db.session.scalar(select(Comment).where(Comment.id == comment_id))
     if not comment or comment.deleted_at is not None:
         raise NotFoundError(f"comment {comment_id} not found")
     if not _can_edit(comment):
@@ -154,7 +156,7 @@ def update_comment(comment_id: int):
 @comments_bp.delete("/<int:comment_id>")
 @login_required
 def delete_comment(comment_id: int):
-    comment = db.session.get(Comment, comment_id)
+    comment = db.session.scalar(select(Comment).where(Comment.id == comment_id))
     if not comment:
         raise NotFoundError(f"comment {comment_id} not found")
     if comment.deleted_at is not None:

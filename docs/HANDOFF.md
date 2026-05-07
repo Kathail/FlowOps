@@ -1,11 +1,20 @@
-# Handoff — data-router migration + unsaved-changes guard wired up
+# Handoff — production deploy + post-audit hardening sweep
 
-Last commit on `main`: pending — about to land:
-`refactor: migrate to data router; ship UnsavedChangesGuard with useBlocker`.
-Prior to that: `e43d9b9` (`docs: BACKLOG.md + recurring WOs spec delta`),
-`308b6b7` (UX sweep), all pushed.
+Last commits on `main` (newest → oldest, post-deploy hardening):
 
-v1 has shipped (S0–S12) and a substantial post-v1 trajectory has landed: dark UI rebrand, recurring schedules, activity timeline + cross-entity links, link-driven autopopulation, the task-definitions catalog (the "keystone" — 28 tasks across water/sewer/storm/general), `simulate-year` CLI, smart comment chips, checklist-driven drafts, daily WOs grouping SRs, dashboard with KPIs + supervisor metrics + by-area panel, map overlays for open WOs/active SRs, service areas (maintenance districts + water/sewer/storm systems), area chips, demo-tenant button, audit infrastructure skeleton, and most recently the UI primitives + UX sweep that consolidated duplicated patterns into reusable components.
+- `4553e41` — fix(demo): drop `/demo` redirect (caught the post-login navigate too)
+- `6d7c7b6` — fix(demo): rename auto-login route to `/try-demo` (collision with tenant slug "demo")
+- `6074f0c` — fix(demo): hard 12s timeout on login fetch
+- `8fca6a8` — ui(demo): per-step status, watchdog, hard-reset escape hatch
+- `ff1c56a` — fix(pwa): switch SW to autoUpdate + drop /me from runtime cache
+- `8f7b294` — ui: mobile-friendly shell + drawer nav + harden DemoLoginPage
+- `b0277f4` — fix(frontend): use nginx-alpine's built-in resolver helper for Railway
+- `a698ea9` — feat: zero-friction demo flow + Railway DNS fix + GIT_SHA fallback
+- `6a1f699` — feat(health): add `/healthz/deep` readiness endpoint
+
+A multi-agent deep audit then ran (5 parallel agents covering security, code quality, frontend, DB, infra/docs). The full punch list lives in conversation history; the pending change list at the bottom of this doc captures what landed in the post-audit fix sweep.
+
+v1 has shipped (S0–S12) and the post-v1 trajectory now includes: dark UI rebrand, recurring schedules, activity timeline + cross-entity links, link-driven autopopulation, the task-definitions catalog (28 tasks across water/sewer/storm/general), `simulate-year` CLI, smart comment chips, checklist-driven drafts, daily WOs grouping SRs, dashboard with KPIs + supervisor metrics + by-area panel, map overlays, service areas, demo-tenant button (now zero-friction at `/try-demo`), audit infrastructure, the UI primitives + UX sweep, mobile-responsive shell with drawer nav, marketing brochure at citywater.ca, full Railway production deploy, and a security hardening pass that closed cross-tenant `db.session.get()` exposures, missing `@require_roles` gates, and several other P0s/P1s.
 
 ## Where things stand right now
 

@@ -10,6 +10,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -49,6 +50,16 @@ class WorkOrderAsset(Base):
         ForeignKey("asset.id", ondelete="RESTRICT"),
         primary_key=True,
     )
+    # Denormalised tenant_id (added in 0029_audit_hardening) so the
+    # session-level tenant filter listener applies directly to this
+    # join table — defence in depth on top of the joins through
+    # work_order/asset.
+    tenant_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("tenant.id", ondelete="RESTRICT", name="fk_work_order_asset_tenant_id_tenant"),
+        nullable=False,
+        index=True,
+    )
     role: Mapped[str] = mapped_column(
         String(32), nullable=False, default="affected", server_default="affected"
     )
@@ -56,4 +67,12 @@ class WorkOrderAsset(Base):
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completion_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now(),
+    )

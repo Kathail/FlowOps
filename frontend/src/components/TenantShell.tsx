@@ -1,8 +1,16 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  Navigate,
+  NavLink,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { logout } from "../features/auth/api";
-import { ME_QUERY_KEY, useAuth } from "../features/auth/useAuth";
+import { useAuth } from "../features/auth/useAuth";
 import { ConflictDrawer } from "./ConflictDrawer";
 import { DemoBanner } from "./DemoBanner";
 import { Logo } from "./Logo";
@@ -23,15 +31,16 @@ export function TenantShell() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const [conflictsOpen, setConflictsOpen] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
 
   const signOut = useMutation({
     mutationFn: logout,
     onSuccess: () => {
-      queryClient.removeQueries({ queryKey: ME_QUERY_KEY });
-      queryClient.removeQueries({ queryKey: ["assets"] });
-      queryClient.removeQueries({ queryKey: ["asset-classes"] });
+      // Clear *every* query so signing into a different tenant doesn't
+      // briefly show stale data from the previous one.
+      queryClient.clear();
       navigate("/login", { replace: true });
     },
   });
@@ -56,6 +65,15 @@ export function TenantShell() {
 
   const slug = tenant.slug;
   const isDemo = tenant.slug === "demo";
+
+  // If the URL slug doesn't match the session tenant, redirect to the
+  // session's tenant home rather than rendering chrome that lies about
+  // the active tenant. CLAUDE.md: tenant scope is derived from the
+  // authenticated session, never the URL.
+  const urlSlug = (params as { slug?: string }).slug;
+  if (urlSlug && urlSlug !== slug) {
+    return <Navigate to={`/${slug}/`} replace />;
+  }
   const isAdmin = user.roles.some((r) => r.code === "admin");
 
   const navLink = (to: string, label: string) => (

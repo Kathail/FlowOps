@@ -1,0 +1,23 @@
+# Build context hygiene — keep the image small and never ship secrets.
+.git
+.gitignore
+.gitattributes
+.github
+.dockerignore
+Dockerfile
+
+# Node
+node_modules
+dist
+.cache
+.turbo
+
+# Env
+.env
+.env.*
+
+# IDE / editor
+.idea
+.vscode
+*.swp
+.DS_Store

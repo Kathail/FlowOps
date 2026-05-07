@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
+import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
@@ -123,10 +125,16 @@ export function ServiceRequestListPage() {
   // transition to "dispatched" here — that happens via the SR detail's
   // Dispatch dialog which also creates the linked WO).
   type MutableSrStatus = "new" | "triaged" | "closed" | "duplicate";
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [closeConfirm, setCloseConfirm] = useState<string | null>(null);
   const update = useMutation<unknown, Error, { sr: string; status: MutableSrStatus }>({
     mutationFn: ({ sr, status }) => updateServiceRequest(sr, { status }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["service-requests"] }),
-    onError: (e) => alert(translateApiError(e)),
+    onSuccess: () => {
+      setErrorMessage(null);
+      queryClient.invalidateQueries({ queryKey: ["service-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+    onError: (e) => setErrorMessage(translateApiError(e)),
   });
 
   const hasFilters = !!(
@@ -332,12 +340,7 @@ export function ServiceRequestListPage() {
                           >
                             Mark as duplicate
                           </RowActions.Action>
-                          <RowActions.Action
-                            onClick={() => {
-                              if (confirm(`Close ${sr.sr_number} without dispatching a WO?`))
-                                update.mutate({ sr: sr.sr_number, status: "closed" });
-                            }}
-                          >
+                          <RowActions.Action onClick={() => setCloseConfirm(sr.sr_number)}>
                             Close without dispatch
                           </RowActions.Action>
                         </>
@@ -397,6 +400,22 @@ export function ServiceRequestListPage() {
       </div>
 
       {intakeOpen && <IntakeDialog onClose={() => setIntakeOpen(false)} />}
+
+      {errorMessage && <Alert>{errorMessage}</Alert>}
+
+      {closeConfirm && (
+        <ConfirmDialog
+          title={`Close ${closeConfirm}?`}
+          message="The service request will be closed without dispatching a work order."
+          confirmLabel="Close request"
+          confirmVariant="danger"
+          onCancel={() => setCloseConfirm(null)}
+          onConfirm={() => {
+            update.mutate({ sr: closeConfirm, status: "closed" });
+            setCloseConfirm(null);
+          }}
+        />
+      )}
     </div>
   );
 }

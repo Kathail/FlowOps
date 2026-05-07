@@ -169,7 +169,7 @@ def create_task_definition():
 @login_required
 @require_roles("admin")
 def update_task_definition(td_id: int):
-    td = db.session.get(TaskDefinition, td_id)
+    td = db.session.scalar(select(TaskDefinition).where(TaskDefinition.id == td_id))
     if not td or td.deleted_at is not None:
         raise NotFoundError(f"task definition {td_id} not found")
     if td.status != "draft":
@@ -260,7 +260,7 @@ def fork_new_version(code: str):
 @login_required
 @require_roles("admin")
 def activate_task_definition(td_id: int):
-    td = db.session.get(TaskDefinition, td_id)
+    td = db.session.scalar(select(TaskDefinition).where(TaskDefinition.id == td_id))
     if not td or td.deleted_at is not None:
         raise NotFoundError(f"task definition {td_id} not found")
     if td.status != "draft":
@@ -296,7 +296,7 @@ def activate_task_definition(td_id: int):
 @login_required
 @require_roles("admin")
 def soft_delete_task_definition(td_id: int):
-    td = db.session.get(TaskDefinition, td_id)
+    td = db.session.scalar(select(TaskDefinition).where(TaskDefinition.id == td_id))
     if not td:
         raise NotFoundError(f"task definition {td_id} not found")
     if td.status == "active":

@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import json
 from typing import Any, BinaryIO
-from xml.etree import ElementTree as ET
+# defusedxml hardens against billion-laughs / external-entity attacks in
+# tenant-uploaded WinCAN XML. Public API matches stdlib xml.etree.
+from defusedxml import ElementTree as ET
 
 from app.errors import ValidationError
 

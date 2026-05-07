@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy import select
 
-from app.errors import NotFoundError, ValidationError
+from app.errors import ForbiddenError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models import AssetClass
 from app.schemas.asset import AssetClassRead
@@ -62,11 +62,28 @@ def get_asset_class(code: str):
 def update_asset_class(code: str):
     """Edit a class's attribute_schema (and a few cosmetics).
 
+    SECURITY NOTE: AssetClass is a globally-shared catalog (no tenant_id),
+    so any tenant admin's edits would affect every other tenant. This
+    endpoint is disabled by default. Operators can opt in by setting
+    `ALLOW_ASSET_CLASS_EDITS=true` in env when they trust every tenant
+    admin (e.g. single-tenant deploys). Long-term fix: per-tenant
+    copy-on-customize, see BACKLOG.md.
+
     `attribute_schema` is validated as a JSON Schema *meta-schema* (i.e. the
     schema itself must be a valid Draft-2020 schema). We don't validate
     existing assets against the new schema here — that's a destructive
     re-validation step we'll surface in S12 hardening.
     """
+    from flask import current_app
+
+    settings = current_app.config["SETTINGS"]
+    if not settings.allow_asset_class_edits:
+        raise ForbiddenError(
+            "asset class edits are disabled — they affect every tenant in "
+            "this deploy. Set ALLOW_ASSET_CLASS_EDITS=true to enable.",
+            code="catalog_edits_disabled",
+        )
+
     ac = db.session.get(AssetClass, code)
     if not ac:
         raise NotFoundError(f"asset class {code} not found")

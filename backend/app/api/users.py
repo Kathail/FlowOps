@@ -141,6 +141,28 @@ def soft_delete_user(user_uid: str):
     if user.id == current_user.id:
         raise ConflictError("cannot delete your own account", code="self_delete")
 
+    # Don't let the tenant lock itself out by deleting its only remaining
+    # admin. Count *other* active admins; refuse if there are none.
+    if any(r.code == "admin" for r in user.roles):
+        other_admins = db.session.scalar(
+            select(func.count())
+            .select_from(User)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(
+                User.tenant_id == current_user.tenant_id,
+                User.id != user.id,
+                User.is_active.is_(True),
+                User.deleted_at.is_(None),
+                Role.code == "admin",
+            )
+        )
+        if not other_admins:
+            raise ConflictError(
+                "cannot delete the only remaining admin — promote another user first",
+                code="last_admin",
+            )
+
     user.deleted_at = datetime.now(UTC)
     db.session.commit()
     return "", 204

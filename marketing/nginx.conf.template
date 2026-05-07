@@ -11,6 +11,14 @@ server {
     access_log /dev/stdout;
     error_log /dev/stderr warn;
 
+    # Security headers for the brochure. Marketing renders no scripts
+    # of its own, so a strict CSP is cheap.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()" always;
+
     # Tailwind output is content-stable across deploys; cache hard.
     # Bust by changing the filename when you ever switch to hashed
     # assets (e.g. output.[hash].css).

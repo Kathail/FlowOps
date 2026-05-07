@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:20-alpine AS builder
+FROM node:20.18-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -9,7 +9,7 @@ RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 COPY . .
 RUN npm run build
 
-FROM nginx:alpine AS runtime
+FROM nginx:1.27-alpine AS runtime
 
 # envsubst (from gettext) renders nginx.conf.template at container start
 # so BACKEND_URL + PORT can come from the Railway service env.

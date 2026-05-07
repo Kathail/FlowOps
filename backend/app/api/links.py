@@ -175,7 +175,9 @@ def create_link():
 @links_bp.delete("/<int:link_id>")
 @login_required
 def delete_link(link_id: int):
-    link = db.session.get(EntityLink, link_id)
+    # select() routes through the tenant-filter listener; db.session.get()
+    # would hit the identity map directly and bypass it.
+    link = db.session.scalar(select(EntityLink).where(EntityLink.id == link_id))
     if not link:
         raise NotFoundError(f"link {link_id} not found")
     if link.deleted_at is not None:

@@ -89,7 +89,7 @@ def list_service_areas():
 @service_areas_bp.get("/<int:area_id>")
 @login_required
 def get_service_area(area_id: int):
-    area = db.session.get(ServiceArea, area_id)
+    area = db.session.scalar(select(ServiceArea).where(ServiceArea.id == area_id))
     if area is None or area.deleted_at is not None:
         raise NotFoundError(f"service area {area_id} not found")
     return jsonify(ServiceAreaRead.model_validate(_payload(area)).model_dump(mode="json"))
@@ -122,7 +122,7 @@ def create_service_area():
 @require_roles("admin", "supervisor")
 def update_service_area(area_id: int):
     data = _validate(ServiceAreaUpdate, request.get_json(silent=True) or {})
-    area = db.session.get(ServiceArea, area_id)
+    area = db.session.scalar(select(ServiceArea).where(ServiceArea.id == area_id))
     if area is None or area.deleted_at is not None:
         raise NotFoundError(f"service area {area_id} not found")
     for field in ("code", "name", "kind", "color", "parent_id", "attrs"):
@@ -142,7 +142,7 @@ def update_service_area(area_id: int):
 def delete_service_area(area_id: int):
     from datetime import UTC, datetime
 
-    area = db.session.get(ServiceArea, area_id)
+    area = db.session.scalar(select(ServiceArea).where(ServiceArea.id == area_id))
     if area is None or area.deleted_at is not None:
         raise NotFoundError(f"service area {area_id} not found")
     area.deleted_at = datetime.now(UTC)

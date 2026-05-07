@@ -41,8 +41,14 @@ db-revision:
 	@if [ -z "$(NAME)" ]; then echo "Usage: make db-revision NAME=<description>"; exit 1; fi
 	cd backend && uv run flask --app app.wsgi db revision --autogenerate -m "$(NAME)"
 
-seed:
-	@echo "No seeds in S0 — asset class catalog seed lands in S2."
+seed-demo:
+	cd backend && uv run flask --app app.wsgi seed-demo
+
+simulate-year:
+	cd backend && uv run flask --app app.wsgi simulate-year
+
+# Legacy alias kept for muscle memory.
+seed: seed-demo
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

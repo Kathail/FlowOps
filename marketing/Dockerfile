@@ -9,7 +9,7 @@
 # whatever Alpine + nginx happen to be latest at build time, which has
 # bitten us before with non-deterministic re-builds across replicas.
 
-FROM node:20-alpine AS builder
+FROM node:20.18-alpine AS builder
 WORKDIR /app
 
 COPY package.json package-lock.json* ./

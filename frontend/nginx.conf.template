@@ -10,6 +10,15 @@ server {
     access_log /dev/stdout;
     error_log /dev/stderr warn;
 
+    # Security headers for the SPA shell. The backend sets its own
+    # CSP/HSTS on /api responses; these cover everything served by
+    # nginx (index.html, /assets/, sw.js, etc.).
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), interest-cohort=()" always;
+
     # DNS resolver — required for nginx to re-resolve $upstream per
     # request. Without this, nginx caches the backend's IP at startup
     # and never refreshes; when Railway redeploys the backend its
@@ -64,6 +73,16 @@ server {
         # Long-running operations (CSV import, report PDF) shouldn't time out
         # at the proxy before the backend finishes.
         proxy_read_timeout 300s;
+    }
+
+    # index.html points at hashed asset bundles. If browsers cache the
+    # shell, returning visitors keep loading yesterday's bundle pointer.
+    location = /index.html {
+        add_header Cache-Control "no-cache, no-store, must-revalidate" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Frame-Options "DENY" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     }
 
     # SPA fallback — anything else returns index.html so the data router

@@ -214,6 +214,7 @@ def me():
 
 @auth_bp.post("/password/change")
 @login_required
+@limiter.limit(_login_limit)
 def change_password():
     data = _validate(PasswordChangeRequest, request.get_json(silent=True) or {})
     user = current_user._get_current_object()

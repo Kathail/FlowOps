@@ -354,6 +354,7 @@ def get_work_order(wo_number: str):
 
 @work_orders_bp.patch("/<string:wo_number>")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def update_work_order(wo_number: str):
     data = _validate(WorkOrderUpdate, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -393,6 +394,7 @@ def update_work_order(wo_number: str):
 
 @work_orders_bp.post("/<string:wo_number>/transition")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def transition_work_order(wo_number: str):
     data = _validate(WorkOrderTransition, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -423,6 +425,7 @@ def transition_work_order(wo_number: str):
 
 @work_orders_bp.post("/<string:wo_number>/assets")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def add_wo_assets(wo_number: str):
     """Bulk-add assets to a work order by their UIDs. New rows get the
     next-available sequence numbers, appended to whatever's already on
@@ -469,6 +472,7 @@ def add_wo_assets(wo_number: str):
         db.session.add(WorkOrderAsset(
             work_order_id=wo.id,
             asset_id=a.id,
+            tenant_id=wo.tenant_id,
             role=data.role,
             sequence=next_seq,
             created_at=datetime.now(UTC),
@@ -482,6 +486,7 @@ def add_wo_assets(wo_number: str):
 
 @work_orders_bp.delete("/<string:wo_number>/assets/<string:asset_uid>")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def remove_wo_asset(wo_number: str, asset_uid: str):
     wo = _get_wo(wo_number)
     asset = db.session.scalar(select(Asset).where(Asset.asset_uid == asset_uid))
@@ -503,6 +508,7 @@ def remove_wo_asset(wo_number: str, asset_uid: str):
 
 @work_orders_bp.patch("/<string:wo_number>/assets/<string:asset_uid>")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def update_wo_asset(wo_number: str, asset_uid: str):
     """Per-stop update: change role / sequence / notes / completion. The
     `mark_complete` shortcut is the operator-friendly form: True → stamp
@@ -544,6 +550,7 @@ def update_wo_asset(wo_number: str, asset_uid: str):
 
 @work_orders_bp.post("/<string:wo_number>/tasks")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def add_task(wo_number: str):
     data = _validate(TaskCreate, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -566,6 +573,7 @@ def add_task(wo_number: str):
 
 @work_orders_bp.patch("/<string:wo_number>/tasks/<int:task_id>")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def update_task(wo_number: str, task_id: int):
     data = _validate(TaskUpdate, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -595,6 +603,7 @@ def update_task(wo_number: str, task_id: int):
 
 @work_orders_bp.post("/<string:wo_number>/time")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def log_time(wo_number: str):
     data = _validate(TimeLogCreate, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -619,6 +628,7 @@ def log_time(wo_number: str):
 
 @work_orders_bp.post("/<string:wo_number>/materials")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def log_material(wo_number: str):
     data = _validate(MaterialCreate, request.get_json(silent=True) or {})
     wo = _get_wo(wo_number)
@@ -638,6 +648,7 @@ def log_material(wo_number: str):
 
 @work_orders_bp.post("/<string:wo_number>/attachments")
 @login_required
+@require_roles("admin", "supervisor", "tech")
 def upload_attachment_endpoint(wo_number: str):
     file = request.files.get("file")
     if not file:

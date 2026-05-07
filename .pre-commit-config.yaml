@@ -1,6 +1,8 @@
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.4
+    # Match the version uv resolves in CI/dev to avoid "passes locally,
+    # fails in CI" drift. Bump together with `pyproject.toml`'s ruff>=0.4.
+    rev: v0.15.12
     hooks:
       - id: ruff
         args: [--fix]
@@ -17,9 +19,16 @@ repos:
         files: ^frontend/src/.*\.(ts|tsx)$
         pass_filenames: false
 
-      - id: prettier-check
+      - id: prettier-check-frontend
         name: prettier --check (frontend)
         entry: bash -c 'cd frontend && npm run format:check'
         language: system
         files: ^frontend/.*\.(ts|tsx|json|css|html|md)$
+        pass_filenames: false
+
+      - id: marketing-build
+        name: marketing build (smoke)
+        entry: bash -c 'cd marketing && npm run build > /dev/null'
+        language: system
+        files: ^marketing/.*\.(html|css|js|json)$
         pass_filenames: false

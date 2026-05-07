@@ -1,31 +1,55 @@
 from __future__ import annotations
 
-import os
+import re
 import uuid
 from typing import BinaryIO
 
 import boto3
 from botocore.client import Config
+from botocore.exceptions import ClientError
+from flask import current_app
+
+from app.config import Settings
+
+
+def _settings() -> Settings:
+    return current_app.config["SETTINGS"]
 
 
 def _client():
     """Build a boto3 S3 client for MinIO (dev) / B2 / R2 / AWS S3 (prod).
 
-    Configured via env: S3_ENDPOINT_URL, S3_REGION, S3_ACCESS_KEY_ID,
-    S3_SECRET_ACCESS_KEY. Path-style addressing is used for MinIO compat.
+    All values come from `Settings` (pydantic-settings) per CLAUDE.md.
+    Path-style addressing is the default for MinIO/B2 compat.
     """
+    s = _settings()
     return boto3.client(
         "s3",
-        endpoint_url=os.environ.get("S3_ENDPOINT_URL") or None,
-        region_name=os.environ.get("S3_REGION", "us-east-1"),
-        aws_access_key_id=os.environ.get("S3_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.environ.get("S3_SECRET_ACCESS_KEY"),
-        config=Config(signature_version="s3v4", s3={"addressing_style": "path"}),
+        endpoint_url=s.s3_endpoint or None,
+        region_name=s.s3_region,
+        aws_access_key_id=s.s3_access_key or None,
+        aws_secret_access_key=s.s3_secret_key or None,
+        config=Config(
+            signature_version="s3v4",
+            s3={"addressing_style": "path" if s.s3_force_path_style else "auto"},
+        ),
     )
 
 
 def _bucket() -> str:
-    return os.environ.get("S3_BUCKET", "citywater-attachments")
+    return _settings().s3_bucket
+
+
+_FILENAME_SAFE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _safe_name(filename: str) -> str:
+    """Strip everything but alnum, dot, underscore, dash so the S3 key tail
+    can't contain control characters or path-traversal payloads."""
+    cleaned = _FILENAME_SAFE.sub("_", filename)
+    # Avoid leading dots that would create dotfiles in any S3 browser.
+    cleaned = cleaned.lstrip(".") or "file"
+    return cleaned[:120]  # bound length
 
 
 def upload_attachment(
@@ -38,7 +62,7 @@ def upload_attachment(
 ) -> str:
     """Upload to S3 under tenants/{tenant}/work-orders/{wo}/{uuid}-{filename}.
     Returns the S3 key."""
-    safe_name = filename.replace("/", "_").replace("\\", "_")
+    safe_name = _safe_name(filename)
     key = f"tenants/{tenant_id}/work-orders/{work_order_id}/{uuid.uuid4().hex[:12]}-{safe_name}"
     s3 = _client()
     s3.upload_fileobj(
@@ -50,12 +74,12 @@ def upload_attachment(
     return key
 
 
-def presigned_download_url(s3_key: str, expires_in: int = 600) -> str:
+def presigned_download_url(s3_key: str, expires_in: int | None = None) -> str:
     s3 = _client()
     return s3.generate_presigned_url(
         "get_object",
         Params={"Bucket": _bucket(), "Key": s3_key},
-        ExpiresIn=expires_in,
+        ExpiresIn=expires_in if expires_in is not None else _settings().s3_presign_expiry_seconds,
     )
 
 
@@ -64,5 +88,8 @@ def ensure_bucket() -> None:
     s3 = _client()
     try:
         s3.head_bucket(Bucket=_bucket())
-    except Exception:
+    except ClientError:
+        # 404/403 from head_bucket → bucket missing. Other ClientError
+        # surfaces (auth, network) propagate naturally so the operator
+        # sees the real cause.
         s3.create_bucket(Bucket=_bucket())

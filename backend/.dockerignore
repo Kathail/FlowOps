@@ -1,0 +1,33 @@
+# Build context hygiene — keep the image small and never ship secrets.
+.git
+.gitignore
+.gitattributes
+.github
+.dockerignore
+Dockerfile
+
+# Python
+.venv
+venv
+.env
+.env.*
+!.env.example
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+
+# IDE / editor
+.idea
+.vscode
+*.swp
+.DS_Store
+
+# Tests / fixtures we never want in the runtime image
+tests

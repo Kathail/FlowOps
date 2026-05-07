@@ -175,7 +175,7 @@ def list_service_requests():
             or_(
                 ServiceRequest.sr_number.ilike(like),
                 ServiceRequest.caller_name.ilike(like),
-                ServiceRequest.address.ilike(like),
+                ServiceRequest.reported_address.ilike(like),
                 ServiceRequest.description.ilike(like),
             )
         )
@@ -310,6 +310,7 @@ def get_service_request(sr_number: str):
 
 @service_requests_bp.patch("/<string:sr_number>")
 @login_required
+@require_roles("admin", "supervisor", "tech", "intake")
 def update_service_request(sr_number: str):
     data = _validate(ServiceRequestUpdate, request.get_json(silent=True) or {})
     sr = _get_sr(sr_number)

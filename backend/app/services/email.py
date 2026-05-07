@@ -18,6 +18,7 @@ from typing import Protocol
 
 import httpx
 from flask import current_app
+from markupsafe import escape
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +31,11 @@ class StdoutDriver:
     """Dev/v1 driver — logs the email instead of sending it."""
 
     def send(self, *, to: str, subject: str, html: str, text: str) -> None:
-        logger.info(
-            "email[stdout] to=%s subject=%r body=%r",
-            to,
-            subject,
-            text,
-        )
+        # The body of an invitation contains a single-use accept token —
+        # logging it at INFO would persist a secret to production logs.
+        # Subject + recipient at INFO; full body only at DEBUG.
+        logger.info("email[stdout] to=%s subject=%r", to, subject)
+        logger.debug("email[stdout] body=%r", text)
 
 
 class ResendDriver:
@@ -87,9 +87,14 @@ def send_invitation_email(*, to: str, accept_url: str, tenant_name: str) -> None
         f"Accept your invitation:\n{accept_url}\n\n"
         f"This link expires soon. If you didn't expect this, ignore this email."
     )
+    # tenant_name is user-controlled at register-tenant; accept_url is
+    # built from PUBLIC_BASE_URL + a random token but is interpolated as
+    # both an attribute and a text node, so escape both as a habit.
+    safe_tenant = escape(tenant_name)
+    safe_url = escape(accept_url)
     html = (
-        f"<p>You've been invited to join <strong>{tenant_name}</strong> on CityWater.</p>"
-        f'<p><a href="{accept_url}">Accept your invitation</a></p>'
+        f"<p>You've been invited to join <strong>{safe_tenant}</strong> on CityWater.</p>"
+        f'<p><a href="{safe_url}">Accept your invitation</a></p>'
         f"<p>If you didn't expect this, ignore this email.</p>"
     )
     _driver().send(to=to, subject=subject, html=html, text=text)

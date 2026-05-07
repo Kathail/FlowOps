@@ -16,8 +16,11 @@ WORKDIR /app
 
 RUN pip install uv
 
-COPY pyproject.toml ./
+COPY pyproject.toml uv.lock* ./
 COPY app ./app
+# uv pip install with --no-cache; if uv.lock is present `uv sync --frozen`
+# would be stricter, but we use pip-install here because the runtime
+# image only needs the resolved deps (no virtualenv carry-over).
 RUN uv pip install --system --no-cache .
 
 FROM python:${PYTHON_VERSION} AS runtime
