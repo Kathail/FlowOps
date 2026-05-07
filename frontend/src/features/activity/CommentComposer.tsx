@@ -30,9 +30,22 @@ interface Props {
    * checklist for repetitive daily-WO summaries. */
   task?: TaskDefinitionRead;
   taskData?: Record<string, unknown>;
+  /** Asset UIDs the operator recently completed in this view session
+   * (e.g. ticked-off route-WO stops). Rendered as one-tap chips above
+   * the textarea — clicking inserts the UID into the body. Cleared via
+   * onClearPendingAssetRefs once the comment is posted. */
+  pendingAssetRefs?: string[];
+  onClearPendingAssetRefs?: () => void;
 }
 
-export function CommentComposer({ entityType, entityId, task, taskData }: Props) {
+export function CommentComposer({
+  entityType,
+  entityId,
+  task,
+  taskData,
+  pendingAssetRefs,
+  onClearPendingAssetRefs,
+}: Props) {
   const [body, setBody] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [assetQuery, setAssetQuery] = useState("");
@@ -87,13 +100,54 @@ export function CommentComposer({ entityType, entityId, task, taskData }: Props)
         body: body.trim(),
       });
       setBody("");
+      // Comment posted → the "completed-this-session" chip set has been
+      // recorded (either in body or via insertAll). Clear so we don't
+      // keep showing stale chips.
+      onClearPendingAssetRefs?.();
     } catch (err) {
       setErrorMessage(err instanceof ApiError ? err.message : String(err));
     }
   }
 
+  function insertAllPending() {
+    if (!pendingAssetRefs?.length) return;
+    const joined = pendingAssetRefs.join(", ");
+    if (!body.trim()) {
+      setBody(`Completed: ${joined}`);
+    } else {
+      insertAtCursor(joined);
+    }
+  }
+
   return (
     <form onSubmit={onSubmit} className="space-y-3">
+      {pendingAssetRefs && pendingAssetRefs.length > 0 && (
+        <div
+          className="flex flex-wrap items-center gap-2 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2"
+          aria-label="Recently completed assets"
+        >
+          <span className="text-xs uppercase tracking-wider text-emerald-300">
+            Completed ({pendingAssetRefs.length})
+          </span>
+          {pendingAssetRefs.map((uid) => (
+            <button
+              key={uid}
+              type="button"
+              onClick={() => insertReference(uid)}
+              className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-mono text-emerald-100 hover:bg-emerald-500/20"
+            >
+              {uid}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={insertAllPending}
+            className="ml-auto rounded border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+          >
+            Add all to comment
+          </button>
+        </div>
+      )}
       <textarea
         ref={textareaRef}
         value={body}

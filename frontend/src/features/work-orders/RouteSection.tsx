@@ -25,14 +25,31 @@ import {
  * patch through the React Query cache on success.
  */
 
-export function RouteSection({ wo, slug }: { wo: WorkOrderDetail; slug: string | undefined }) {
+export function RouteSection({
+  wo,
+  slug,
+  onAssetCompleted,
+}: {
+  wo: WorkOrderDetail;
+  slug: string | undefined;
+  /** Called when the operator ticks an asset complete from this view.
+   * Parent (WorkOrderDetailPage) uses it to push the UID into the
+   * smart-comment chip strip on the comment composer. Untick is a
+   * no-op — the chip strip is additive within the session. */
+  onAssetCompleted?: (asset_uid: string) => void;
+}) {
   const queryClient = useQueryClient();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<string | null>(null);
   const [removeError, setRemoveError] = useState<string | null>(null);
+  // Completed stops disappear from the visible list by default — the
+  // operator's mental model is "what's left to do." A toggle expands
+  // them inline when needed (audit, mistake recovery).
+  const [showCompleted, setShowCompleted] = useState(false);
 
   const completed = wo.assets.filter((a) => a.completed_at).length;
   const total = wo.assets.length;
+  const visibleAssets = showCompleted ? wo.assets : wo.assets.filter((a) => !a.completed_at);
 
   const update = useMutation({
     mutationFn: (vars: { uid: string; patch: Parameters<typeof updateWoAsset>[2] }) =>
@@ -61,23 +78,37 @@ export function RouteSection({ wo, slug }: { wo: WorkOrderDetail; slug: string |
         <h2 className="text-sm font-medium uppercase tracking-wide text-slate-400">
           Assets ({completed}/{total})
         </h2>
-        <Button onClick={() => setPickerOpen(true)}>+ Add assets</Button>
+        <div className="flex items-center gap-2">
+          {completed > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowCompleted((v) => !v)}
+              className="text-xs text-slate-400 hover:text-blue-300"
+            >
+              {showCompleted ? "Hide completed" : `Show ${completed} completed`}
+            </button>
+          )}
+          <Button onClick={() => setPickerOpen(true)}>+ Add assets</Button>
+        </div>
       </div>
 
       {wo.assets.length === 0 ? (
         <p className="mt-3 text-sm text-slate-500">
           No assets attached. Tap <em>Add assets</em> to build the route.
         </p>
+      ) : visibleAssets.length === 0 ? (
+        <p className="mt-3 text-sm text-emerald-400">All {total} stops complete. ✓</p>
       ) : (
         <ol className="mt-3 space-y-2">
-          {wo.assets.map((a) => (
+          {visibleAssets.map((a) => (
             <RouteRow
               key={a.asset_uid}
               asset={a}
               slug={slug}
-              onToggle={(complete) =>
-                update.mutate({ uid: a.asset_uid, patch: { mark_complete: complete } })
-              }
+              onToggle={(complete) => {
+                update.mutate({ uid: a.asset_uid, patch: { mark_complete: complete } });
+                if (complete) onAssetCompleted?.(a.asset_uid);
+              }}
               onNotes={(notes) =>
                 update.mutate({
                   uid: a.asset_uid,

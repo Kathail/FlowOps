@@ -15,13 +15,27 @@ interface Props {
    * checklist draft will render in the comment composer. */
   task?: TaskDefinitionRead;
   taskData?: Record<string, unknown>;
+  /** Asset UIDs the parent recently observed the operator complete (e.g.
+   * route-WO stops ticked off). Surfaced as one-tap chips in the comment
+   * composer so the operator can fold "what I just did" into the next
+   * comment without re-typing. Cleared via onClearPendingAssetRefs after
+   * the comment is posted. */
+  pendingAssetRefs?: string[];
+  onClearPendingAssetRefs?: () => void;
 }
 
 type TimelineRow =
   | { kind: "comment"; at: string; data: CommentRead }
   | { kind: "event"; at: string; data: HistoryEvent };
 
-export function ActivityTimeline({ entityType, entityId, task, taskData }: Props) {
+export function ActivityTimeline({
+  entityType,
+  entityId,
+  task,
+  taskData,
+  pendingAssetRefs,
+  onClearPendingAssetRefs,
+}: Props) {
   const comments = useComments(entityType, entityId);
   const history = useHistory(entityType, entityId);
 
@@ -50,6 +64,8 @@ export function ActivityTimeline({ entityType, entityId, task, taskData }: Props
           entityId={entityId}
           task={task}
           taskData={taskData}
+          pendingAssetRefs={pendingAssetRefs}
+          onClearPendingAssetRefs={onClearPendingAssetRefs}
         />
       </div>
 

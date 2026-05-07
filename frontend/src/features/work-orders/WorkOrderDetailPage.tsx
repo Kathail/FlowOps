@@ -34,6 +34,15 @@ export function WorkOrderDetailPage() {
   const queryClient = useQueryClient();
   const woQuery = useWorkOrder(woNumber);
 
+  // Asset UIDs the operator just ticked complete in this session — flow
+  // through to the comment composer as smart-comment chips so the work
+  // they did is one tap away from being recorded as a comment. Cleared
+  // when the comment is posted.
+  const [pendingAssetRefs, setPendingAssetRefs] = useState<string[]>([]);
+  const recordCompletedAsset = (uid: string) =>
+    setPendingAssetRefs((prev) => (prev.includes(uid) ? prev : [...prev, uid]));
+  const clearPendingAssetRefs = () => setPendingAssetRefs([]);
+
   const transition = useMutation({
     mutationFn: (to: WoStatus) => transitionWorkOrder(woNumber!, to),
     onSuccess: (next) => {
@@ -118,7 +127,7 @@ export function WorkOrderDetailPage() {
 
       {taskQuery.data && <TaskSection task={taskQuery.data} wo={wo} slug={slug} />}
 
-      <RouteSection wo={wo} slug={slug} />
+      <RouteSection wo={wo} slug={slug} onAssetCompleted={recordCompletedAsset} />
 
       <TasksSection wo={wo} />
       <TimeSection wo={wo} />
@@ -130,6 +139,8 @@ export function WorkOrderDetailPage() {
         entityId={wo.id}
         task={taskQuery.data}
         taskData={wo.task_data}
+        pendingAssetRefs={pendingAssetRefs}
+        onClearPendingAssetRefs={clearPendingAssetRefs}
       />
     </div>
   );
