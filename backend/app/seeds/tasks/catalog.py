@@ -61,7 +61,7 @@ TASKS: list[dict[str, Any]] = [
                 "id": "pressure_service_line",
                 "condition": "likely_cause == 'service_line'",
                 "text": (
-                    "Pressure issue appears to be on customer service line. Advised customer to have plumber check."
+                    "Pressure issue appears to be on customer service line. Advised customer to have a plumber check."
                 ),
             },
             {
@@ -424,7 +424,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "no_water_service_line",
                 "condition": "service_line_issue == true",
-                "text": "No water on customer service line. Advised customer to contact plumber.",
+                "text": "No water on customer service line. Advised customer to contact a plumber.",
             },
         ],
         "procedure": {
@@ -476,7 +476,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "service_leak_customer_side",
                 "condition": "leak_on_customer_side == true",
-                "text": "Leak confirmed on customer side of curb stop. Advised customer to contact plumber.",
+                "text": "Leak confirmed on customer side of curb stop. Advised customer to contact a plumber.",
             },
         ],
         "procedure": {
@@ -650,7 +650,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "odor_vent_issue",
                 "condition": "likely_cause == 'vent_issue'",
-                "text": "Odor from plumbing vent. Issue on customer side. Advised to have plumber inspect.",
+                "text": "Odor from plumbing vent. Issue on customer side. Advised to have a plumber inspect.",
             },
             {
                 "id": "odor_main_line",
@@ -707,7 +707,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "lift_normal",
                 "condition": "wet_well_level_normal == true && pumps_ok == true",
-                "text": "Lift station normal. Wet well level {wet_well_level_m}m. Pump 1 runtime {pump1_runtime_h}h. Pump 2 runtime {pump2_runtime_h}h.",
+                "text": "Lift station normal. Wet well level {wet_well_level_m} m. Pump 1 runtime {pump1_runtime_h} h. Pump 2 runtime {pump2_runtime_h} h.",
             },
             {
                 "id": "lift_high_level",
@@ -717,7 +717,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "lift_pump_issue",
                 "condition": "pump_issue == true",
-                "text": "Pump issue detected on Pump {affected_pump}. Amps {amps}A. Repair / replacement required.",
+                "text": "Pump issue detected on Pump {affected_pump}. Amps {amps} A. Repair / replacement required.",
             },
             {
                 "id": "lift_odor",
@@ -831,7 +831,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "cctv_clean",
                 "condition": "structural_total <= 5 && om_total <= 5",
-                "text": "CCTV inspection complete. Pipe in good condition. {length_surveyed_m}m surveyed. No significant defects.",
+                "text": "CCTV inspection complete. Pipe in good condition. {length_surveyed_m} m surveyed. No significant defects.",
             },
             {
                 "id": "cctv_structural_defects",
@@ -841,7 +841,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "cctv_grease",
                 "condition": "grease_observed == true",
-                "text": "Heavy grease observed. {grease_length_m}m affected. Cleaning recommended.",
+                "text": "Heavy grease observed. {grease_length_m} m affected. Cleaning recommended.",
             },
         ],
         "procedure": {
@@ -888,7 +888,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "grease_trap_cleaned",
                 "condition": "trap_cleaned == true",
-                "text": "Grease trap cleaned. {sediment_depth_cm}cm sediment and {grease_depth_cm}cm grease removed.",
+                "text": "Grease trap cleaned. {sediment_depth_cm} cm sediment and {grease_depth_cm} cm grease removed.",
             },
             {
                 "id": "grease_trap_undersized",
@@ -1094,7 +1094,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "cb_heavy_sediment",
                 "condition": "sediment_depth_m > 0.3",
-                "text": "Heavy sediment accumulation ({sediment_depth_m}m). Recommend increased cleaning frequency for this basin.",
+                "text": "Heavy sediment accumulation ({sediment_depth_m} m). Recommend increased cleaning frequency for this basin.",
             },
         ],
         "procedure": {
@@ -1140,12 +1140,12 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "cb_good",
                 "condition": "sediment_depth_m < 0.15 && grate_good == true",
-                "text": "Catch basin in good condition. Sediment {sediment_depth_m}m. Grate and outlet clear.",
+                "text": "Catch basin in good condition. Sediment {sediment_depth_m} m. Grate and outlet clear.",
             },
             {
                 "id": "cb_needs_cleaning",
                 "condition": "sediment_depth_m > 0.25 || needs_cleaning == true",
-                "text": "Catch basin needs cleaning. Sediment {sediment_depth_m}m. Cleaning scheduled.",
+                "text": "Catch basin needs cleaning. Sediment {sediment_depth_m} m. Cleaning scheduled.",
             },
         ],
         "procedure": {
@@ -1186,7 +1186,7 @@ TASKS: list[dict[str, Any]] = [
             {
                 "id": "ditch_cleaned",
                 "condition": "ditch_cleaned == true",
-                "text": "Ditch cleaned. Vegetation and debris removed. Flow capacity restored. {length_cleaned_m}m cleaned.",
+                "text": "Ditch cleaned. Vegetation and debris removed. Flow capacity restored. {length_cleaned_m} m cleaned.",
             },
         ],
         "procedure": {
