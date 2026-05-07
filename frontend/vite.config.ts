@@ -55,7 +55,7 @@ export default defineConfig({
             handler: "StaleWhileRevalidate",
             method: "GET",
             options: {
-              cacheName: "flowops-readonly-v1",
+              cacheName: "citywater-readonly-v1",
               expiration: { maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 },
             },
           },
@@ -71,7 +71,7 @@ export default defineConfig({
             handler: "NetworkFirst",
             method: "GET",
             options: {
-              cacheName: "flowops-live-v1",
+              cacheName: "citywater-live-v1",
               networkTimeoutSeconds: 4,
               expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 },
             },

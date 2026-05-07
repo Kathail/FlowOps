@@ -30,7 +30,7 @@ aws s3 ls s3://$BACKUP_BUCKET/daily/ --endpoint-url $BACKUP_S3_ENDPOINT \
   | tail -3
 ```
 You should see today's date. If not, check the systemd timer logs
-(`journalctl -u flowops-backup.service --since today`) for the most recent
+(`journalctl -u citywater-backup.service --since today`) for the most recent
 exit code; non-zero means the dump or upload failed.
 
 **Drift alarm:** the production deployment also writes a heartbeat to
@@ -56,15 +56,15 @@ aws s3 cp s3://$BACKUP_BUCKET/daily/$SNAP /tmp/$SNAP \
 age --decrypt -i /path/to/your-private-key.txt /tmp/$SNAP > /tmp/restore.dump
 
 # 3. Restore into a *new* database, never overwrite the live one.
-createdb flowops_restore
-pg_restore --no-owner --dbname=flowops_restore --jobs=4 /tmp/restore.dump
+createdb citywater_restore
+pg_restore --no-owner --dbname=citywater_restore --jobs=4 /tmp/restore.dump
 
 # 4. Sanity check.
-psql flowops_restore -c "SELECT count(*) FROM tenant;"
-psql flowops_restore -c "SELECT max(created_at) FROM audit_log;"
+psql citywater_restore -c "SELECT count(*) FROM tenant;"
+psql citywater_restore -c "SELECT max(created_at) FROM audit_log;"
 
 # 5. Promote (only if the live DB is genuinely lost):
-#    a. Stop the app: `systemctl stop flowops-backend`
+#    a. Stop the app: `systemctl stop citywater-backend`
 #    b. Rename databases: live → corrupt, restore → live
 #    c. Start the app, verify /healthz
 ```
@@ -80,7 +80,7 @@ rotation, and the restore-time elapsed is recorded in
 
 ```sh
 # 1. Pick a new password and rotate it on the Postgres side.
-psql -h $PG_HOST -U postgres -c "ALTER USER flowops WITH PASSWORD '<new>';"
+psql -h $PG_HOST -U postgres -c "ALTER USER citywater WITH PASSWORD '<new>';"
 
 # 2. Update the deploy secret (Railway / your platform of choice).
 # 3. Trigger a rolling restart so workers pick up the new DATABASE_URL.
@@ -102,7 +102,7 @@ Enforce the 7-year retention policy from SPEC §8.
 curl -X POST \
   -b cookies.txt \
   -H "X-CSRFToken: $(awk '/XSRF-TOKEN/{print $7}' cookies.txt)" \
-  "https://flowops.example.com/api/v1/admin/audit-log/cleanup?older_than_days=2555"
+  "https://citywater.example.com/api/v1/admin/audit-log/cleanup?older_than_days=2555"
 ```
 
 The endpoint refuses windows shorter than 30 days. The deletion itself is

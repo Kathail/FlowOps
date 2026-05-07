@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_USER: flowops
-      POSTGRES_PASSWORD: flowops
-      POSTGRES_DB: flowops
+      POSTGRES_USER: citywater
+      POSTGRES_PASSWORD: citywater
+      POSTGRES_DB: citywater
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U flowops -d flowops"]
+      test: ["CMD-SHELL", "pg_isready -U citywater -d citywater"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -31,8 +31,8 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: flowops
-      MINIO_ROOT_PASSWORD: flowops_minio_dev
+      MINIO_ROOT_USER: citywater
+      MINIO_ROOT_PASSWORD: citywater_minio_dev
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -50,7 +50,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://flowops:flowops@postgres:5432/flowops
+      DATABASE_URL: postgres://citywater:citywater@postgres:5432/citywater
     ports:
       - "7800:7800"
     volumes:

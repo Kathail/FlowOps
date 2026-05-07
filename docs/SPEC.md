@@ -82,7 +82,7 @@ user_role
   user_id, role_id, primary_key (user_id, role_id)
 ```
 
-`tenant.slug` is the URL prefix for the frontend: `flowops.app/{tenant_slug}/...`.
+`tenant.slug` is the URL prefix for the frontend: `app.citywater.ca/{tenant_slug}/...`.
 
 `user.user_uid` is the URL identifier for users (per CLAUDE.md hard rule #3 — internal `id` is never exposed in routes for tenant data). Generated as a 12-character URL-safe slug.
 

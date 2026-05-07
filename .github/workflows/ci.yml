@@ -13,22 +13,22 @@ jobs:
       postgres:
         image: postgis/postgis:16-3.4
         env:
-          POSTGRES_USER: flowops
-          POSTGRES_PASSWORD: flowops
-          POSTGRES_DB: flowops
+          POSTGRES_USER: citywater
+          POSTGRES_PASSWORD: citywater
+          POSTGRES_DB: citywater
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U flowops -d flowops"
+          --health-cmd "pg_isready -U citywater -d citywater"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
       PGHOST: localhost
       PGPORT: "5432"
-      PGUSER: flowops
-      PGPASSWORD: flowops
-      DATABASE_URL: postgresql+psycopg://flowops:flowops@localhost:5432/flowops
+      PGUSER: citywater
+      PGPASSWORD: citywater
+      DATABASE_URL: postgresql+psycopg://citywater:citywater@localhost:5432/citywater
     defaults:
       run:
         working-directory: backend

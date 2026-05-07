@@ -25,7 +25,7 @@ def _client():
 
 
 def _bucket() -> str:
-    return os.environ.get("S3_BUCKET", "flowops-attachments")
+    return os.environ.get("S3_BUCKET", "citywater-attachments")
 
 
 def upload_attachment(

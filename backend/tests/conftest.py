@@ -18,8 +18,8 @@ from app.utils.uids import generate_user_uid
 
 _PG_HOST = os.environ.get("PGHOST", "localhost")
 _PG_PORT = int(os.environ.get("PGPORT", "5432"))
-_PG_USER = os.environ.get("PGUSER", "flowops")
-_PG_PASSWORD = os.environ.get("PGPASSWORD", "flowops")
+_PG_USER = os.environ.get("PGUSER", "citywater")
+_PG_PASSWORD = os.environ.get("PGPASSWORD", "citywater")
 
 postgresql_proc = factories.postgresql_noproc(
     host=_PG_HOST,

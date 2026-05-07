@@ -30,7 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libpq5 \
         curl \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd -m -u 1000 flowops
+    && useradd -m -u 1000 citywater
 
 WORKDIR /app
 
@@ -43,7 +43,7 @@ COPY migrations ./migrations
 ARG GIT_SHA=dev
 ENV GIT_SHA=${GIT_SHA}
 
-USER flowops
+USER citywater
 
 EXPOSE 5000
 

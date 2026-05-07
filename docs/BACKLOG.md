@@ -1,4 +1,4 @@
-# BACKLOG.md — FlowOps post-v1
+# BACKLOG.md — CityWater post-v1
 
 Epics and features deferred from v1. Each epic captures enough scope and rationale that future planning sessions don't re-derive it from scratch. Epic IDs are placeholders — adjust to your convention.
 
@@ -8,7 +8,7 @@ Epics and features deferred from v1. Each epic captures enough scope and rationa
 
 ### Rationale
 
-v1 ships with manual recurring WOs (single asset or whole class, fixed frequency). This is enough for small utilities but breaks down at scale: regulated PM programs need conditional rules, compliance reporting, batch generation, and workload forecasting. The Planner workspace turns FlowOps from "asset registry with reactive ops" into a real PM program — which is the load-bearing claim of the Cityworks-alternative positioning.
+v1 ships with manual recurring WOs (single asset or whole class, fixed frequency). This is enough for small utilities but breaks down at scale: regulated PM programs need conditional rules, compliance reporting, batch generation, and workload forecasting. The Planner workspace turns CityWater from "asset registry with reactive ops" into a real PM program — which is the load-bearing claim of the Cityworks-alternative positioning.
 
 ### Triggered when
 

@@ -30,6 +30,8 @@ dependencies = [
     "gunicorn>=21.2",           # production WSGI server on Railway
     "python-json-logger>=2.0,<3", # structured JSON logs in production
     "httpx>=0.27",              # used by services/email.py (Resend driver) and services/geocode.py (Nominatim) — runtime, not just tests
+    "redis>=5",                 # flask-limiter's redis storage backend — limits-lib looks it up at app boot, not install
+    "python-dateutil>=2.9",     # imported by services/schedules.py (RRULE parsing) — was incidentally pulled by another transitive in dev, never declared
 ]
 
 [dependency-groups]

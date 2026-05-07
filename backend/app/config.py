@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     environment: str = Field(default="development")
     secret_key: str = Field(default="dev-secret-do-not-use-in-prod")
     database_url: str = Field(
-        default="postgresql+psycopg://flowops:flowops@localhost:5432/flowops",
+        default="postgresql+psycopg://citywater:citywater@localhost:5432/citywater",
     )
     git_sha: str = Field(default="dev")
     log_level: str = Field(default="INFO")
