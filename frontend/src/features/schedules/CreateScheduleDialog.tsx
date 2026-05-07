@@ -32,21 +32,34 @@ const INSPECTION_KINDS = [
   "cctv",
 ];
 
-interface Props {
-  onClose: () => void;
+/** Optional prefill — used by the "suggested template" cards on the
+ * Schedules empty state so a user can land on this dialog with a
+ * realistic name + RRULE already filled in. */
+export interface ScheduleTemplatePrefill {
+  kind: ScheduleKind;
+  name: string;
+  description?: string;
+  rrule: string;
+  woCategory?: string;
+  insKind?: string;
 }
 
-export function CreateScheduleDialog({ onClose }: Props) {
+interface Props {
+  onClose: () => void;
+  initial?: ScheduleTemplatePrefill;
+}
+
+export function CreateScheduleDialog({ onClose, initial }: Props) {
   const create = useCreateSchedule();
-  const [kind, setKind] = useState<ScheduleKind>("work_order");
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [rrule, setRrule] = useState("FREQ=MONTHLY;BYMONTHDAY=1");
+  const [kind, setKind] = useState<ScheduleKind>(initial?.kind ?? "work_order");
+  const [name, setName] = useState(initial?.name ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [rrule, setRrule] = useState(initial?.rrule ?? "FREQ=MONTHLY;BYMONTHDAY=1");
   const [assetUid, setAssetUid] = useState("");
-  const [woCategory, setWoCategory] = useState("repair");
+  const [woCategory, setWoCategory] = useState(initial?.woCategory ?? "repair");
   const [woTitle, setWoTitle] = useState("");
   const [woPriority, setWoPriority] = useState("normal");
-  const [insKind, setInsKind] = useState("manhole");
+  const [insKind, setInsKind] = useState(initial?.insKind ?? "manhole");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
@@ -130,9 +143,7 @@ export function CreateScheduleDialog({ onClose }: Props) {
           <span className="text-slate-300">Recurrence</span>
           <select
             className="input"
-            value={
-              RRULE_PRESETS.find((p) => p.rrule === rrule)?.rrule ?? "custom"
-            }
+            value={RRULE_PRESETS.find((p) => p.rrule === rrule)?.rrule ?? "custom"}
             onChange={(e) => {
               if (e.target.value !== "custom") setRrule(e.target.value);
             }}
@@ -157,9 +168,7 @@ export function CreateScheduleDialog({ onClose }: Props) {
 
         {kind === "work_order" ? (
           <div className="surface space-y-2 p-3">
-            <p className="text-xs uppercase tracking-wider text-slate-500">
-              Work order template
-            </p>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Work order template</p>
             <label className="block text-sm">
               <span className="text-slate-300">Title (defaults to name)</span>
               <input
@@ -201,9 +210,7 @@ export function CreateScheduleDialog({ onClose }: Props) {
           </div>
         ) : (
           <div className="surface space-y-2 p-3">
-            <p className="text-xs uppercase tracking-wider text-slate-500">
-              Inspection template
-            </p>
+            <p className="text-xs uppercase tracking-wider text-slate-500">Inspection template</p>
             <label className="block text-sm">
               <span className="text-slate-300">Inspection kind</span>
               <select

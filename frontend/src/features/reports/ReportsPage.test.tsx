@@ -56,7 +56,8 @@ describe("ReportsPage", () => {
       expect(screen.getByText("Main break history")).toBeInTheDocument();
     });
     expect(screen.getByText("Work order summary")).toBeInTheDocument();
-    const link = screen.getByText("Main break history").closest("a");
-    expect(link).toHaveAttribute("href", "/acme/reports/break-history");
+    // Each card surfaces its own "Run report" link to the detail page.
+    const runLinks = screen.getAllByText("Run report");
+    expect(runLinks[0]).toHaveAttribute("href", expect.stringMatching(/\/acme\/reports\//));
   });
 });

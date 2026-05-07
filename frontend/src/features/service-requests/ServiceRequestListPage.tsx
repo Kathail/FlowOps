@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
+import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
 import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { SummaryBar } from "../../components/SummaryBar";
 import { formatDateTime } from "../../lib/format";
+import { translateApiError } from "../../lib/translateApiError";
 import { IntakeDialog } from "./IntakeDialog";
-import type { ServiceRequestListParams, SrCategory, SrDomain, SrStatus } from "./api";
+import {
+  updateServiceRequest,
+  type ServiceRequestListParams,
+  type SrCategory,
+  type SrDomain,
+  type SrPriority,
+  type SrStatus,
+} from "./api";
 import { useServiceRequests } from "./hooks";
 
 const STATUSES: SrStatus[] = ["new", "triaged", "dispatched", "closed", "duplicate"];
@@ -31,11 +42,25 @@ const STATUS_TONE: Record<SrStatus, PillTone> = {
   duplicate: "muted",
 };
 
+const PRIORITY_TONE: Record<SrPriority, PillTone> = {
+  emergency: "danger",
+  high: "warning",
+  normal: "neutral",
+  low: "muted",
+};
+
+/** SRs that need supervisor attention (the default scope). */
+const ATTENTION_STATUSES: SrStatus[] = ["new", "triaged"];
+
 export function ServiceRequestListPage() {
   const { slug } = useParams<{ slug: string }>();
   const [search, setSearch] = useSearchParams();
   const [intakeOpen, setIntakeOpen] = useState(false);
   const [pendingQ, setPendingQ] = useState(search.get("q") ?? "");
+  const queryClient = useQueryClient();
+
+  // Default scope: "needs attention" — anything new or triaged.
+  const scope = (search.get("scope") as "attention" | "all") ?? "attention";
 
   const params: ServiceRequestListParams = {
     status: (search.get("status") as SrStatus) || undefined,
@@ -47,6 +72,29 @@ export function ServiceRequestListPage() {
   };
 
   const query = useServiceRequests(params);
+
+  const visibleItems = useMemo(() => {
+    const items = query.data?.items ?? [];
+    if (scope === "attention" && !params.status) {
+      return items.filter((sr) => ATTENTION_STATUSES.includes(sr.status));
+    }
+    return items;
+  }, [query.data, scope, params.status]);
+
+  const summary = useMemo(() => {
+    const items = query.data?.items ?? [];
+    const newCount = items.filter((sr) => sr.status === "new").length;
+    const triaged = items.filter((sr) => sr.status === "triaged").length;
+    const high = items.filter(
+      (sr) =>
+        (sr.priority === "high" || sr.priority === "emergency") &&
+        ATTENTION_STATUSES.includes(sr.status),
+    ).length;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const newToday = items.filter((sr) => new Date(sr.reported_at) >= today).length;
+    return { newCount, triaged, high, newToday };
+  }, [query.data]);
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(search);
@@ -61,6 +109,17 @@ export function ServiceRequestListPage() {
     setPendingQ("");
   }
 
+  // Quick-triage from the row menu — sets status to "triaged" without
+  // having to open the SR. Type narrows to mutable statuses (we never
+  // transition to "dispatched" here — that happens via the SR detail's
+  // Dispatch dialog which also creates the linked WO).
+  type MutableSrStatus = "new" | "triaged" | "closed" | "duplicate";
+  const update = useMutation<unknown, Error, { sr: string; status: MutableSrStatus }>({
+    mutationFn: ({ sr, status }) => updateServiceRequest(sr, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["service-requests"] }),
+    onError: (e) => alert(translateApiError(e)),
+  });
+
   const hasFilters = !!(params.status || params.category || params.domain || params.q);
 
   return (
@@ -70,7 +129,33 @@ export function ServiceRequestListPage() {
         <Button onClick={() => setIntakeOpen(true)}>New intake</Button>
       </header>
 
+      <SummaryBar>
+        <SummaryBar.Stat
+          label="New"
+          value={summary.newCount}
+          tone={summary.newCount > 0 ? "warning" : "muted"}
+          to="?status=new"
+        />
+        <SummaryBar.Stat
+          label="Awaiting dispatch"
+          value={summary.triaged}
+          tone={summary.triaged > 0 ? "default" : "muted"}
+          to="?status=triaged"
+        />
+        <SummaryBar.Stat
+          label="High / emergency"
+          value={summary.high}
+          tone={summary.high > 0 ? "danger" : "muted"}
+        />
+        <SummaryBar.Stat label="Reported today" value={summary.newToday} tone="muted" />
+        <SummaryBar.Stat label="Total" value={query.data?.total ?? 0} tone="muted" />
+      </SummaryBar>
+
       <div className="flex flex-wrap items-end gap-3 text-sm">
+        <ScopeTabs
+          scope={scope}
+          onChange={(s) => setParam("scope", s === "attention" ? null : s)}
+        />
         <label>
           <span className="block text-slate-300">Status</span>
           <select
@@ -111,7 +196,7 @@ export function ServiceRequestListPage() {
             <option value="">Any</option>
             {CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {c.replace("_", " ")}
               </option>
             ))}
           </select>
@@ -129,7 +214,7 @@ export function ServiceRequestListPage() {
               value={pendingQ}
               onChange={(e) => setPendingQ(e.target.value)}
               onBlur={() => setParam("q", pendingQ || null)}
-              placeholder="number, caller, address, description"
+              placeholder="Number, caller, address, description"
               className="mt-1 w-full rounded border border-slate-700 px-2 py-1"
             />
           </label>
@@ -142,69 +227,120 @@ export function ServiceRequestListPage() {
             <tr>
               <th className="px-3 py-2">Number</th>
               <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Priority</th>
               <th className="px-3 py-2">Category</th>
               <th className="px-3 py-2">Domain</th>
-              <th className="px-3 py-2">Priority</th>
               <th className="px-3 py-2">Caller</th>
               <th className="px-3 py-2">Address</th>
               <th className="px-3 py-2">Reported</th>
               <th className="px-3 py-2">WO</th>
+              <th className="px-3 py-2 text-right" />
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {query.data?.items.map((sr) => (
-              <tr key={sr.sr_number} className="hover:bg-slate-800/50">
-                <td className="px-3 py-2 font-medium">
-                  <Link
-                    to={`/${slug}/service-requests/${sr.sr_number}`}
-                    className="text-slate-100 hover:underline"
-                  >
-                    {sr.sr_number}
-                  </Link>
-                </td>
-                <td className="px-3 py-2">
-                  <StatusPill tone={STATUS_TONE[sr.status]} dot>
-                    {sr.status}
-                  </StatusPill>
-                </td>
-                <td className="px-3 py-2">{sr.category}</td>
-                <td className="px-3 py-2">{sr.domain}</td>
-                <td className="px-3 py-2">{sr.priority}</td>
-                <td className="px-3 py-2">{sr.caller_name ?? <Dash />}</td>
-                <td className="px-3 py-2 max-w-xs truncate">{sr.reported_address ?? <Dash />}</td>
-                <td className="px-3 py-2 text-slate-400">
-                  {formatDateTime(sr.reported_at) || <Dash />}
-                </td>
-                <td className="px-3 py-2">
-                  {sr.work_order_number ? (
+            {visibleItems.map((sr) => {
+              const urgent = sr.priority === "emergency" || sr.priority === "high";
+              return (
+                <tr
+                  key={sr.sr_number}
+                  className={`hover:bg-slate-800/40 ${urgent && sr.status !== "closed" ? "bg-red-500/[0.03]" : ""}`}
+                >
+                  <td className="px-3 py-2 font-medium">
                     <Link
-                      to={`/${slug}/work-orders/${sr.work_order_number}`}
-                      className="text-slate-200 hover:underline"
+                      to={`/${slug}/service-requests/${sr.sr_number}`}
+                      className="text-slate-100 hover:underline"
                     >
-                      {sr.work_order_number}
+                      {sr.sr_number}
                     </Link>
-                  ) : (
-                    <Dash />
-                  )}
-                </td>
-              </tr>
-            ))}
-            {query.data && query.data.items.length === 0 && (
+                  </td>
+                  <td className="px-3 py-2">
+                    <StatusPill tone={STATUS_TONE[sr.status]} dot>
+                      {sr.status}
+                    </StatusPill>
+                  </td>
+                  <td className="px-3 py-2">
+                    <StatusPill
+                      tone={PRIORITY_TONE[sr.priority]}
+                      dot={sr.priority === "emergency" || sr.priority === "high"}
+                    >
+                      {sr.priority}
+                    </StatusPill>
+                  </td>
+                  <td className="px-3 py-2 capitalize">{sr.category.replace(/_/g, " ")}</td>
+                  <td className="px-3 py-2 capitalize">{sr.domain}</td>
+                  <td className="px-3 py-2">{sr.caller_name ?? <Dash />}</td>
+                  <td
+                    className="px-3 py-2 max-w-xs truncate"
+                    title={sr.reported_address ?? undefined}
+                  >
+                    {sr.reported_address ?? <Dash />}
+                  </td>
+                  <td className="px-3 py-2 text-slate-400">
+                    {formatDateTime(sr.reported_at) || <Dash />}
+                  </td>
+                  <td className="px-3 py-2">
+                    {sr.work_order_number ? (
+                      <Link
+                        to={`/${slug}/work-orders/${sr.work_order_number}`}
+                        className="font-mono text-xs text-slate-200 hover:underline"
+                      >
+                        {sr.work_order_number}
+                      </Link>
+                    ) : (
+                      <Dash />
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <RowActions label={`${sr.sr_number} actions`}>
+                      <RowActions.Link to={`/${slug}/service-requests/${sr.sr_number}`}>
+                        View details
+                      </RowActions.Link>
+                      {sr.status === "new" && (
+                        <RowActions.Action
+                          onClick={() => update.mutate({ sr: sr.sr_number, status: "triaged" })}
+                        >
+                          Mark triaged
+                        </RowActions.Action>
+                      )}
+                      {!["closed", "dispatched", "duplicate"].includes(sr.status) && (
+                        <RowActions.Link to={`/${slug}/service-requests/${sr.sr_number}#dispatch`}>
+                          Dispatch as WO…
+                        </RowActions.Link>
+                      )}
+                      {sr.work_order_number && (
+                        <RowActions.Link to={`/${slug}/work-orders/${sr.work_order_number}`}>
+                          View linked WO
+                        </RowActions.Link>
+                      )}
+                    </RowActions>
+                  </td>
+                </tr>
+              );
+            })}
+            {visibleItems.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-0">
+                <td colSpan={10} className="p-0">
                   <EmptyState
                     title={
-                      hasFilters
-                        ? "No service requests match these filters."
-                        : "No service requests yet."
+                      scope === "attention" && !hasFilters
+                        ? "Nothing needs attention right now."
+                        : hasFilters
+                          ? "No service requests match these filters."
+                          : "No service requests yet."
                     }
                     hint={
-                      hasFilters
-                        ? "Try widening the filters or clearing them."
-                        : "Log a new intake to get started."
+                      scope === "attention"
+                        ? "Switch to All to see triaged + dispatched + closed history."
+                        : hasFilters
+                          ? "Try widening the filters or clearing them."
+                          : "Log a new intake to get started."
                     }
                     action={
-                      hasFilters ? (
+                      scope === "attention" && !hasFilters ? (
+                        <Button variant="ghost" size="sm" onClick={() => setParam("scope", "all")}>
+                          Show all
+                        </Button>
+                      ) : hasFilters ? (
                         <Button variant="ghost" size="sm" onClick={clearFilters}>
                           Clear filters
                         </Button>
@@ -223,6 +359,36 @@ export function ServiceRequestListPage() {
       </div>
 
       {intakeOpen && <IntakeDialog onClose={() => setIntakeOpen(false)} />}
+    </div>
+  );
+}
+
+function ScopeTabs({
+  scope,
+  onChange,
+}: {
+  scope: "attention" | "all";
+  onChange: (s: "attention" | "all") => void;
+}) {
+  return (
+    <div
+      role="tablist"
+      className="inline-flex rounded border border-slate-700 bg-slate-950/40 p-0.5"
+    >
+      {(["attention", "all"] as const).map((k) => (
+        <button
+          key={k}
+          role="tab"
+          aria-selected={scope === k}
+          type="button"
+          onClick={() => onChange(k)}
+          className={`rounded px-3 py-1 text-xs capitalize transition-colors ${
+            scope === k ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+          }`}
+        >
+          {k === "attention" ? "Needs attention" : "All"}
+        </button>
+      ))}
     </div>
   );
 }

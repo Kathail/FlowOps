@@ -1,9 +1,12 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
+import { ConditionBadge } from "../../components/ConditionBadge";
 import { Dash } from "../../components/Dash";
+import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
+import { SummaryBar } from "../../components/SummaryBar";
 import { formatDateTime } from "../../lib/format";
 import { CreateInspectionDialog } from "./CreateInspectionDialog";
 import { ImportPacpDialog } from "./ImportPacpDialog";
@@ -16,10 +19,15 @@ const KINDS: { value: InspectionKind; label: string }[] = [
   { value: "manhole", label: "Manhole" },
   { value: "catch_basin", label: "Catch basin" },
   { value: "lift_station_round", label: "Lift station" },
-  { value: "cctv", label: "CCTV" },
+  { value: "cctv", label: "CCTV (PACP)" },
 ];
 
+const KIND_LABEL: Record<InspectionKind, string> = Object.fromEntries(
+  KINDS.map((k) => [k.value, k.label]),
+) as Record<InspectionKind, string>;
+
 export function InspectionListPage() {
+  const { slug } = useParams<{ slug: string }>();
   const [search, setSearch] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
@@ -34,6 +42,22 @@ export function InspectionListPage() {
   };
 
   const insQuery = useInspections(params);
+
+  // Summary stats — derived from current page (because the API doesn't
+  // expose a global pass/fail summary yet; future backend work could
+  // add a /dashboard-style aggregate).
+  const summary = useMemo(() => {
+    const items = insQuery.data?.items ?? [];
+    const total = insQuery.data?.total ?? 0;
+    const passed = items.filter((i) => i.pass === true).length;
+    const failed = items.filter((i) => i.pass === false).length;
+    const conditionCounted = items.filter((i) => i.pass !== null).length;
+    const passRate = conditionCounted > 0 ? Math.round((passed / conditionCounted) * 100) : null;
+    const recentFailures = items.filter(
+      (i) => i.pass === false && new Date(i.performed_at) > new Date(Date.now() - 7 * 86_400_000),
+    ).length;
+    return { total, passed, failed, passRate, recentFailures };
+  }, [insQuery.data]);
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(search);
@@ -64,10 +88,38 @@ export function InspectionListPage() {
         </div>
       </header>
 
+      <SummaryBar>
+        <SummaryBar.Stat label="Total in dataset" value={summary.total} tone="muted" />
+        <SummaryBar.Stat
+          label="Pass rate (page)"
+          value={summary.passRate === null ? "—" : `${summary.passRate}%`}
+          tone={
+            summary.passRate === null
+              ? "muted"
+              : summary.passRate >= 90
+                ? "success"
+                : summary.passRate >= 70
+                  ? "warning"
+                  : "danger"
+          }
+        />
+        <SummaryBar.Stat
+          label="Failed (page)"
+          value={summary.failed}
+          tone={summary.failed > 0 ? "danger" : "muted"}
+          to="?pass=false"
+        />
+        <SummaryBar.Stat
+          label="Failures last 7d"
+          value={summary.recentFailures}
+          tone={summary.recentFailures > 0 ? "warning" : "muted"}
+        />
+      </SummaryBar>
+
       {createOpen && <CreateInspectionDialog onClose={() => setCreateOpen(false)} />}
       {importOpen && <ImportPacpDialog onClose={() => setImportOpen(false)} />}
 
-      <div className="flex gap-3 items-end flex-wrap">
+      <div className="flex flex-wrap items-end gap-3">
         <label className="block">
           <span className="text-xs text-slate-300">Kind</span>
           <select
@@ -89,7 +141,7 @@ export function InspectionListPage() {
             const input = e.currentTarget.elements.namedItem("asset_uid") as HTMLInputElement;
             setParam("asset_uid", input.value || null);
           }}
-          className="block"
+          className="flex items-end gap-2"
         >
           <label className="block">
             <span className="text-xs text-slate-300">Asset UID</span>
@@ -97,21 +149,31 @@ export function InspectionListPage() {
               name="asset_uid"
               defaultValue={search.get("asset_uid") ?? ""}
               onBlur={(e) => setParam("asset_uid", e.target.value || null)}
-              placeholder="HYD-00001"
-              className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-40"
+              placeholder="e.g. HYD-00001"
+              className="mt-1 w-48 rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
+          {params.asset_uid && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setParam("asset_uid", null)}
+            >
+              Clear
+            </Button>
+          )}
         </form>
         <label className="block">
-          <span className="text-xs text-slate-300">Pass</span>
+          <span className="text-xs text-slate-300">Result</span>
           <select
             value={params.pass ?? ""}
             onChange={(e) => setParam("pass", e.target.value || null)}
             className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm bg-slate-900"
           >
             <option value="">Any</option>
-            <option value="true">Pass</option>
-            <option value="false">Fail</option>
+            <option value="true">Pass only</option>
+            <option value="false">Fail only</option>
           </select>
         </label>
       </div>
@@ -126,26 +188,27 @@ export function InspectionListPage() {
               <th className="px-3 py-2 text-left">Performed</th>
               <th className="px-3 py-2 text-left">Condition</th>
               <th className="px-3 py-2 text-left">Pass</th>
+              <th className="px-3 py-2 text-right" />
             </tr>
           </thead>
           <tbody>
             {insQuery.isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
+                <td colSpan={7} className="px-3 py-6 text-center text-slate-400">
                   Loading…
                 </td>
               </tr>
             )}
             {insQuery.data?.items.length === 0 && (
               <tr>
-                <td colSpan={6} className="p-0">
+                <td colSpan={7} className="p-0">
                   <EmptyState
                     title={
                       hasFilters ? "No inspections match these filters." : "No inspections yet."
                     }
                     hint={
                       hasFilters
-                        ? "Try widening the filters or clearing them."
+                        ? "Try widening filters or clearing them."
                         : "Log a new inspection or import PACP results."
                     }
                     action={
@@ -164,16 +227,27 @@ export function InspectionListPage() {
               </tr>
             )}
             {insQuery.data?.items.map((i) => (
-              <tr key={i.inspection_number} className="border-t border-slate-100">
+              <tr
+                key={i.inspection_number}
+                className={`border-t border-slate-800 transition-colors hover:bg-slate-800/30 ${
+                  i.pass === false ? "bg-red-500/[0.04]" : ""
+                }`}
+              >
                 <td className="px-3 py-2 font-mono text-xs">
                   <Link to={`./${i.inspection_number}`} className="text-slate-100 hover:underline">
                     {i.inspection_number}
                   </Link>
                 </td>
-                <td className="px-3 py-2">{i.kind}</td>
+                <td className="px-3 py-2 text-slate-100">{KIND_LABEL[i.kind] ?? i.kind}</td>
                 <td className="px-3 py-2 font-mono text-xs">{i.asset_uid ?? <Dash />}</td>
                 <td className="px-3 py-2">{formatDateTime(i.performed_at)}</td>
-                <td className="px-3 py-2">{i.overall_condition ?? <Dash />}</td>
+                <td className="px-3 py-2">
+                  {i.overall_condition === null ? (
+                    <Dash />
+                  ) : (
+                    <ConditionBadge value={i.overall_condition} />
+                  )}
+                </td>
                 <td className="px-3 py-2">
                   {i.pass === null ? (
                     <Dash />
@@ -186,6 +260,29 @@ export function InspectionListPage() {
                       Fail
                     </StatusPill>
                   )}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <RowActions label={`${i.inspection_number} actions`}>
+                    <RowActions.Link to={`./${i.inspection_number}`}>View details</RowActions.Link>
+                    {i.asset_uid && (
+                      <RowActions.Link to={`/${slug}/assets/${i.asset_uid}`}>
+                        View asset
+                      </RowActions.Link>
+                    )}
+                    {i.work_order_number && (
+                      <RowActions.Link to={`/${slug}/work-orders/${i.work_order_number}`}>
+                        View linked WO
+                      </RowActions.Link>
+                    )}
+                    {i.asset_uid && (
+                      <>
+                        <RowActions.Separator />
+                        <RowActions.Link to={`/${slug}/inspections?asset_uid=${i.asset_uid}`}>
+                          All inspections for this asset
+                        </RowActions.Link>
+                      </>
+                    )}
+                  </RowActions>
                 </td>
               </tr>
             ))}

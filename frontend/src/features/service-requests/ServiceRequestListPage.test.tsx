@@ -67,7 +67,9 @@ describe("ServiceRequestListPage", () => {
   });
 
   it("renders rows with status pills and links to WO when dispatched", async () => {
-    renderList();
+    // Default scope is "needs attention" which hides dispatched + closed.
+    // For this assertion we want to see the full list, so land on ?scope=all.
+    renderList("/acme/service-requests?scope=all");
     expect(screen.getByText("Service requests")).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText("SR-2026-00042")).toBeInTheDocument();
@@ -82,9 +84,7 @@ describe("ServiceRequestListPage", () => {
     await waitFor(() => {
       expect(screen.getByText("SR-2026-00042")).toBeInTheDocument();
     });
-    const statusSelect = container.querySelector(
-      "select",
-    ) as HTMLSelectElement | null;
+    const statusSelect = container.querySelector("select") as HTMLSelectElement | null;
     expect(statusSelect).not.toBeNull();
   });
 });

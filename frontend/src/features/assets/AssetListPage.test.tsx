@@ -96,6 +96,14 @@ describe("AssetListPage", () => {
     await waitFor(() => {
       expect(screen.getByText("HYD-00001")).toBeInTheDocument();
     });
+    // Class is now rendered as the human-readable name + small mono
+    // code. "Hydrant" also appears in the filter <option>, so assert
+    // at-least-one match rather than exactly-one.
+    expect(screen.getAllByText("Hydrant").length).toBeGreaterThan(0);
+    expect(screen.getByText("WAT_HYD")).toBeInTheDocument();
+    // Material is hidden behind the optional-columns toggle by default;
+    // enable it and confirm the value renders.
+    await userEvent.click(screen.getByLabelText(/show install date/i));
     expect(screen.getByText("ductile iron")).toBeInTheDocument();
   });
 

@@ -1,13 +1,22 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
+import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
 import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { SummaryBar } from "../../components/SummaryBar";
 import { formatDate } from "../../lib/format";
+import { translateApiError } from "../../lib/translateApiError";
 import { CreateWorkOrderDialog } from "./CreateWorkOrderDialog";
 import { KanbanBoard } from "./KanbanBoard";
-import { type WoPriority, type WoStatus, type WorkOrderListParams } from "./api";
+import {
+  transitionWorkOrder,
+  type WoPriority,
+  type WoStatus,
+  type WorkOrderListParams,
+} from "./api";
 import { useWorkOrders } from "./hooks";
 
 const STATUS_TONE: Record<WoStatus, PillTone> = {
@@ -37,21 +46,61 @@ const STATUSES: WoStatus[] = [
   "cancelled",
 ];
 
+/** Statuses that count as "active" for the default filter — anything
+ *  that's not done. Drives the Active/All tab. */
+const ACTIVE_STATUSES: WoStatus[] = ["open", "assigned", "in_progress", "on_hold"];
+
 export function WorkOrderListPage() {
   const [search, setSearch] = useSearchParams();
   const [createOpen, setCreateOpen] = useState(false);
   const { slug } = useParams<{ slug: string }>();
+  const queryClient = useQueryClient();
 
   const view = search.get("view") === "kanban" ? "kanban" : "list";
+  // Default to Active so supervisors see today's work, not history.
+  const scope = (search.get("scope") as "active" | "all" | "mine") ?? "active";
 
   const params: WorkOrderListParams = {
     status: (search.get("status") as WoStatus) || undefined,
-    assigned_to: search.get("assigned_to") || undefined,
+    assigned_to: scope === "mine" ? "me" : search.get("assigned_to") || undefined,
     q: search.get("q") || undefined,
     page: Number(search.get("page") ?? 1),
     page_size: view === "kanban" ? 200 : 50,
   };
   const woQuery = useWorkOrders(params);
+
+  // Apply scope filter client-side on top of any explicit status filter.
+  // (Backend list endpoint accepts a single status; "active" is a set.)
+  const visibleItems = useMemo(() => {
+    const items = woQuery.data?.items ?? [];
+    if (scope === "active") {
+      return items.filter((w) => ACTIVE_STATUSES.includes(w.status));
+    }
+    return items;
+  }, [woQuery.data, scope]);
+
+  // Summary stats — derived from the visible items.
+  const summary = useMemo(() => {
+    const items = woQuery.data?.items ?? [];
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const todayIso = today.toISOString();
+    return {
+      active: items.filter((w) => ACTIVE_STATUSES.includes(w.status)).length,
+      overdue: items.filter(
+        (w) =>
+          w.due_by && w.due_by < new Date().toISOString() && ACTIVE_STATUSES.includes(w.status),
+      ).length,
+      dueToday: items.filter(
+        (w) => w.due_by && w.due_by <= todayIso && ACTIVE_STATUSES.includes(w.status),
+      ).length,
+      highOrEmergency: items.filter(
+        (w) =>
+          (w.priority === "high" || w.priority === "emergency") &&
+          ACTIVE_STATUSES.includes(w.status),
+      ).length,
+    };
+  }, [woQuery.data]);
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(search);
@@ -61,46 +110,58 @@ export function WorkOrderListPage() {
     setSearch(next);
   }
 
-  function clearFilters() {
-    const next = new URLSearchParams();
-    if (view === "kanban") next.set("view", "kanban");
-    setSearch(next);
-  }
+  const hasFilters = !!(params.status || params.q || (scope !== "active" && scope !== "all"));
 
-  const hasFilters = !!(params.status || params.assigned_to || params.q);
+  // Quick-transition mutation — used by the row-actions menu so a
+  // supervisor can mark a WO complete or in-progress without
+  // navigating into the detail page.
+  const transition = useMutation<unknown, Error, { wo: string; to: WoStatus }>({
+    mutationFn: ({ wo, to }) => transitionWorkOrder(wo, to),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["work-orders"] }),
+    onError: (e) => alert(translateApiError(e)),
+  });
 
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-100">Work orders</h1>
         <div className="flex gap-2">
-          <div className="rounded border border-slate-700 bg-slate-950/40 p-0.5 flex">
-            <button
-              onClick={() => setParam("view", null)}
-              className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                view === "list" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
-              }`}
-            >
-              List
-            </button>
-            <button
-              onClick={() => setParam("view", "kanban")}
-              className={`px-2.5 py-1 text-xs rounded transition-colors ${
-                view === "kanban" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
-              }`}
-            >
-              Kanban
-            </button>
-          </div>
+          <ViewToggle current={view} onChange={(v) => setParam("view", v === "list" ? null : v)} />
           <Button onClick={() => setCreateOpen(true)}>New work order</Button>
         </div>
       </header>
+
+      {/* Summary bar: quick situational read of the open workload. Click
+          the count to drill into a filtered view. */}
+      <SummaryBar>
+        <SummaryBar.Stat label="Active" value={summary.active} tone="default" to="?scope=active" />
+        <SummaryBar.Stat
+          label="Overdue"
+          value={summary.overdue}
+          tone={summary.overdue > 0 ? "danger" : "muted"}
+        />
+        <SummaryBar.Stat
+          label="Due today"
+          value={summary.dueToday}
+          tone={summary.dueToday > 0 ? "warning" : "muted"}
+        />
+        <SummaryBar.Stat
+          label="High / emergency"
+          value={summary.highOrEmergency}
+          tone={summary.highOrEmergency > 0 ? "danger" : "muted"}
+        />
+        <SummaryBar.Stat label="Total in dataset" value={woQuery.data?.total ?? 0} tone="muted" />
+      </SummaryBar>
 
       {createOpen && <CreateWorkOrderDialog onClose={() => setCreateOpen(false)} />}
 
       {view === "list" && (
         <>
-          <div className="flex gap-3 items-end flex-wrap">
+          {/* Scope tabs — Active is default to keep the list focused on
+              what needs attention. "All" shows the full history. */}
+          <ScopeTabs scope={scope} onChange={(s) => setParam("scope", s === "active" ? null : s)} />
+
+          <div className="flex flex-wrap items-end gap-3">
             <label className="block">
               <span className="text-xs text-slate-300">Status</span>
               <select
@@ -111,18 +172,10 @@ export function WorkOrderListPage() {
                 <option value="">Any</option>
                 {STATUSES.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {s.replace("_", " ")}
                   </option>
                 ))}
               </select>
-            </label>
-            <label className="flex items-end gap-2 text-sm pb-1">
-              <input
-                type="checkbox"
-                checked={search.get("assigned_to") === "me"}
-                onChange={(e) => setParam("assigned_to", e.target.checked ? "me" : null)}
-              />
-              <span>Assigned to me</span>
             </label>
             <form
               onSubmit={(e) => {
@@ -138,7 +191,8 @@ export function WorkOrderListPage() {
                   name="q"
                   defaultValue={search.get("q") ?? ""}
                   onBlur={(e) => setParam("q", e.target.value || null)}
-                  className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
+                  placeholder="WO number, title, asset…"
+                  className="mt-1 w-72 rounded border border-slate-700 px-2 py-1 text-sm"
                 />
               </label>
             </form>
@@ -154,32 +208,43 @@ export function WorkOrderListPage() {
                   <th className="px-3 py-2 text-left">Priority</th>
                   <th className="px-3 py-2 text-left">Asset</th>
                   <th className="px-3 py-2 text-left">Due</th>
+                  <th className="px-3 py-2 text-right" />
                 </tr>
               </thead>
               <tbody>
                 {woQuery.isLoading && (
                   <tr>
-                    <td colSpan={6} className="px-3 py-6 text-center text-slate-400">
+                    <td colSpan={7} className="px-3 py-6 text-center text-slate-400">
                       Loading…
                     </td>
                   </tr>
                 )}
-                {woQuery.data?.items.length === 0 && (
+                {visibleItems.length === 0 && !woQuery.isLoading && (
                   <tr>
-                    <td colSpan={6} className="p-0">
+                    <td colSpan={7} className="p-0">
                       <EmptyState
                         title={
-                          hasFilters ? "No work orders match these filters." : "No work orders yet."
+                          scope === "active"
+                            ? "No active work orders."
+                            : hasFilters
+                              ? "No work orders match these filters."
+                              : "No work orders yet."
                         }
                         hint={
-                          hasFilters
-                            ? "Try widening the filters or clearing them."
-                            : "Create one from a service request or directly here."
+                          scope === "active"
+                            ? "Switch to All to see completed/cancelled history, or create a new WO."
+                            : hasFilters
+                              ? "Try widening filters or switching scope to All."
+                              : "Create one from a service request or directly here."
                         }
                         action={
-                          hasFilters ? (
-                            <Button variant="ghost" size="sm" onClick={clearFilters}>
-                              Clear filters
+                          hasFilters || scope === "active" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setParam("scope", "all")}
+                            >
+                              Show all
                             </Button>
                           ) : (
                             <Button size="sm" onClick={() => setCreateOpen(true)}>
@@ -191,26 +256,86 @@ export function WorkOrderListPage() {
                     </td>
                   </tr>
                 )}
-                {woQuery.data?.items.map((w) => (
-                  <tr key={w.wo_number} className="border-t border-slate-100">
-                    <td className="px-3 py-2 font-mono text-xs">
-                      <Link to={`./${w.wo_number}`} className="text-slate-100 hover:underline">
-                        {w.wo_number}
-                      </Link>
-                    </td>
-                    <td className="px-3 py-2">{w.title}</td>
-                    <td className="px-3 py-2">
-                      <StatusPill tone={STATUS_TONE[w.status]} dot>
-                        {w.status.replace("_", " ")}
-                      </StatusPill>
-                    </td>
-                    <td className="px-3 py-2">
-                      <StatusPill tone={PRIORITY_TONE[w.priority]}>{w.priority}</StatusPill>
-                    </td>
-                    <td className="px-3 py-2 font-mono text-xs">{w.asset_uid ?? <Dash />}</td>
-                    <td className="px-3 py-2">{w.due_by ? formatDate(w.due_by) : <Dash />}</td>
-                  </tr>
-                ))}
+                {visibleItems.map((w) => {
+                  const overdue =
+                    !!w.due_by &&
+                    w.due_by < new Date().toISOString() &&
+                    ACTIVE_STATUSES.includes(w.status);
+                  return (
+                    <tr
+                      key={w.wo_number}
+                      className={`border-t border-slate-800 transition-colors hover:bg-slate-800/30 ${
+                        overdue ? "bg-red-500/5" : ""
+                      }`}
+                    >
+                      <td className="px-3 py-2 font-mono text-xs">
+                        <Link to={`./${w.wo_number}`} className="text-slate-100 hover:underline">
+                          {w.wo_number}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2 text-slate-100">{w.title}</td>
+                      <td className="px-3 py-2">
+                        <StatusPill tone={STATUS_TONE[w.status]} dot>
+                          {w.status.replace("_", " ")}
+                        </StatusPill>
+                      </td>
+                      <td className="px-3 py-2">
+                        <StatusPill
+                          tone={PRIORITY_TONE[w.priority]}
+                          dot={w.priority === "emergency"}
+                        >
+                          {w.priority}
+                        </StatusPill>
+                      </td>
+                      <td className="px-3 py-2 font-mono text-xs">{w.asset_uid ?? <Dash />}</td>
+                      <td className="px-3 py-2">
+                        {w.due_by ? (
+                          <span className={overdue ? "text-red-300" : ""}>
+                            {formatDate(w.due_by)}
+                          </span>
+                        ) : (
+                          <Dash />
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <RowActions label={`${w.wo_number} actions`}>
+                          <RowActions.Link to={`./${w.wo_number}`}>View details</RowActions.Link>
+                          {w.asset_uid && (
+                            <RowActions.Link to={`/${slug}/assets/${w.asset_uid}`}>
+                              View asset
+                            </RowActions.Link>
+                          )}
+                          <RowActions.Separator />
+                          {w.status === "open" && (
+                            <RowActions.Action
+                              onClick={() =>
+                                transition.mutate({ wo: w.wo_number, to: "in_progress" })
+                              }
+                            >
+                              Mark in progress
+                            </RowActions.Action>
+                          )}
+                          {(w.status === "in_progress" || w.status === "assigned") && (
+                            <RowActions.Action
+                              onClick={() =>
+                                transition.mutate({ wo: w.wo_number, to: "completed" })
+                              }
+                            >
+                              Mark complete
+                            </RowActions.Action>
+                          )}
+                          {!["completed", "cancelled"].includes(w.status) && (
+                            <RowActions.Action
+                              onClick={() => transition.mutate({ wo: w.wo_number, to: "on_hold" })}
+                            >
+                              Put on hold
+                            </RowActions.Action>
+                          )}
+                        </RowActions>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -218,6 +343,80 @@ export function WorkOrderListPage() {
       )}
 
       {view === "kanban" && <KanbanBoard items={woQuery.data?.items ?? []} slug={slug ?? ""} />}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Active / All / Mine scope tabs.                                            */
+/* -------------------------------------------------------------------------- */
+
+function ScopeTabs({
+  scope,
+  onChange,
+}: {
+  scope: "active" | "all" | "mine";
+  onChange: (s: "active" | "all" | "mine") => void;
+}) {
+  const tabs: { key: "active" | "all" | "mine"; label: string }[] = [
+    { key: "active", label: "Active" },
+    { key: "mine", label: "Mine" },
+    { key: "all", label: "All" },
+  ];
+  return (
+    <div
+      role="tablist"
+      className="inline-flex rounded border border-slate-700 bg-slate-950/40 p-0.5"
+    >
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          role="tab"
+          aria-selected={scope === t.key}
+          type="button"
+          onClick={() => onChange(t.key)}
+          className={`rounded px-3 py-1 text-xs transition-colors ${
+            scope === t.key ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+          }`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* List vs Kanban view toggle.                                                */
+/* -------------------------------------------------------------------------- */
+
+function ViewToggle({
+  current,
+  onChange,
+}: {
+  current: "list" | "kanban";
+  onChange: (v: "list" | "kanban") => void;
+}) {
+  return (
+    <div className="inline-flex rounded border border-slate-700 bg-slate-950/40 p-0.5">
+      <button
+        type="button"
+        onClick={() => onChange("list")}
+        className={`rounded px-2.5 py-1 text-xs transition-colors ${
+          current === "list" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+        }`}
+      >
+        List
+      </button>
+      <button
+        type="button"
+        onClick={() => onChange("kanban")}
+        className={`rounded px-2.5 py-1 text-xs transition-colors ${
+          current === "kanban" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+        }`}
+      >
+        Kanban
+      </button>
     </div>
   );
 }

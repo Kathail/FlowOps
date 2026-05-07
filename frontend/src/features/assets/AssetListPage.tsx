@@ -1,20 +1,40 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
+import { ConditionBadge } from "../../components/ConditionBadge";
 import { Dash } from "../../components/Dash";
+import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
+import { StatusPill, type PillTone } from "../../components/StatusPill";
+import { SummaryBar } from "../../components/SummaryBar";
 import { formatDate } from "../../lib/format";
 import { ExportButton } from "./ExportButton";
 import { ImportDialog } from "./ImportDialog";
 import { useAssetClasses, useAssets } from "./hooks";
-import type { AssetListParams } from "./api";
+import type { AssetListParams, AssetOut } from "./api";
 
 const STATUSES = ["active", "abandoned", "removed", "proposed"] as const;
 
+const STATUS_TONE: Record<AssetOut["status"], PillTone> = {
+  active: "success",
+  proposed: "info",
+  abandoned: "muted",
+  removed: "neutral",
+};
+
+type SortKey = "uid" | "class" | "status" | "condition" | "install" | "material";
+type SortDir = "asc" | "desc";
+
 export function AssetListPage() {
+  const { slug } = useParams<{ slug: string }>();
   const [search, setSearch] = useSearchParams();
   const [pendingQ, setPendingQ] = useState(search.get("q") ?? "");
   const [importOpen, setImportOpen] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
+  const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({
+    key: "uid",
+    dir: "asc",
+  });
 
   const params: AssetListParams = {
     class: search.get("class") ?? undefined,
@@ -26,6 +46,15 @@ export function AssetListPage() {
 
   const classesQuery = useAssetClasses();
   const assetsQuery = useAssets(params);
+
+  // Lookup map: class_code → human-readable name (so the table shows
+  // "Hydrant" instead of "WAT_HYD"). Falls back to the code when the
+  // class catalog hasn't loaded yet.
+  const classNameByCode = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const c of classesQuery.data ?? []) map.set(c.code, c.name);
+    return map;
+  }, [classesQuery.data]);
 
   function setParam(key: string, value: string | null) {
     const next = new URLSearchParams(search);
@@ -42,6 +71,34 @@ export function AssetListPage() {
 
   const hasFilters = !!(params.class || params.status || params.q);
 
+  // Client-side sort within the current page. (Backend list endpoint
+  // doesn't accept a sort parameter yet; once it does, swap this for
+  // server-side sort by passing the key through `setParam("sort", ...)`.)
+  const sortedItems = useMemo(() => {
+    const items = assetsQuery.data?.items ?? [];
+    const sorted = [...items];
+    sorted.sort((a, b) => {
+      const dir = sort.dir === "asc" ? 1 : -1;
+      const cmp = compare(a, b, sort.key, classNameByCode);
+      return cmp * dir;
+    });
+    return sorted;
+  }, [assetsQuery.data, sort, classNameByCode]);
+
+  function toggleSort(key: SortKey) {
+    setSort((prev) =>
+      prev.key === key ? { key, dir: prev.dir === "asc" ? "desc" : "asc" } : { key, dir: "asc" },
+    );
+  }
+
+  // Summary stats — derived from the current page's items + the
+  // total count from the API. With paginated data we can't show
+  // "active" vs "all" accurately across pages without an API change;
+  // surfacing the total + the visible active count is honest.
+  const total = assetsQuery.data?.total ?? 0;
+  const visibleActive = sortedItems.filter((a) => a.status === "active").length;
+  const visibleClasses = new Set(sortedItems.map((a) => a.class_code)).size;
+
   return (
     <div className="p-8 space-y-4">
       <header className="flex items-center justify-between">
@@ -54,9 +111,25 @@ export function AssetListPage() {
         </div>
       </header>
 
+      <SummaryBar>
+        <SummaryBar.Stat label="Total" value={total} />
+        <SummaryBar.Stat
+          label="Active on this page"
+          value={visibleActive}
+          sub={`of ${sortedItems.length} shown`}
+          tone="success"
+        />
+        <SummaryBar.Stat label="Classes on page" value={visibleClasses} />
+        <SummaryBar.Stat
+          label="Class catalogue"
+          value={classesQuery.data?.length ?? "—"}
+          to={`/${slug}/admin/asset-classes`}
+        />
+      </SummaryBar>
+
       {importOpen && <ImportDialog onClose={() => setImportOpen(false)} />}
 
-      <div className="flex gap-3 items-end flex-wrap">
+      <div className="flex flex-wrap items-end gap-3">
         <label className="block">
           <span className="text-xs text-slate-300">Class</span>
           <select
@@ -67,7 +140,7 @@ export function AssetListPage() {
             <option value="">All classes</option>
             {classesQuery.data?.map((c) => (
               <option key={c.code} value={c.code}>
-                {c.name} ({c.code})
+                {c.name}
               </option>
             ))}
           </select>
@@ -99,45 +172,70 @@ export function AssetListPage() {
             <input
               value={pendingQ}
               onChange={(e) => setPendingQ(e.target.value)}
-              placeholder="uid, material, manufacturer…"
-              className="mt-1 rounded border border-slate-700 px-2 py-1 text-sm w-64"
+              placeholder="UID, material, manufacturer, model…"
+              className="mt-1 w-72 rounded border border-slate-700 px-2 py-1 text-sm"
             />
           </label>
           <Button type="submit" size="sm">
             Search
           </Button>
         </form>
+        <label className="flex items-end gap-2 pb-1 text-sm">
+          <input
+            type="checkbox"
+            checked={showOptional}
+            onChange={(e) => setShowOptional(e.target.checked)}
+          />
+          <span className="text-slate-300">Show install date + material</span>
+        </label>
       </div>
 
       <div className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/50 text-slate-300">
             <tr>
-              <th className="px-3 py-2 text-left">UID</th>
-              <th className="px-3 py-2 text-left">Class</th>
-              <th className="px-3 py-2 text-left">Status</th>
-              <th className="px-3 py-2 text-left">Condition</th>
-              <th className="px-3 py-2 text-left">Install date</th>
-              <th className="px-3 py-2 text-left">Material</th>
+              <SortHeader sort={sort} k="uid" onToggle={toggleSort}>
+                UID
+              </SortHeader>
+              <SortHeader sort={sort} k="class" onToggle={toggleSort}>
+                Class
+              </SortHeader>
+              <SortHeader sort={sort} k="status" onToggle={toggleSort}>
+                Status
+              </SortHeader>
+              <SortHeader sort={sort} k="condition" onToggle={toggleSort}>
+                Condition
+              </SortHeader>
+              {showOptional && (
+                <>
+                  <SortHeader sort={sort} k="install" onToggle={toggleSort}>
+                    Install date
+                  </SortHeader>
+                  <SortHeader sort={sort} k="material" onToggle={toggleSort}>
+                    Material
+                  </SortHeader>
+                </>
+              )}
+              <th className="px-3 py-2 text-right">{/* actions */}</th>
             </tr>
           </thead>
           <tbody>
             {assetsQuery.isLoading && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-slate-400 text-center">
+                <td colSpan={showOptional ? 7 : 5} className="px-3 py-6 text-slate-400 text-center">
                   Loading…
                 </td>
               </tr>
             )}
-            {assetsQuery.data?.items.length === 0 && (
+            {sortedItems.length === 0 && !assetsQuery.isLoading && (
               <tr>
-                <td colSpan={6} className="p-0">
+                <td colSpan={showOptional ? 7 : 5} className="p-0">
                   <EmptyState
                     title={hasFilters ? "No assets match these filters." : "No assets yet."}
                     hint={
                       hasFilters
                         ? "Try widening the filters or clearing them."
-                        : "Import a CSV or add an asset on the map to get started."
+                        : "Import a CSV/GeoJSON, or add a Point asset directly on the map."
                     }
                     action={
                       hasFilters ? (
@@ -154,20 +252,58 @@ export function AssetListPage() {
                 </td>
               </tr>
             )}
-            {assetsQuery.data?.items.map((a) => (
-              <tr key={a.asset_uid} className="border-t border-slate-100">
+            {sortedItems.map((a) => (
+              <tr
+                key={a.asset_uid}
+                className="border-t border-slate-800 transition-colors hover:bg-slate-800/30"
+              >
                 <td className="px-3 py-2 font-mono text-xs">
                   <Link to={`./${a.asset_uid}`} className="text-slate-100 hover:underline">
                     {a.asset_uid}
                   </Link>
                 </td>
-                <td className="px-3 py-2">{a.class_code}</td>
-                <td className="px-3 py-2">{a.status}</td>
-                <td className="px-3 py-2">{a.condition ?? <Dash />}</td>
                 <td className="px-3 py-2">
-                  {a.install_date ? formatDate(a.install_date) : <Dash />}
+                  {/* Human-readable name + small mono code beneath. The
+                      code is still useful (CSV imports, search) but
+                      shouldn't be the primary thing the eye lands on. */}
+                  <div className="leading-tight">
+                    <p className="text-slate-100">
+                      {classNameByCode.get(a.class_code) ?? a.class_code}
+                    </p>
+                    <p className="font-mono text-[10px] text-slate-500">{a.class_code}</p>
+                  </div>
                 </td>
-                <td className="px-3 py-2">{a.material ?? <Dash />}</td>
+                <td className="px-3 py-2">
+                  <StatusPill tone={STATUS_TONE[a.status]} dot>
+                    {a.status}
+                  </StatusPill>
+                </td>
+                <td className="px-3 py-2">
+                  {a.condition === null ? <Dash /> : <ConditionBadge value={a.condition} />}
+                </td>
+                {showOptional && (
+                  <>
+                    <td className="px-3 py-2">
+                      {a.install_date ? formatDate(a.install_date) : <Dash />}
+                    </td>
+                    <td className="px-3 py-2">{a.material ?? <Dash />}</td>
+                  </>
+                )}
+                <td className="px-3 py-2 text-right">
+                  <RowActions label={`${a.asset_uid} actions`}>
+                    <RowActions.Link to={`./${a.asset_uid}`}>View details</RowActions.Link>
+                    <RowActions.Link to={`/${slug}/work-orders?asset_uid=${a.asset_uid}`}>
+                      View work orders
+                    </RowActions.Link>
+                    <RowActions.Link to={`/${slug}/inspections?asset_uid=${a.asset_uid}`}>
+                      View inspections
+                    </RowActions.Link>
+                    <RowActions.Separator />
+                    <RowActions.Link to={`/${slug}/map?focus=${a.asset_uid}`}>
+                      Locate on map
+                    </RowActions.Link>
+                  </RowActions>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -203,4 +339,61 @@ export function AssetListPage() {
       )}
     </div>
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Sortable header cell — chevron indicates active sort + direction.          */
+/* -------------------------------------------------------------------------- */
+
+function SortHeader({
+  k,
+  sort,
+  onToggle,
+  children,
+}: {
+  k: SortKey;
+  sort: { key: SortKey; dir: SortDir };
+  onToggle: (k: SortKey) => void;
+  children: string;
+}) {
+  const active = sort.key === k;
+  return (
+    <th className="px-3 py-2 text-left">
+      <button
+        type="button"
+        onClick={() => onToggle(k)}
+        className={`inline-flex items-center gap-1 transition-colors ${
+          active ? "text-slate-100" : "text-slate-300 hover:text-slate-100"
+        }`}
+        aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
+      >
+        {children}
+        <span className="text-[10px] text-slate-500" aria-hidden="true">
+          {active ? (sort.dir === "asc" ? "▲" : "▼") : "▾"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+function compare(a: AssetOut, b: AssetOut, key: SortKey, classNames: Map<string, string>): number {
+  switch (key) {
+    case "uid":
+      return a.asset_uid.localeCompare(b.asset_uid);
+    case "class": {
+      const an = classNames.get(a.class_code) ?? a.class_code;
+      const bn = classNames.get(b.class_code) ?? b.class_code;
+      return an.localeCompare(bn);
+    }
+    case "status":
+      return a.status.localeCompare(b.status);
+    case "condition":
+      return (a.condition ?? 99) - (b.condition ?? 99);
+    case "install":
+      return (a.install_date ?? "").localeCompare(b.install_date ?? "");
+    case "material":
+      return (a.material ?? "").localeCompare(b.material ?? "");
+    default:
+      return 0;
+  }
 }
