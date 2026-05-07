@@ -126,6 +126,10 @@ export interface WorkOrderDetail extends WorkOrderListItem {
 
 export interface WorkOrderListParams {
   status?: WoStatus;
+  /** Comma-separated multi-status filter — e.g. "open,assigned,in_progress,on_hold". */
+  status_in?: string;
+  /** "1" → only WOs whose due_by has passed and are still in an active status. */
+  overdue?: "1";
   assigned_to?: string;
   crew_id?: number;
   asset_uid?: string;

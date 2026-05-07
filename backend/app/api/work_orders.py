@@ -287,6 +287,28 @@ def list_work_orders():
     if status:
         stmt = stmt.where(WorkOrder.status == status)
 
+    # `status_in` — comma-separated multi-status filter so the frontend's
+    # "Active" tab can ask the backend for {open,assigned,in_progress,on_hold}
+    # in one go instead of filtering a paginated page client-side. Without
+    # this the dashboard's "X open WOs" KPI and the linked list view
+    # disagree when there are more than `page_size` rows in the tenant.
+    status_in_raw = request.args.get("status_in")
+    if status_in_raw:
+        wanted = {s.strip() for s in status_in_raw.split(",") if s.strip()}
+        if wanted:
+            stmt = stmt.where(WorkOrder.status.in_(wanted))
+
+    # `overdue=1` — server-side overdue filter so the dashboard's Overdue
+    # tile lands on a list whose total count matches the KPI. "Overdue"
+    # means due_by has passed and the WO is still in an active status.
+    if request.args.get("overdue") == "1":
+        active_statuses = ("open", "assigned", "in_progress", "on_hold")
+        stmt = stmt.where(
+            WorkOrder.due_by.isnot(None),
+            WorkOrder.due_by < datetime.now(UTC),
+            WorkOrder.status.in_(active_statuses),
+        )
+
     assigned_to = request.args.get("assigned_to")
     if assigned_to == "me":
         stmt = stmt.where(WorkOrder.assigned_to == current_user.id)

@@ -74,6 +74,46 @@ def test_filter_by_status(admin_client):
     assert all(w["status"] == "open" for w in body["items"])
 
 
+def test_filter_status_in_multi(admin_client):
+    """status_in lets the dashboard's "Active" filter ask for the full
+    {open,assigned,in_progress,on_hold} set in one query. Without this
+    the frontend was filtering a single page client-side and KPIs
+    diverged from the displayed list."""
+    a = _create_wo(admin_client)
+    b = _create_wo(admin_client)
+    c = _create_wo(admin_client)
+    admin_client.post(f"/api/v1/work-orders/{a['wo_number']}/transition", json={"to": "open"})
+    admin_client.post(f"/api/v1/work-orders/{b['wo_number']}/transition", json={"to": "open"})
+    admin_client.post(f"/api/v1/work-orders/{b['wo_number']}/transition", json={"to": "assigned"})
+    admin_client.post(f"/api/v1/work-orders/{c['wo_number']}/transition", json={"to": "open"})
+    admin_client.post(f"/api/v1/work-orders/{c['wo_number']}/transition", json={"to": "assigned"})
+    admin_client.post(f"/api/v1/work-orders/{c['wo_number']}/transition", json={"to": "in_progress"})
+    admin_client.post(f"/api/v1/work-orders/{c['wo_number']}/transition", json={"to": "completed"})
+
+    body = admin_client.get("/api/v1/work-orders?status_in=open,assigned,in_progress,on_hold").get_json()
+    statuses = {w["status"] for w in body["items"]}
+    assert "completed" not in statuses
+    assert {a["wo_number"], b["wo_number"]}.issubset({w["wo_number"] for w in body["items"]})
+    assert all(w["wo_number"] != c["wo_number"] for w in body["items"])
+
+
+def test_filter_overdue(admin_client):
+    """overdue=1 returns only WOs whose due_by has passed and which are
+    still in an active status. The frontend's overdue tile relies on
+    this matching the dashboard's overdue KPI."""
+    past = (datetime.now(UTC) - timedelta(days=2)).isoformat()
+    future = (datetime.now(UTC) + timedelta(days=2)).isoformat()
+    overdue_wo = _create_wo(admin_client, due_by=past)
+    on_time_wo = _create_wo(admin_client, due_by=future)
+    admin_client.post(f"/api/v1/work-orders/{overdue_wo['wo_number']}/transition", json={"to": "open"})
+    admin_client.post(f"/api/v1/work-orders/{on_time_wo['wo_number']}/transition", json={"to": "open"})
+
+    body = admin_client.get("/api/v1/work-orders?overdue=1").get_json()
+    nums = {w["wo_number"] for w in body["items"]}
+    assert overdue_wo["wo_number"] in nums
+    assert on_time_wo["wo_number"] not in nums
+
+
 def test_filter_assigned_to_me(admin_client, admin_user):
     body = _create_wo(admin_client, assigned_to=admin_user.id)
     listing = admin_client.get("/api/v1/work-orders?assigned_to=me").get_json()

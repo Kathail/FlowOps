@@ -81,9 +81,21 @@ export function WorkOrderListPage() {
   const view = search.get("view") === "kanban" ? "kanban" : "list";
   // Default to Active so supervisors see today's work, not history.
   const scope = (search.get("scope") as "active" | "all" | "mine") ?? "active";
+  const overdueOnly = search.get("overdue") === "1";
+
+  // Hand the scope/overdue filters to the backend so the page's `total`
+  // matches the dashboard KPIs. Previous client-side filtering only
+  // operated on the visible 50-row page, so a tenant with hundreds of
+  // WOs saw "47 overdue" on the dashboard and 3 on this page.
+  // Explicit ?status= still wins because users can override the scope
+  // by picking a single status in the filter dropdown.
+  const explicitStatus = (search.get("status") as WoStatus) || undefined;
+  const statusIn = !explicitStatus && scope === "active" ? ACTIVE_STATUSES.join(",") : undefined;
 
   const params: WorkOrderListParams = {
-    status: (search.get("status") as WoStatus) || undefined,
+    status: explicitStatus,
+    status_in: statusIn,
+    overdue: overdueOnly ? "1" : undefined,
     assigned_to: scope === "mine" ? "me" : search.get("assigned_to") || undefined,
     q: search.get("q") || undefined,
     page: Number(search.get("page") ?? 1),
@@ -91,48 +103,18 @@ export function WorkOrderListPage() {
   };
   const woQuery = useWorkOrders(params);
 
-  // Apply scope filter client-side on top of any explicit status filter.
-  // ?overdue=1 deep-link from the dashboard filters to active WOs whose
-  // due_by has passed (DASH-P1-1). Backend doesn't support an overdue
-  // query param yet, so we filter client-side. When a backend `overdue`
-  // is added, swap to that and drop this branch.
-  const overdueOnly = search.get("overdue") === "1";
+  // No more client-side scope/overdue filtering — the backend already
+  // applied them. visibleItems == server items.
+  const visibleItems = useMemo(() => woQuery.data?.items ?? [], [woQuery.data]);
 
-  // (Backend list endpoint accepts a single status; "active" is a set.)
-  const visibleItems = useMemo(() => {
-    let items = woQuery.data?.items ?? [];
-    if (scope === "active") {
-      items = items.filter((w) => ACTIVE_STATUSES.includes(w.status));
-    }
-    if (overdueOnly) {
-      const nowIso = new Date().toISOString();
-      items = items.filter(
-        (w) => w.due_by != null && w.due_by < nowIso && ACTIVE_STATUSES.includes(w.status),
-      );
-    }
-    return items;
-  }, [woQuery.data, scope, overdueOnly]);
-
-  // Summary stats — derived from the visible items.
+  // Summary stats are scoped to the *current page's items*, which is
+  // misleading on tenants with more than `page_size` rows. Drop the
+  // client-derived overdue/dueToday/highOrEmergency — only `active`
+  // (which equals the page total when scope=active) survives.
   const summary = useMemo(() => {
     const items = woQuery.data?.items ?? [];
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const todayIso = today.toISOString();
     return {
       active: items.filter((w) => ACTIVE_STATUSES.includes(w.status)).length,
-      overdue: items.filter(
-        (w) =>
-          w.due_by && w.due_by < new Date().toISOString() && ACTIVE_STATUSES.includes(w.status),
-      ).length,
-      dueToday: items.filter(
-        (w) => w.due_by && w.due_by <= todayIso && ACTIVE_STATUSES.includes(w.status),
-      ).length,
-      highOrEmergency: items.filter(
-        (w) =>
-          (w.priority === "high" || w.priority === "emergency") &&
-          ACTIVE_STATUSES.includes(w.status),
-      ).length,
     };
   }, [woQuery.data]);
 
@@ -170,25 +152,15 @@ export function WorkOrderListPage() {
         </div>
       </header>
 
-      {/* Summary bar: quick situational read of the open workload. Click
-          the count to drill into a filtered view. */}
+      {/* Summary bar: quick situational read. Counts are scoped to the
+          current filter — `Total in dataset` reflects the backend total
+          for whatever scope/status is applied, so the dashboard KPIs
+          and this view always agree. Per-page-only metrics (Due today,
+          High/emergency without a backend filter) were removed because
+          they lied on tenants with more rows than fit on one page. */}
       <SummaryBar>
         <SummaryBar.Stat label="Active" value={summary.active} tone="default" to="?scope=active" />
-        <SummaryBar.Stat
-          label="Overdue"
-          value={summary.overdue}
-          tone={summary.overdue > 0 ? "danger" : "muted"}
-        />
-        <SummaryBar.Stat
-          label="Due today"
-          value={summary.dueToday}
-          tone={summary.dueToday > 0 ? "warning" : "muted"}
-        />
-        <SummaryBar.Stat
-          label="High / emergency"
-          value={summary.highOrEmergency}
-          tone={summary.highOrEmergency > 0 ? "danger" : "muted"}
-        />
+        <SummaryBar.Stat label="On this page" value={visibleItems.length} tone="muted" />
         <SummaryBar.Stat label="Total in dataset" value={woQuery.data?.total ?? 0} tone="muted" />
       </SummaryBar>
 
