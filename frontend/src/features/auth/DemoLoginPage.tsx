@@ -79,7 +79,19 @@ export function DemoLoginPage() {
       try {
         setPhase({ kind: "loading", step: "posting" });
         console.log("[demo] POST /api/v1/auth/login");
-        const data = await login(DEMO_LOGIN);
+
+        // Hard timeout so a hung fetch (intercepted, SW bug, CSP block,
+        // misbehaving network) surfaces as a clear failure instead of
+        // an indefinite spinner.
+        const data = await Promise.race([
+          login(DEMO_LOGIN),
+          new Promise<never>((_, reject) =>
+            window.setTimeout(
+              () => reject(new Error("Login request timed out after 12 seconds.")),
+              12_000,
+            ),
+          ),
+        ]);
         if (cancelled) return;
         console.log("[demo] login ok", { slug: data.tenant.slug });
         setPhase({ kind: "loading", step: "navigating" });
