@@ -100,8 +100,8 @@ export function AssetListPage() {
   const visibleClasses = new Set(sortedItems.map((a) => a.class_code)).size;
 
   return (
-    <div className="p-8 space-y-4">
-      <header className="flex items-center justify-between">
+    <div className="p-4 sm:p-8 space-y-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-slate-100">Assets</h1>
         <div className="flex gap-2">
           <Button variant="ghost" onClick={() => setImportOpen(true)}>

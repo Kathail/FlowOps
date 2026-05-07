@@ -64,7 +64,7 @@ export function WorkOrderDetailPage() {
   const wo = woQuery.data!;
 
   return (
-    <div className="p-8 space-y-6 max-w-4xl">
+    <div className="p-4 sm:p-8 space-y-6 max-w-4xl">
       <header className="space-y-1">
         <Link to={`/${slug}/work-orders`} className="text-sm text-slate-400 hover:underline">
           ← Back to work orders

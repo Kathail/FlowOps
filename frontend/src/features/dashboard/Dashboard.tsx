@@ -44,7 +44,7 @@ export function Dashboard({ user, tenant }: Props) {
   });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 p-6">
+    <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
       <header>
         <h1 className="text-xl font-semibold text-slate-100">
           Welcome, {user.full_name.split(" ")[0]}

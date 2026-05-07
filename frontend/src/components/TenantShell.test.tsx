@@ -58,8 +58,11 @@ describe("TenantShell", () => {
 
   it("renders the tenant header, nav, and outlet content", async () => {
     renderShell();
+    // The tenant name renders in two places (mobile top bar + desktop
+    // sidebar) — both are in the DOM under jsdom since media queries
+    // don't gate the markup. Asserting >= 1 covers both.
     await waitFor(() => {
-      expect(screen.getByText("Acme Water")).toBeInTheDocument();
+      expect(screen.getAllByText("Acme Water").length).toBeGreaterThan(0);
     });
     expect(screen.getByText(/Assets/)).toBeInTheDocument();
     expect(screen.getByText(/Home/)).toBeInTheDocument();
