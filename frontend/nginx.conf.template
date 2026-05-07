@@ -14,11 +14,13 @@ server {
     # request. Without this, nginx caches the backend's IP at startup
     # and never refreshes; when Railway redeploys the backend its
     # private IP changes and we get connect-timeout 504s.
-    # ${DNS_RESOLVER} is populated by docker-entrypoint-resolver.sh from
-    # the container's /etc/resolv.conf (Railway's platform resolver) so
-    # *.railway.internal hostnames actually resolve. Falls back to
-    # public DNS in the entrypoint if resolv.conf is empty.
-    resolver ${DNS_RESOLVER} valid=10s ipv6=off;
+    #
+    # ${NGINX_LOCAL_RESOLVERS} is populated by nginx-alpine's
+    # /docker-entrypoint.d/15-local-resolvers.envsh from /etc/resolv.conf
+    # — see the matching ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1 in the
+    # Dockerfile. The helper bracket-wraps IPv6 resolvers like Railway's
+    # fd12::10 so nginx parses them correctly.
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=10s;
     set $upstream "${BACKEND_URL}";
 
     # Long cache for hashed assets (Vite emits content-hashed filenames).
