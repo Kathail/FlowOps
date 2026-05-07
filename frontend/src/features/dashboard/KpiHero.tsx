@@ -41,10 +41,10 @@ export function KpiHero({ data, slug }: Props) {
           value={wo.open}
           sub={`${wo.in_progress} in progress`}
           accent="blue"
-          quickAction={{
-            to: `/${slug}/work-orders?new=1`,
-            label: "+ New work order",
-          }}
+          quickActions={[
+            { to: `/${slug}/work-orders?scope=mine`, label: "Just mine →" },
+            { to: `/${slug}/work-orders?new=1`, label: "+ New WO" },
+          ]}
         />
         <KpiTile
           to={`/${slug}/work-orders?overdue=1`}
@@ -52,12 +52,9 @@ export function KpiHero({ data, slug }: Props) {
           value={wo.overdue}
           sub={wo.stale_open ? `${wo.stale_open} stale 30d+` : "all on time"}
           accent={wo.overdue > 0 ? "red" : "neutral"}
-          quickAction={
+          quickActions={
             wo.overdue > 0
-              ? {
-                  to: `/${slug}/work-orders?overdue=1`,
-                  label: "Review overdue →",
-                }
+              ? [{ to: `/${slug}/work-orders?overdue=1`, label: "Review overdue →" }]
               : undefined
           }
         />
@@ -67,12 +64,9 @@ export function KpiHero({ data, slug }: Props) {
           value={sr.new}
           sub={`${sr.triaged} triaged · ${sr.dispatched} dispatched`}
           accent={sr.new > 0 ? "amber" : "neutral"}
-          quickAction={
+          quickActions={
             sr.new > 0
-              ? {
-                  to: `/${slug}/service-requests?scope=attention`,
-                  label: "Triage queue →",
-                }
+              ? [{ to: `/${slug}/service-requests?scope=attention`, label: "Triage queue →" }]
               : undefined
           }
         />
@@ -139,14 +133,14 @@ function KpiTile({
   value,
   sub,
   accent,
-  quickAction,
+  quickActions,
 }: {
   to: string;
   label: string;
   value: number;
   sub?: string;
   accent: keyof typeof ACCENT;
-  quickAction?: QuickAction;
+  quickActions?: QuickAction[];
 }) {
   const a = ACCENT[accent];
   return (
@@ -190,13 +184,18 @@ function KpiTile({
       {/* Quick action — visible on hover or when keyboard-focused.
           Lets a supervisor jump from "I see overdue WOs" straight
           to the action without reading the value first. */}
-      {quickAction && (
-        <Link
-          to={quickAction.to}
-          className="border-t border-slate-800 bg-slate-950/40 px-5 py-1.5 pl-6 text-[11px] font-medium text-slate-400 opacity-0 transition-all hover:bg-slate-800/40 hover:text-slate-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/40 group-hover/tile:opacity-100"
-        >
-          {quickAction.label}
-        </Link>
+      {quickActions && quickActions.length > 0 && (
+        <div className="flex flex-wrap items-stretch divide-x divide-slate-800 border-t border-slate-800 bg-slate-950/40 opacity-0 transition-all focus-within:opacity-100 group-hover/tile:opacity-100">
+          {quickActions.map((qa) => (
+            <Link
+              key={qa.to + qa.label}
+              to={qa.to}
+              className="flex-1 px-5 py-1.5 pl-6 text-[11px] font-medium text-slate-400 transition-colors hover:bg-slate-800/40 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/40"
+            >
+              {qa.label}
+            </Link>
+          ))}
+        </div>
       )}
     </div>
   );

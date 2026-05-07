@@ -16,6 +16,25 @@ import {
   type WorkOrderDetail,
 } from "./api";
 
+/** Most common asset class on this WO so the AssetPicker can default
+ * its class filter to it — second/third stop adds don't make the
+ * operator re-pick the same class every time. Returns undefined for
+ * an empty WO so the picker stays "Any class". */
+function mostCommonClassOf(assets: { class_code: string }[]): string | undefined {
+  if (!assets.length) return undefined;
+  const counts = new Map<string, number>();
+  for (const a of assets) counts.set(a.class_code, (counts.get(a.class_code) ?? 0) + 1);
+  let best: string | undefined;
+  let bestN = 0;
+  for (const [code, n] of counts) {
+    if (n > bestN) {
+      best = code;
+      bestN = n;
+    }
+  }
+  return best;
+}
+
 /** Render the first matching smart_comment for `taskData` against the
  * task definition. Returns null when nothing applies. Mirrors the
  * SmartCommentChips pick logic so the operator gets the same narrative
@@ -156,6 +175,7 @@ export function RouteSection({
       {pickerOpen && (
         <AssetPicker
           existingUids={new Set(wo.assets.map((a) => a.asset_uid))}
+          defaultClass={mostCommonClassOf(wo.assets)}
           onClose={() => setPickerOpen(false)}
           onAdd={(uids) => add.mutate(uids)}
           isPending={add.isPending}
@@ -354,17 +374,22 @@ function FreeTextNote({
 
 function AssetPicker({
   existingUids,
+  defaultClass,
   onClose,
   onAdd,
   isPending,
 }: {
   existingUids: Set<string>;
+  /** When the WO already has stops, default the class filter to the
+   * most-common existing class so adding the second asset doesn't make
+   * the operator re-pick it from scratch. */
+  defaultClass?: string;
   onClose: () => void;
   onAdd: (uids: string[]) => void;
   isPending: boolean;
 }) {
   const [q, setQ] = useState("");
-  const [classCode, setClassCode] = useState("");
+  const [classCode, setClassCode] = useState(defaultClass ?? "");
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
   const assetsQuery = useAssets(

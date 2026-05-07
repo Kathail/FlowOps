@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Alert } from "../../components/Alert";
@@ -146,6 +146,55 @@ export function ServiceRequestListPage() {
     });
   }
 
+  /**
+   * Same defer-then-undo pattern as deferMutate, but for a batch. One
+   * toast summarises the batch; one undo cancels the whole set. Used
+   * by the bulk action bar so triaging 12 SRs is one action with one
+   * undo, not 12 toasts.
+   */
+  function deferBulk(srs: string[], status: MutableSrStatus, label: string) {
+    if (srs.length === 0) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      if (cancelled) return;
+      for (const sr of srs) update.mutate({ sr, status });
+    }, 4000);
+    showToast({
+      message: `${srs.length} request${srs.length === 1 ? "" : "s"} ${label}.`,
+      tone: "success",
+      ttl: 4000,
+      undo: () => {
+        cancelled = true;
+        window.clearTimeout(timer);
+      },
+    });
+    setSelected(new Set());
+  }
+
+  // Bulk-select state. Cleared on filter change so the operator doesn't
+  // accidentally apply an action to rows they no longer see.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setSelected(new Set());
+  }, [params.status, params.category, params.domain, params.q, scope]);
+
+  function toggleSelect(sr: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(sr)) next.delete(sr);
+      else next.add(sr);
+      return next;
+    });
+  }
+  function toggleSelectAllVisible() {
+    setSelected((prev) => {
+      const allUids = visibleItems.map((s) => s.sr_number);
+      const allSelected = allUids.every((u) => prev.has(u));
+      if (allSelected) return new Set();
+      return new Set(allUids);
+    });
+  }
+
   const hasFilters = !!(
     params.status ||
     params.category ||
@@ -253,10 +302,60 @@ export function ServiceRequestListPage() {
         </form>
       </div>
 
+      {/* Bulk action bar — only renders when there's a selection. The
+          actions hit `deferBulk` so the same toast+undo pattern as the
+          row-action menu applies; one undo click cancels every queued
+          mutation. */}
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-blue-500/30 bg-blue-500/5 px-3 py-2 text-sm text-slate-100">
+          <span className="font-medium">{selected.size} selected</span>
+          <span className="flex-1" />
+          <button
+            type="button"
+            onClick={() => deferBulk([...selected], "triaged", "marked triaged")}
+            className="rounded border border-slate-600 px-2 py-1 text-xs hover:border-slate-400"
+          >
+            Mark triaged
+          </button>
+          <button
+            type="button"
+            onClick={() => deferBulk([...selected], "duplicate", "marked as duplicate")}
+            className="rounded border border-slate-600 px-2 py-1 text-xs hover:border-slate-400"
+          >
+            Mark duplicate
+          </button>
+          <button
+            type="button"
+            onClick={() => deferBulk([...selected], "closed", "closed")}
+            className="rounded border border-red-500/40 px-2 py-1 text-xs text-red-200 hover:border-red-400"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-slate-400 hover:text-slate-200"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded border border-slate-800 bg-slate-900">
         <table className="w-full text-sm">
           <thead className="bg-slate-800/50 text-left text-xs uppercase text-slate-400">
             <tr>
+              <th className="w-8 px-3 py-2">
+                <input
+                  type="checkbox"
+                  aria-label="Select all"
+                  checked={
+                    visibleItems.length > 0 && visibleItems.every((s) => selected.has(s.sr_number))
+                  }
+                  onChange={toggleSelectAllVisible}
+                  className="h-4 w-4"
+                />
+              </th>
               <th className="px-3 py-2">Number</th>
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Priority</th>
@@ -277,6 +376,15 @@ export function ServiceRequestListPage() {
                   key={sr.sr_number}
                   className={`hover:bg-slate-800/40 ${urgent && sr.status !== "closed" ? "bg-red-500/[0.03]" : ""}`}
                 >
+                  <td className="px-3 py-2">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${sr.sr_number}`}
+                      checked={selected.has(sr.sr_number)}
+                      onChange={() => toggleSelect(sr.sr_number)}
+                      className="h-4 w-4"
+                    />
+                  </td>
                   <td className="px-3 py-2 font-medium">
                     <Link
                       to={`/${slug}/service-requests/${sr.sr_number}`}
@@ -373,7 +481,7 @@ export function ServiceRequestListPage() {
             })}
             {visibleItems.length === 0 && (
               <tr>
-                <td colSpan={10} className="p-0">
+                <td colSpan={11} className="p-0">
                   <EmptyState
                     title={
                       scope === "attention" && !hasFilters
