@@ -52,7 +52,7 @@ export function SmartCommentChips({ smartComments, taskData, onPick, className }
             key={s.id}
             type="button"
             onClick={() => onPick(s.text)}
-            className="min-h-11 max-w-full rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-left text-sm text-blue-100 hover:border-blue-400 hover:bg-blue-500/20"
+            className="min-h-11 max-w-full rounded-full border border-signal/40 bg-signal/10 px-3 py-1.5 text-left text-sm text-blue-100 hover:border-signal hover:bg-signal/20"
             title="Tap to insert. You can edit it after."
           >
             {s.text}

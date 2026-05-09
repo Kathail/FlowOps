@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
+import { PageHeader } from "../../components/PageHeader";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
@@ -205,10 +206,11 @@ export function ServiceRequestListPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-slate-100">Service requests</h1>
-        <Button onClick={() => setIntakeOpen(true)}>New intake</Button>
-      </header>
+      <PageHeader
+        eyebrow="Citizen intake"
+        title="Service requests"
+        trailing={<Button onClick={() => setIntakeOpen(true)}>New intake</Button>}
+      />
 
       <SummaryBar>
         <SummaryBar.Stat
@@ -307,7 +309,7 @@ export function ServiceRequestListPage() {
           row-action menu applies; one undo click cancels every queued
           mutation. */}
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-md border border-blue-500/30 bg-blue-500/5 px-3 py-2 text-sm text-slate-100">
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-signal/30 bg-signal/5 px-3 py-2 text-sm text-slate-100">
           <span className="font-medium">{selected.size} selected</span>
           <span className="flex-1" />
           <button
@@ -547,7 +549,7 @@ function ScopeTabs({
           type="button"
           onClick={() => onChange(k)}
           className={`rounded px-3 py-1 text-xs capitalize transition-colors ${
-            scope === k ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+            scope === k ? "bg-signal/20 text-white" : "text-slate-400 hover:text-slate-100"
           }`}
         >
           {k === "attention" ? "Needs attention" : "All"}

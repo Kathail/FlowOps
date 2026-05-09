@@ -62,18 +62,10 @@ export function Dashboard({ user, tenant }: Props) {
 
   return (
     <div className="relative min-h-full">
-      {/* Faint dot grid behind the whole page — gives the operations-
-          console feel without becoming visual noise. ~6%-opacity dots
-          on a 32px grid; invisible to anyone not specifically looking. */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgb(148 163 184) 1px, transparent 0)",
-          backgroundSize: "32px 32px",
-        }}
-      />
+      {/* Faint dot grid behind the whole page (.dot-grid-bg from
+          index.css) — operations-console feel without competing for
+          attention. */}
+      <div aria-hidden className="dot-grid-bg" />
 
       <div className="relative z-10 mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
         <DashboardHeader user={user} tenant={tenant} />
@@ -103,15 +95,11 @@ function DashboardHeader({ user, tenant }: Props) {
   return (
     <header className="flex items-baseline justify-between gap-4 border-b border-slate-800/60 pb-3">
       <div className="flex items-baseline gap-3">
-        <h1 className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-500">
-          {tenant.name}
-        </h1>
+        <h1 className="section-label">{tenant.name}</h1>
         <span className="text-slate-700">/</span>
-        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">
-          Operations
-        </span>
+        <span className="section-label-strong">Operations</span>
       </div>
-      <div className="flex items-baseline gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-500">
+      <div className="flex items-baseline gap-3 section-label">
         <span>{date}</span>
         <span className="text-slate-700">·</span>
         <span className="tabular-nums text-slate-300">{time}</span>

@@ -50,7 +50,7 @@ export function TaskCatalog() {
                   <td className="px-3 py-2 font-mono text-xs text-slate-300">
                     <Link
                       to={`/${slug}/admin/task-definitions/${td.code}`}
-                      className="hover:text-blue-300 hover:underline"
+                      className="hover:text-cyan-100 hover:underline"
                     >
                       {td.code}
                     </Link>

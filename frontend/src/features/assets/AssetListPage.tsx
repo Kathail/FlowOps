@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { usePersistedState } from "../../lib/persistedState";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
+import { PageHeader } from "../../components/PageHeader";
 import { ConditionBadge } from "../../components/ConditionBadge";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
@@ -104,15 +105,18 @@ export function AssetListPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-slate-100">Assets</h1>
-        <div className="flex gap-2">
-          <Button variant="ghost" onClick={() => setImportOpen(true)}>
-            Import…
-          </Button>
-          <ExportButton />
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Inventory"
+        title="Assets"
+        trailing={
+          <>
+            <Button variant="ghost" onClick={() => setImportOpen(true)}>
+              Import…
+            </Button>
+            <ExportButton />
+          </>
+        }
+      />
 
       <SummaryBar>
         <SummaryBar.Stat label="Total" value={total} />

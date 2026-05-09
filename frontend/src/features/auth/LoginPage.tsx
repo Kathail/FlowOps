@@ -65,18 +65,19 @@ export function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+    <main className="relative min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div aria-hidden className="dot-grid-bg" />
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
+        className="relative z-10 w-full max-w-md console-panel space-y-4 p-6 shadow-2xl shadow-signal/5"
       >
-        <div className="flex items-center gap-3">
-          <Logo size={48} />
+        <div className="flex items-center gap-3 border-b border-dashed border-slate-800 pb-4">
+          <Logo size={40} />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-400">
-              CityWater
-            </p>
-            <h1 className="text-xl font-semibold text-slate-100 leading-tight">Sign in</h1>
+            <p className="section-label-signal">CityWater</p>
+            <h1 className="text-xl font-semibold tracking-tight text-slate-100 leading-tight">
+              Sign in
+            </h1>
           </div>
         </div>
         <label className="block">
@@ -140,7 +141,7 @@ export function LoginPage() {
 
         <p className="text-sm text-slate-400">
           Need an account?{" "}
-          <Link to="/register" className="text-blue-400 hover:text-blue-300 hover:underline">
+          <Link to="/register" className="text-signal hover:text-cyan-100 hover:underline">
             Register a tenant
           </Link>
         </p>

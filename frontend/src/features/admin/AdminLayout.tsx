@@ -45,7 +45,7 @@ export function AdminLayout() {
             className={({ isActive }) =>
               `border-b-2 px-3 py-2 text-sm transition-colors ${
                 isActive
-                  ? "border-blue-500 text-slate-100"
+                  ? "border-signal text-slate-100"
                   : "border-transparent text-slate-400 hover:border-slate-700 hover:text-slate-100"
               }`
             }

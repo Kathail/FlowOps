@@ -21,7 +21,7 @@ const KIND_LABELS: Record<LinkKind, string> = {
 
 const KIND_PILL: Record<LinkKind, string> = {
   parent_of: "bg-violet-500/15 text-violet-200 ring-1 ring-violet-500/30",
-  related: "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/30",
+  related: "bg-signal/15 text-cyan-100 ring-1 ring-signal/30",
   caused_by: "bg-amber-500/15 text-amber-200 ring-1 ring-amber-500/30",
 };
 
@@ -44,7 +44,7 @@ export function LinkedItems({ entityType, entityId }: Props) {
         </h2>
         <button
           onClick={() => setAdding((v) => !v)}
-          className="text-xs text-blue-400 hover:text-blue-300 hover:underline"
+          className="text-xs text-signal hover:text-cyan-100 hover:underline"
         >
           {adding ? "Cancel" : "+ Link an item"}
         </button>
@@ -114,7 +114,7 @@ function LinkRow({
           {path && otherRef ? (
             <Link
               to={path}
-              className="font-mono text-slate-100 hover:text-blue-300 hover:underline"
+              className="font-mono text-slate-100 hover:text-cyan-100 hover:underline"
             >
               {otherRef}
             </Link>

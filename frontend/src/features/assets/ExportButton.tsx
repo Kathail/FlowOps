@@ -44,7 +44,7 @@ export function ExportButton() {
           </label>
           {/* Anchors (not <Button>) so the browser's download handler runs.
               .btn-primary keeps them visually consistent with the rest of
-              the app. The earlier `hover:bg-blue-400 hover:bg-slate-700`
+              the app. The earlier `hover:bg-signal/30 hover:bg-slate-700`
               had two conflicting hover backgrounds — Tailwind's last-rule
               wins, so the slate hover always defeated blue. Both gone now. */}
           <div className="flex gap-2">

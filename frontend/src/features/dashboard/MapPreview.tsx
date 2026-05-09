@@ -200,16 +200,16 @@ export function MapPreview({ slug, tab }: Props) {
   return (
     <section
       aria-label="Map preview"
-      className="relative overflow-hidden rounded-md border border-slate-800/80 bg-slate-950/40"
+      className="relative console-panel"
     >
       {/* Top strip — title + counts. Stays out of the map's visual
           frame so the data is the only thing competing for attention
           inside the canvas. */}
       <header className="flex items-baseline justify-between border-b border-dashed border-slate-800 px-4 py-2.5">
-        <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300">
+        <h2 className="section-label-strong">
           Field
         </h2>
-        <div className="flex items-baseline gap-3 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <div className="flex items-baseline gap-3 section-label">
           {emergencies > 0 && (
             <span className="flex items-baseline gap-1 text-rose-300">
               <span aria-hidden className="inline-block h-1.5 w-1.5 translate-y-[1px] rounded-full bg-rose-400" />

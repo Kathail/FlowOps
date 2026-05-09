@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { Dash } from "../../components/Dash";
+import { PageHeader } from "../../components/PageHeader";
 import { RowActions } from "../../components/RowActions";
 import { EmptyState } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
@@ -158,13 +159,16 @@ export function WorkOrderListPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-slate-100">Work orders</h1>
-        <div className="flex gap-2">
-          <ViewToggle current={view} onChange={(v) => setParam("view", v === "list" ? null : v)} />
-          <Button onClick={() => setCreateOpen(true)}>New work order</Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Operations"
+        title="Work orders"
+        trailing={
+          <>
+            <ViewToggle current={view} onChange={(v) => setParam("view", v === "list" ? null : v)} />
+            <Button onClick={() => setCreateOpen(true)}>New work order</Button>
+          </>
+        }
+      />
 
       {/* Summary bar: quick situational read. Counts are scoped to the
           current filter — `Total in dataset` reflects the backend total
@@ -448,7 +452,7 @@ function ScopeTabs({
           type="button"
           onClick={() => onChange(t.key)}
           className={`rounded px-3 py-1 text-xs transition-colors ${
-            scope === t.key ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+            scope === t.key ? "bg-signal/20 text-white" : "text-slate-400 hover:text-slate-100"
           }`}
         >
           {t.label}
@@ -475,7 +479,7 @@ function ViewToggle({
         type="button"
         onClick={() => onChange("list")}
         className={`rounded px-2.5 py-1 text-xs transition-colors ${
-          current === "list" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+          current === "list" ? "bg-signal/20 text-white" : "text-slate-400 hover:text-slate-100"
         }`}
       >
         List
@@ -484,7 +488,7 @@ function ViewToggle({
         type="button"
         onClick={() => onChange("kanban")}
         className={`rounded px-2.5 py-1 text-xs transition-colors ${
-          current === "kanban" ? "bg-blue-500 text-white" : "text-slate-400 hover:text-slate-100"
+          current === "kanban" ? "bg-signal/20 text-white" : "text-slate-400 hover:text-slate-100"
         }`}
       >
         Kanban

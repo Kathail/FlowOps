@@ -8,11 +8,13 @@ describe("Panel", () => {
     expect(screen.getByText("body")).toBeInTheDocument();
   });
 
-  it("renders a string title as an uppercase eyebrow heading", () => {
+  it("renders a string title as the operations-console section eyebrow", () => {
     render(<Panel title="Caller">body</Panel>);
     const heading = screen.getByRole("heading", { name: "Caller" });
     expect(heading.tagName).toBe("H2");
-    expect(heading).toHaveClass("uppercase");
+    // .section-label-strong applies the uppercase + tracking + mono
+    // styling via @layer components — see index.css.
+    expect(heading).toHaveClass("section-label-strong");
   });
 
   it("renders a ReactNode title verbatim (no h2 wrapping)", () => {

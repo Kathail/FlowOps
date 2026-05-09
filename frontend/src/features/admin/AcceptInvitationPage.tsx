@@ -33,7 +33,7 @@ export function AcceptInvitationPage() {
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-300">
         <div className="surface max-w-md p-6 text-center">
           <p>Missing invitation token.</p>
-          <Link to="/login" className="mt-2 inline-block text-sm text-blue-400 hover:underline">
+          <Link to="/login" className="mt-2 inline-block text-sm text-signal hover:underline">
             ← Back to login
           </Link>
         </div>
@@ -44,7 +44,7 @@ export function AcceptInvitationPage() {
   if (accepted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-6 text-center max-w-md w-full">
+        <div className="rounded-lg border border-signal/30 bg-signal/5 p-6 text-center max-w-md w-full">
           <h1 className="text-xl font-semibold text-slate-100">You're in.</h1>
           <p className="mt-2 text-sm text-slate-300">
             Your CityWater account ({accepted.email}) is ready.
@@ -71,7 +71,7 @@ export function AcceptInvitationPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
-      <div className="surface max-w-md w-full p-6 shadow-2xl shadow-blue-500/5">
+      <div className="surface max-w-md w-full p-6 shadow-2xl shadow-signal/5">
         <h1 className="text-xl font-semibold text-slate-100">Accept your invitation</h1>
         <p className="mt-1 text-sm text-slate-400">
           Set your name and a password to finish creating your account.

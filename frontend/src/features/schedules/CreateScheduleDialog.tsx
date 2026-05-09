@@ -92,7 +92,7 @@ export function CreateScheduleDialog({ onClose, initial }: Props) {
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-xl space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5"
+        className="w-full max-w-xl space-y-3 rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-signal/5"
       >
         <h2 className="text-lg font-semibold text-slate-100">New schedule</h2>
 

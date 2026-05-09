@@ -15,10 +15,10 @@ export type PillTone = "neutral" | "info" | "success" | "warning" | "danger" | "
 
 const TONE: Record<PillTone, string> = {
   neutral: "bg-slate-500/15 text-slate-200 ring-slate-500/30",
-  info: "bg-blue-500/15 text-blue-200 ring-blue-500/30",
+  info: "bg-signal/15 text-cyan-100 ring-signal/30",
   success: "bg-emerald-500/15 text-emerald-200 ring-emerald-500/30",
   warning: "bg-amber-500/15 text-amber-200 ring-amber-500/40",
-  danger: "bg-red-500/15 text-red-200 ring-red-500/40",
+  danger: "bg-rose-500/15 text-rose-200 ring-rose-500/40",
   muted: "bg-slate-700/30 text-slate-400 ring-slate-700/50",
 };
 

@@ -39,16 +39,16 @@
   select:focus,
   textarea:focus {
     outline: none;
-    border-color: theme("colors.blue.500");
-    box-shadow: 0 0 0 1px theme("colors.blue.500" / 60%);
+    border-color: theme("colors.signal.DEFAULT");
+    box-shadow: 0 0 0 1px theme("colors.signal.DEFAULT" / 60%);
   }
 
-  /* Native date picker icon is invisible on dark; nudge it toward blue. */
+  /* Native date picker icon is invisible on dark; tint toward cyan. */
   input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(0.85) sepia(0.4) saturate(3) hue-rotate(180deg);
+    filter: invert(0.85) sepia(0.3) saturate(3) hue-rotate(150deg);
   }
 
-  /* Browser scrollbars — slim, blue accent. */
+  /* Browser scrollbars — slim, signal-cyan hover accent. */
   * {
     scrollbar-width: thin;
     scrollbar-color: theme("colors.slate.700") transparent;
@@ -62,38 +62,55 @@
     border-radius: 4px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background-color: theme("colors.blue.500");
+    background-color: theme("colors.signal.DEFAULT");
   }
 }
 
 @layer components {
-  /* Button system. Variants supply color/border + default md sizing.
-     `.btn-sm` is appended on top to override padding + text size — it
-     is defined LAST in this layer so its declarations win the cascade
-     under same-specificity (no `!important` needed). */
-  .btn-primary {
-    @apply rounded bg-blue-500 px-3 py-1.5 text-sm font-medium text-white
-      transition-colors hover:bg-blue-400
-      disabled:cursor-not-allowed disabled:bg-blue-500/40 disabled:text-white/70;
+  /* -------------------------------------------------------------------
+   * Operations-console theme atoms.
+   *
+   * These live in @layer components so individual pages can compose
+   * them with Tailwind utilities without losing the consistent look.
+   * Anything used in 2+ places earns a class here.
+   * ----------------------------------------------------------------- */
+
+  /* Section labels — the small uppercase mono text that captions every
+     panel header, gauge, and chip. One source of truth for the
+     tracking + size + tone. */
+  .section-label {
+    @apply font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500;
   }
-  .btn-secondary {
-    @apply rounded border border-slate-600 bg-slate-800 px-3 py-1.5 text-sm
-      font-medium text-slate-100 transition-colors hover:bg-slate-700
-      disabled:cursor-not-allowed disabled:bg-slate-800/60 disabled:text-slate-400;
+  .section-label-strong {
+    @apply font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300;
   }
-  .btn-ghost {
-    @apply rounded border border-slate-700 px-3 py-1.5 text-sm text-slate-200
-      transition-colors hover:bg-slate-800
-      disabled:cursor-not-allowed disabled:text-slate-500;
+  .section-label-signal {
+    @apply font-mono text-[10px] uppercase tracking-[0.22em] text-signal;
   }
-  .btn-danger {
-    @apply rounded border border-red-500/40 px-3 py-1.5 text-sm text-red-300
-      transition-colors hover:bg-red-500/10
-      disabled:cursor-not-allowed disabled:text-red-300/50 disabled:hover:bg-transparent;
+
+  /* Hairline dotted rules. Replace solid borders within the
+     operations-console aesthetic — they read quieter and group items
+     without competing for attention. */
+  .hairline {
+    @apply border-dashed border-slate-800;
   }
-  .btn-sm {
-    @apply px-2 py-1 text-xs;
+  .hairline-b {
+    @apply border-b border-dashed border-slate-800;
   }
+  .hairline-t {
+    @apply border-t border-dashed border-slate-800;
+  }
+
+  /* Console panel — the standard surface chrome. Slate-950 fill,
+     muted slate-800 border. Use .console-panel + utilities for layout. */
+  .console-panel {
+    @apply overflow-hidden rounded-md border border-slate-800/80 bg-slate-950/40;
+  }
+  .console-panel-header {
+    @apply flex items-baseline justify-between border-b border-dashed border-slate-800 px-4 py-2.5;
+  }
+
+  /* Surfaces (used by inputs, dropdowns, etc). */
   .surface {
     @apply rounded border border-slate-800 bg-slate-900;
   }
@@ -103,6 +120,52 @@
   .input {
     @apply mt-1 block w-full rounded border border-slate-700 bg-slate-900
       px-2 py-1 text-sm text-slate-100 placeholder-slate-500
-      focus:border-blue-500 focus:outline-none;
+      focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal/40;
+  }
+
+  /* Faint dot grid backdrop — fixed-positioned, sits behind page
+     content. Add to the page's outer wrapper (relative parent) and
+     ensure a positive z-index on the content. */
+  .dot-grid-bg {
+    background-image: radial-gradient(circle at 1px 1px, rgb(148 163 184) 1px, transparent 0);
+    background-size: 32px 32px;
+    @apply pointer-events-none fixed inset-0 z-0 opacity-[0.06];
+  }
+
+  /* Hero numerals — single editorial moment per page. Apply on KPIs
+     that deserve weight (dashboard gauges, list-page totals, the big
+     metric in a detail page). */
+  .hero-numeral {
+    @apply font-display tabular-nums leading-none;
+  }
+
+  /* -------------------------------------------------------------------
+   * Buttons. Operations console treatment: signal cyan primary, slate
+   * borders, no chunky shadows. `.btn-sm` appended on top to override
+   * padding + text size — defined LAST so it wins the cascade under
+   * same-specificity (no !important needed).
+   * ----------------------------------------------------------------- */
+  .btn-primary {
+    @apply rounded border border-signal/40 bg-signal/15 px-3 py-1.5 text-sm font-medium text-signal
+      transition-colors hover:bg-signal/25 hover:text-cyan-100
+      disabled:cursor-not-allowed disabled:border-signal/20 disabled:bg-signal/5 disabled:text-signal/40;
+  }
+  .btn-secondary {
+    @apply rounded border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm
+      font-medium text-slate-100 transition-colors hover:border-slate-600 hover:bg-slate-800
+      disabled:cursor-not-allowed disabled:border-slate-800 disabled:bg-slate-900/60 disabled:text-slate-500;
+  }
+  .btn-ghost {
+    @apply rounded border border-slate-800 bg-transparent px-3 py-1.5 text-sm text-slate-300
+      transition-colors hover:border-slate-700 hover:bg-slate-900 hover:text-slate-100
+      disabled:cursor-not-allowed disabled:border-slate-900 disabled:text-slate-600;
+  }
+  .btn-danger {
+    @apply rounded border border-rose-500/40 bg-rose-500/5 px-3 py-1.5 text-sm text-rose-200
+      transition-colors hover:border-rose-500/60 hover:bg-rose-500/15
+      disabled:cursor-not-allowed disabled:border-rose-500/20 disabled:text-rose-300/40 disabled:hover:bg-transparent;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
   }
 }

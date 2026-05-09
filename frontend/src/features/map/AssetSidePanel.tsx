@@ -50,7 +50,7 @@ export function AssetSidePanel({ feature, onClose }: Props) {
               valueNode={
                 <Link
                   to={`/${slug}/assets/${feature.asset_uid}`}
-                  className="font-mono hover:text-blue-300"
+                  className="font-mono hover:text-cyan-100"
                 >
                   {feature.asset_uid}
                 </Link>
@@ -60,7 +60,7 @@ export function AssetSidePanel({ feature, onClose }: Props) {
         </dl>
         <Link
           to={`/${slug}/work-orders/${feature.wo_number}`}
-          className="mt-4 inline-block text-sm text-blue-300 hover:text-blue-200"
+          className="mt-4 inline-block text-sm text-cyan-100 hover:text-cyan-100"
         >
           Open work order →
         </Link>
@@ -82,7 +82,7 @@ export function AssetSidePanel({ feature, onClose }: Props) {
               valueNode={
                 <Link
                   to={`/${slug}/assets/${feature.asset_uid}`}
-                  className="font-mono hover:text-blue-300"
+                  className="font-mono hover:text-cyan-100"
                 >
                   {feature.asset_uid}
                 </Link>
@@ -92,7 +92,7 @@ export function AssetSidePanel({ feature, onClose }: Props) {
         </dl>
         <Link
           to={`/${slug}/service-requests/${feature.sr_number}`}
-          className="mt-4 inline-block text-sm text-blue-300 hover:text-blue-200"
+          className="mt-4 inline-block text-sm text-cyan-100 hover:text-cyan-100"
         >
           Open service request →
         </Link>
@@ -115,13 +115,13 @@ export function AssetSidePanel({ feature, onClose }: Props) {
       <div className="mt-4 flex flex-col gap-2">
         <Link
           to={`/${slug}/assets/${feature.asset_uid}`}
-          className="text-sm text-blue-300 hover:text-blue-200"
+          className="text-sm text-cyan-100 hover:text-cyan-100"
         >
           Open asset details →
         </Link>
         <Link
           to={`/${slug}/work-orders?asset_uid=${encodeURIComponent(feature.asset_uid)}`}
-          className="text-sm text-slate-300 hover:text-blue-200"
+          className="text-sm text-slate-300 hover:text-cyan-100"
         >
           View work orders for this asset →
         </Link>
@@ -185,7 +185,7 @@ function Tag({
   const palette: Record<string, string> = {
     emergency: "text-red-300",
     high: "text-amber-300",
-    normal: "text-blue-300",
+    normal: "text-cyan-100",
     low: "text-slate-400",
   };
   const cls = priority ? (palette[priority] ?? "text-slate-100") : "text-slate-100";

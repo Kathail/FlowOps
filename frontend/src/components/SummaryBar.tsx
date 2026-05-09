@@ -49,7 +49,7 @@ interface StatProps {
 
 function Stat({ label, value, to, tone = "default", sub, active = false }: StatProps) {
   const cls = TONE[tone] ?? TONE.default;
-  const ring = active ? "ring-1 ring-blue-500/40 bg-blue-500/5" : "";
+  const ring = active ? "ring-1 ring-signal/40 bg-signal/5" : "";
   const inner = (
     <>
       <p className="text-[10px] font-medium uppercase tracking-wider text-slate-500">{label}</p>

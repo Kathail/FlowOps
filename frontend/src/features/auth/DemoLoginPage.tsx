@@ -142,15 +142,14 @@ export function DemoLoginPage() {
   const isStalled = phase.kind === "stalled";
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 text-slate-100">
-      <div className="w-full max-w-md space-y-6 rounded-lg border border-slate-800 bg-slate-900 p-6 text-center shadow-2xl shadow-blue-500/5 sm:p-8">
-        <div className="flex flex-col items-center gap-3">
-          <Logo size={56} />
+    <main className="relative flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12 text-slate-100">
+      <div aria-hidden className="dot-grid-bg" />
+      <div className="relative z-10 w-full max-w-md console-panel space-y-6 p-6 text-center shadow-2xl shadow-signal/5 sm:p-8">
+        <div className="flex flex-col items-center gap-3 border-b border-dashed border-slate-800 pb-4">
+          <Logo size={48} />
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-400">
-              CityWater
-            </p>
-            <h1 className="text-xl font-semibold text-slate-100">
+            <p className="section-label-signal">CityWater · Demo</p>
+            <h1 className="mt-1 text-xl font-semibold tracking-tight text-slate-100">
               {phase.kind === "error" ? "Couldn't load the demo" : "Loading the demo…"}
             </h1>
           </div>
@@ -200,7 +199,7 @@ export function DemoLoginPage() {
 
         {phase.kind === "error" && (
           <div className="space-y-3 text-left">
-            <p className="rounded border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            <p className="rounded border border-rose-500/30 bg-rose-500/5 px-3 py-2 text-sm text-rose-200">
               {phase.message}
             </p>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -225,7 +224,7 @@ export function DemoLoginPage() {
           Questions?{" "}
           <a
             href="mailto:contact@citywater.ca"
-            className="text-blue-400 hover:text-blue-300 hover:underline"
+            className="text-signal hover:text-cyan-100 hover:underline"
           >
             contact@citywater.ca
           </a>

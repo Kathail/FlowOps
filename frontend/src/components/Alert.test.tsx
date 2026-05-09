@@ -7,7 +7,7 @@ describe("Alert", () => {
     render(<Alert>boom</Alert>);
     const node = screen.getByRole("alert");
     expect(node).toHaveTextContent("boom");
-    expect(node).toHaveClass("border-red-500/40");
+    expect(node).toHaveClass("border-rose-500/30");
   });
 
   it("warning variant uses role=alert (assertive announcement)", () => {
@@ -37,11 +37,13 @@ describe("Alert", () => {
     expect(screen.getByRole("alert")).toHaveClass("mt-4");
   });
 
+  // Operations-console palette: muted backgrounds, rose for error
+  // (warmer than red), signal-cyan for info. See Alert.tsx VARIANT.
   it.each([
-    ["error", "border-red-500/40"],
-    ["success", "border-emerald-500/40"],
-    ["info", "border-blue-500/40"],
-    ["warning", "border-amber-500/40"],
+    ["error", "border-rose-500/30"],
+    ["success", "border-emerald-500/30"],
+    ["info", "border-signal/30"],
+    ["warning", "border-amber-500/30"],
   ] as const)("variant=%s applies %s", (variant, klass) => {
     render(<Alert variant={variant}>x</Alert>);
     // role differs by variant — query by text instead.

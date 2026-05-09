@@ -3,6 +3,7 @@ import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
 import { Dash } from "../../components/Dash";
+import { PageHeader } from "../../components/PageHeader";
 import { ErrorState, LoadingState } from "../../components/States";
 import { StatusPill } from "../../components/StatusPill";
 import { formatDateTime } from "../../lib/format";
@@ -103,25 +104,24 @@ export function SchedulesPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-100">Schedules</h1>
-          <p className="text-sm text-slate-400">
-            Recurring work orders + inspections, expressed as iCalendar RRULE.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            onClick={fireTick}
-            disabled={tick.isPending}
-            title="Manually fire any due schedules"
-          >
-            {tick.isPending ? "Ticking…" : "Run tick now"}
-          </Button>
-          <Button onClick={() => openCreate()}>+ New schedule</Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Recurrence"
+        title="Schedules"
+        caption="Recurring work orders + inspections, expressed as iCalendar RRULE."
+        trailing={
+          <>
+            <Button
+              variant="ghost"
+              onClick={fireTick}
+              disabled={tick.isPending}
+              title="Manually fire any due schedules"
+            >
+              {tick.isPending ? "Ticking…" : "Run tick now"}
+            </Button>
+            <Button onClick={() => openCreate()}>+ New schedule</Button>
+          </>
+        }
+      />
 
       {tickResult && <Alert variant="info">{tickResult}</Alert>}
       {tickError && <Alert>{tickError}</Alert>}
@@ -276,10 +276,10 @@ function EmptySchedulesHero({ onPick }: { onPick: (initial: ScheduleTemplatePref
               key={t.name}
               type="button"
               onClick={() => onPick(t)}
-              className="group flex flex-col gap-2 rounded-md border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-blue-500/50 hover:bg-slate-900/80"
+              className="group flex flex-col gap-2 rounded-md border border-slate-800 bg-slate-900 p-4 text-left transition-colors hover:border-signal/40 hover:bg-slate-900/80"
             >
               <header className="flex items-start justify-between gap-2">
-                <h4 className="text-sm font-medium text-slate-100 group-hover:text-blue-300">
+                <h4 className="text-sm font-medium text-slate-100 group-hover:text-cyan-100">
                   {t.name}
                 </h4>
                 <StatusPill tone={t.kind === "work_order" ? "info" : "neutral"}>

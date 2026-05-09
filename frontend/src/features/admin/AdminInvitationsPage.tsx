@@ -120,7 +120,7 @@ export function AdminInvitationsPage() {
             <button
               type="submit"
               disabled={create.isPending}
-              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
+              className="rounded bg-signal/20 px-3 py-1.5 text-sm text-white hover:bg-signal/30 disabled:opacity-50"
             >
               {create.isPending ? "Inviting…" : "Send invitation"}
             </button>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "../../components/Button";
+import { PageHeader } from "../../components/PageHeader";
 import { ConditionBadge } from "../../components/ConditionBadge";
 import { Dash } from "../../components/Dash";
 import { RowActions } from "../../components/RowActions";
@@ -101,31 +102,30 @@ export function InspectionListPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-slate-100">Inspections</h1>
-        <div className="flex gap-2">
-          <a
-            href={exportInspectionsUrl(params.kind)}
-            download
-            className="btn-ghost"
-            title={
-              // Hover hint so the operator knows the export respects
-              // the kind filter — "I exported all but only see CCTV"
-              // is a common surprise without it. (The backend export
-              // endpoint only accepts kind today, not pass/asset_uid.)
-              params.kind
-                ? `Exports kind=${params.kind} only`
-                : "Exports every inspection in the tenant"
-            }
-          >
-            Export CSV
-          </a>
-          <Button variant="ghost" onClick={() => setImportOpen(true)}>
-            Import PACP…
-          </Button>
-          <Button onClick={() => setCreateOpen(true)}>New inspection</Button>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Field surveys"
+        title="Inspections"
+        trailing={
+          <>
+            <a
+              href={exportInspectionsUrl(params.kind)}
+              download
+              className="btn-ghost"
+              title={
+                params.kind
+                  ? `Exports kind=${params.kind} only`
+                  : "Exports every inspection in the tenant"
+              }
+            >
+              Export CSV
+            </a>
+            <Button variant="ghost" onClick={() => setImportOpen(true)}>
+              Import PACP…
+            </Button>
+            <Button onClick={() => setCreateOpen(true)}>New inspection</Button>
+          </>
+        }
+      />
 
       <SummaryBar>
         <SummaryBar.Stat label="Total in dataset" value={summary.total} tone="muted" />

@@ -40,7 +40,7 @@ export function MapContextMenu({
             onAddAsset(coords);
             onClose();
           }}
-          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/10 text-slate-100"
+          className="w-full text-left px-3 py-1.5 hover:bg-signal/10 text-slate-100"
         >
           Add asset here…
         </button>
@@ -52,7 +52,7 @@ export function MapContextMenu({
             onCreateWorkOrder(coords);
             onClose();
           }}
-          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/10 text-slate-100"
+          className="w-full text-left px-3 py-1.5 hover:bg-signal/10 text-slate-100"
         >
           Create work order here…
         </button>
@@ -64,7 +64,7 @@ export function MapContextMenu({
             onCreateServiceRequest(coords);
             onClose();
           }}
-          className="w-full text-left px-3 py-1.5 hover:bg-blue-500/10 text-slate-100"
+          className="w-full text-left px-3 py-1.5 hover:bg-signal/10 text-slate-100"
         >
           Create service request here…
         </button>

@@ -177,7 +177,7 @@ export function CommentComposer({
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="Add a comment…"
-        className="block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+        className="block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-signal focus:outline-none"
       />
 
       {task && <ChecklistDraft task={task} taskData={taskData ?? {}} onPick={applySuggestion} />}
@@ -194,7 +194,7 @@ export function CommentComposer({
         <button
           type="button"
           onClick={() => setPickerOpen((v) => !v)}
-          className="min-h-11 rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:border-blue-500/50 hover:bg-slate-800"
+          className="min-h-11 rounded-full border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:border-signal/40 hover:bg-slate-800"
         >
           {pickerOpen ? "Close" : "+ Reference an asset"}
         </button>
@@ -222,7 +222,7 @@ export function CommentComposer({
             value={assetQuery}
             onChange={(e) => setAssetQuery(e.target.value)}
             placeholder="Type asset UID, material, manufacturer…"
-            className="block w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none"
+            className="block w-full rounded border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-signal focus:outline-none"
             autoFocus
           />
           <div className="flex flex-wrap gap-2">
@@ -231,7 +231,7 @@ export function CommentComposer({
                 key={a.asset_uid}
                 type="button"
                 onClick={() => insertReference(a.asset_uid)}
-                className="min-h-11 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 hover:border-blue-500/50 hover:bg-slate-800"
+                className="min-h-11 rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-200 hover:border-signal/40 hover:bg-slate-800"
               >
                 <span className="font-mono">{a.asset_uid}</span>
                 <span className="ml-2 text-xs text-slate-400">{a.class_code}</span>

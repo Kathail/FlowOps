@@ -39,13 +39,13 @@ export function CockpitGauges({ data, slug, tab }: Props) {
   return (
     <aside
       aria-label="Cockpit"
-      className="flex flex-col gap-3 overflow-hidden rounded-md border border-slate-800/80 bg-slate-950/40 p-4"
+      className="flex flex-col gap-3 console-panel p-4"
     >
       <div className="flex items-baseline justify-between border-b border-dashed border-slate-800 pb-2.5">
-        <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300">
+        <h2 className="section-label-strong">
           Cockpit
         </h2>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <span className="section-label">
           {tab === "supervisor" ? "Triage" : tab === "crew" ? "Today" : "30d"}
         </span>
       </div>
@@ -68,7 +68,7 @@ function GaugeRow({ gauge }: { gauge: Gauge }) {
     >
       <Arc value={gauge.value} cap={gauge.cap} tone={gauge.tone} />
       <div className="min-w-0 flex-1">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <p className="section-label">
           {gauge.label}
         </p>
         <p

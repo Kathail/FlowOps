@@ -104,7 +104,7 @@ export function IntakeDialog({ onClose, defaultCoords }: Props) {
   if (createdSrNumber && duplicates.length > 0) {
     return (
       <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
-        <div className="w-full max-w-xl rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/10">
+        <div className="w-full max-w-xl rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-signal/10">
           <h2 className="text-lg font-semibold text-slate-100">Created {createdSrNumber}</h2>
           <p className="mt-2 rounded border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
             Found {duplicates.length} possible duplicate

@@ -26,7 +26,7 @@ interface Props {
 }
 
 const inputClass =
-  "block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-blue-500 focus:outline-none";
+  "block w-full rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 text-base text-slate-100 placeholder-slate-500 focus:border-signal focus:outline-none";
 
 export function TaskFormRenderer({
   task,
@@ -78,7 +78,7 @@ function FieldRow({
     <span className="block text-sm font-medium text-slate-200">
       {field.label}
       {field.required_for_complete && (
-        <span className="ml-1 text-blue-400" aria-label="required">
+        <span className="ml-1 text-signal" aria-label="required">
           *
         </span>
       )}
@@ -97,7 +97,7 @@ function FieldRow({
             checked={value === true}
             onChange={(e) => onChange(e.target.checked)}
             disabled={disabled}
-            className="mt-1 h-5 w-5 rounded border-slate-700 bg-slate-900 text-blue-500 focus:ring-blue-500"
+            className="mt-1 h-5 w-5 rounded border-slate-700 bg-slate-900 text-signal focus:ring-signal"
           />
           <div className="flex-1">
             {labelEl}
@@ -164,7 +164,7 @@ function FieldRow({
         <fieldset>
           <legend className="text-sm font-medium text-slate-200">
             {field.label}
-            {field.required_for_complete && <span className="ml-1 text-blue-400">*</span>}
+            {field.required_for_complete && <span className="ml-1 text-signal">*</span>}
           </legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {(field.choices ?? []).map((choice) => {
@@ -178,8 +178,8 @@ function FieldRow({
                   aria-pressed={selected}
                   className={`min-h-11 rounded-full px-4 py-2 text-sm transition-colors ${
                     selected
-                      ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
-                      : "bg-slate-900 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-800 hover:ring-blue-500/40"
+                      ? "bg-signal/20 text-white shadow-sm shadow-signal/30"
+                      : "bg-slate-900 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-800 hover:ring-signal/40"
                   } disabled:opacity-50`}
                 >
                   {choice.label}
@@ -214,7 +214,7 @@ function FieldRow({
                   aria-pressed={selected}
                   className={`min-h-11 rounded-full px-4 py-2 text-sm transition-colors ${
                     selected
-                      ? "bg-blue-500 text-white"
+                      ? "bg-signal/20 text-white"
                       : "bg-slate-900 text-slate-200 ring-1 ring-slate-700 hover:bg-slate-800"
                   } disabled:opacity-50`}
                 >

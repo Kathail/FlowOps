@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { DOMAIN_DOT, DOMAIN_LABEL_SHORT } from "../../lib/theme";
 import type { DashboardResponse } from "./api";
 import type { DashTab } from "./DashboardTabs";
 
@@ -6,28 +7,13 @@ import type { DashTab } from "./DashboardTabs";
  * The strip beneath the map. Three slim panels in one rule:
  *  · Throughput 7d sparkline + closed-this-week chip.
  *  · Service area chips — domain-coloured pills that deep-link to
- *    /map?area=<code> (the "By area" panel from the old layout, but
- *    folded into a single horizontal scan).
+ *    /map?area=<code>.
  *  · Today's category mix as a tiny stacked bar.
  *
  * Visual rule: every panel uses the same hairline rule chrome and
- * monospace caption labels, so the eye reads the strip as one
+ * `.section-label` captions so the eye reads the strip as one
  * continuous band rather than three competing cards.
  */
-
-const DOMAIN_DOT: Record<string, string> = {
-  maintenance: "bg-amber-400",
-  water_system: "bg-cyan-400",
-  sewer_system: "bg-emerald-400",
-  storm_system: "bg-violet-400",
-};
-
-const DOMAIN_LABEL: Record<string, string> = {
-  maintenance: "Maint",
-  water_system: "Water",
-  sewer_system: "Sewer",
-  storm_system: "Storm",
-};
 
 interface Props {
   data: DashboardResponse;
@@ -39,7 +25,7 @@ export function SystemPulseStrip({ data, slug, tab }: Props) {
   return (
     <section
       aria-label="System pulse"
-      className="grid grid-cols-1 gap-4 overflow-hidden rounded-md border border-slate-800/80 bg-slate-950/40 lg:grid-cols-[1fr_1fr_1fr]"
+      className="grid grid-cols-1 gap-4 console-panel lg:grid-cols-[1fr_1fr_1fr]"
     >
       <Spark throughput={data.throughput_7d} closedThisWeek={data.wo_kpis.completed_this_week} />
       <AreaChips areas={data.by_area} slug={slug} />
@@ -59,10 +45,10 @@ function Spark({
   return (
     <div className="border-b border-dashed border-slate-800 p-4 lg:border-b-0 lg:border-r">
       <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+        <h3 className="section-label-strong">
           Throughput
         </h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <span className="section-label">
           7d · <span className="tabular-nums text-slate-200">{closedThisWeek}</span> this week
         </span>
       </div>
@@ -114,7 +100,7 @@ function AreaChips({
   if (areas.length === 0) {
     return (
       <div className="border-b border-dashed border-slate-800 p-4 lg:border-b-0 lg:border-r">
-        <h3 className="mb-2 font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+        <h3 className="mb-2 section-label-strong">
           Service areas
         </h3>
         <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-600">
@@ -133,12 +119,12 @@ function AreaChips({
   return (
     <div className="border-b border-dashed border-slate-800 p-4 lg:border-b-0 lg:border-r">
       <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+        <h3 className="section-label-strong">
           Areas
         </h3>
         <Link
           to={`/${slug}/map`}
-          className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500 hover:text-signal"
+          className="section-label hover:text-signal"
         >
           Open map →
         </Link>
@@ -157,7 +143,7 @@ function AreaChips({
                       ? "border-rose-500/40 bg-rose-500/5 hover:bg-rose-500/10"
                       : "border-slate-700/60 bg-slate-900/60 hover:border-slate-600 hover:bg-slate-800/80"
                   }`}
-                  title={`${DOMAIN_LABEL[kind] ?? kind} · ${a.name} · ${a.active_wos} open · ${a.active_srs} SR · ${a.overdue_wos} overdue`}
+                  title={`${DOMAIN_LABEL_SHORT[kind] ?? kind} · ${a.name} · ${a.active_wos} open · ${a.active_srs} SR · ${a.overdue_wos} overdue`}
                 >
                   {/* Domain dot is the only kind affordance — the
                       label was redundant when the area name already
@@ -201,10 +187,10 @@ function CategoryMix({
   return (
     <div className="p-4">
       <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-400">
+        <h3 className="section-label-strong">
           {tab === "manager" ? "Mix · 30d" : "Category"}
         </h3>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <span className="section-label">
           <span className="tabular-nums text-slate-200">{total}</span> wo
         </span>
       </div>

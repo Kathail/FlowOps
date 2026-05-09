@@ -108,7 +108,7 @@ function Column({
       ref={setNodeRef}
       aria-labelledby={`col-${id}-heading`}
       className={`flex flex-col w-72 shrink-0 rounded-lg border transition-colors ${
-        isOver ? "border-blue-500/60 bg-blue-500/5" : "border-slate-800 bg-slate-900"
+        isOver ? "border-signal/40 bg-signal/5" : "border-slate-800 bg-slate-900"
       }`}
     >
       <header className="px-3 py-2 border-b border-slate-800 flex items-center justify-between">

@@ -18,18 +18,14 @@ interface Props {
 
 export function Panel({ title, trailing, className = "", children }: Props) {
   return (
-    <section className={`rounded-md border border-slate-800 bg-slate-900 p-4 ${className}`.trim()}>
+    <section className={`console-panel ${className}`.trim()}>
       {(title || trailing) && (
-        <div className="mb-3 flex items-baseline justify-between gap-3">
-          {typeof title === "string" ? (
-            <h2 className="text-xs font-medium uppercase tracking-wide text-slate-400">{title}</h2>
-          ) : (
-            title
-          )}
+        <div className="console-panel-header">
+          {typeof title === "string" ? <h2 className="section-label-strong">{title}</h2> : title}
           {trailing}
         </div>
       )}
-      {children}
+      <div className="p-4">{children}</div>
     </section>
   );
 }

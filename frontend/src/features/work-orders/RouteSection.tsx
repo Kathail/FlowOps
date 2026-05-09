@@ -132,7 +132,7 @@ export function RouteSection({
             type="button"
             onClick={() => setShowCompleted((v) => !v)}
             disabled={completed === 0}
-            className="text-xs text-slate-400 hover:text-blue-300 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:text-slate-600"
+            className="text-xs text-slate-400 hover:text-cyan-100 disabled:cursor-not-allowed disabled:text-slate-600 disabled:hover:text-slate-600"
           >
             {showCompleted ? "Hide completed" : `Show ${completed} completed`}
           </button>
@@ -247,7 +247,7 @@ function RouteRow({
               <span className="text-slate-500 mr-2">{asset.sequence ?? "—"}.</span>
               <Link
                 to={`/${slug}/assets/${asset.asset_uid}`}
-                className="font-mono text-slate-100 hover:text-blue-300 hover:underline"
+                className="font-mono text-slate-100 hover:text-cyan-100 hover:underline"
               >
                 {asset.asset_uid}
               </Link>
@@ -262,7 +262,7 @@ function RouteRow({
               <button
                 type="button"
                 onClick={() => setNotesOpen((v) => !v)}
-                className="text-slate-400 hover:text-blue-300"
+                className="text-slate-400 hover:text-cyan-100"
               >
                 {notesOpen
                   ? "Hide"
@@ -426,7 +426,7 @@ function FreeTextNote({
       <button
         type="button"
         onClick={() => onSave(text)}
-        className="rounded bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-400"
+        className="rounded bg-signal/20 px-3 py-1 text-xs text-white hover:bg-signal/30"
       >
         Save
       </button>
@@ -529,7 +529,7 @@ function AssetPicker({
                       already
                         ? "border-slate-800 bg-slate-900/40 text-slate-500"
                         : isPicked
-                          ? "border-blue-500/50 bg-blue-500/15 text-slate-100"
+                          ? "border-signal/40 bg-signal/15 text-slate-100"
                           : "border-slate-800 bg-slate-950/60 text-slate-200 hover:border-slate-700"
                     }`}
                   >
@@ -562,7 +562,7 @@ function AssetPicker({
               type="button"
               disabled={picked.size === 0 || isPending}
               onClick={() => onAdd(Array.from(picked))}
-              className="rounded bg-blue-500 px-3 py-1.5 text-sm text-white hover:bg-blue-400 disabled:opacity-50"
+              className="rounded bg-signal/20 px-3 py-1.5 text-sm text-white hover:bg-signal/30 disabled:opacity-50"
             >
               {isPending ? "Adding…" : `Add ${picked.size}`}
             </button>

@@ -114,7 +114,7 @@ export function MapSearchBar({ onPick }: { onPick: (hit: MapSearchHit) => void }
           onFocus={() => hits.length && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Search assets, work orders, service requests…"
-          className="w-full rounded-md border border-slate-700 bg-slate-900/95 px-3 py-2 text-sm text-slate-100 shadow-lg backdrop-blur placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
+          className="w-full rounded-md border border-slate-700 bg-slate-900/95 px-3 py-2 text-sm text-slate-100 shadow-lg backdrop-blur placeholder:text-slate-500 focus:border-signal focus:outline-none"
         />
         {open && hits.length > 0 && (
           <ul
@@ -129,7 +129,7 @@ export function MapSearchBar({ onPick }: { onPick: (hit: MapSearchHit) => void }
                   onClick={() => pick(h)}
                   onMouseEnter={() => setActive(i)}
                   className={`flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-sm ${
-                    i === active ? "bg-blue-500/15" : "hover:bg-slate-800"
+                    i === active ? "bg-signal/15" : "hover:bg-slate-800"
                   }`}
                 >
                   <div className="min-w-0">
@@ -154,7 +154,7 @@ export function MapSearchBar({ onPick }: { onPick: (hit: MapSearchHit) => void }
 function KindBadge({ kind }: { kind: MapSearchHit["kind"] }) {
   const palette: Record<MapSearchHit["kind"], string> = {
     asset: "bg-slate-700 text-slate-300",
-    work_order: "bg-blue-500/30 text-blue-200",
+    work_order: "bg-signal/30 text-cyan-100",
     service_request: "bg-amber-500/30 text-amber-200",
   };
   const labels: Record<MapSearchHit["kind"], string> = {

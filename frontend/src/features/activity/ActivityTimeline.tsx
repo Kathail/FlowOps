@@ -141,7 +141,7 @@ function CommentRow({
             <button
               type="button"
               onClick={() => setEditing(true)}
-              className="text-slate-400 hover:text-blue-300"
+              className="text-slate-400 hover:text-cyan-100"
             >
               Edit
             </button>
@@ -213,7 +213,7 @@ function CommentRow({
 function EventRow({ event }: { event: HistoryEvent }) {
   return (
     <li className="flex items-start gap-3 rounded border border-transparent px-3 py-2 hover:border-slate-800 hover:bg-slate-900/40">
-      <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
+      <span className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-signal/20" />
       <div className="flex-1 min-w-0 text-sm">
         <p className="text-slate-300">
           {formatEvent(event)}

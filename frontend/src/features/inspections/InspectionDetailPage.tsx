@@ -163,7 +163,7 @@ export function InspectionDetailPage() {
             </div>
             <Link
               to={`/${slug}/admin/task-definitions`}
-              className="font-mono text-xs text-slate-400 hover:text-blue-300 hover:underline"
+              className="font-mono text-xs text-slate-400 hover:text-cyan-100 hover:underline"
             >
               {taskQuery.data.code} · v{taskQuery.data.version}
             </Link>

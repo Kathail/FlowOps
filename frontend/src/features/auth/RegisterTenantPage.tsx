@@ -43,16 +43,18 @@ export function RegisterTenantPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+    <main className="relative min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+      <div aria-hidden className="dot-grid-bg" />
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md rounded-lg border border-slate-800 bg-slate-900 p-6 shadow-2xl shadow-blue-500/5 space-y-4"
+        className="relative z-10 w-full max-w-md console-panel space-y-4 p-6 shadow-2xl shadow-signal/5"
       >
-        <div>
-          <h1 className="text-xl font-semibold text-slate-100">Register a tenant</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            You'll be the first administrator of this organization.
-          </p>
+        <div className="border-b border-dashed border-slate-800 pb-4">
+          <p className="section-label-signal">CityWater</p>
+          <h1 className="mt-0.5 text-xl font-semibold tracking-tight text-slate-100">
+            Register a tenant
+          </h1>
+          <p className="mt-1 section-label">First administrator of the new organization</p>
         </div>
         <label className="block">
           <span className="text-sm text-slate-300">Organization name</span>
@@ -92,7 +94,7 @@ export function RegisterTenantPage() {
         </Button>
         <p className="text-sm text-slate-400">
           Already have an account?{" "}
-          <Link to="/login" className="text-blue-400 hover:text-blue-300 hover:underline">
+          <Link to="/login" className="text-signal hover:text-cyan-100 hover:underline">
             Sign in
           </Link>
         </p>

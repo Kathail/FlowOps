@@ -43,17 +43,17 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
     <div
       className={`flex items-center justify-between gap-3 border-b px-4 py-2 text-sm ${
         online
-          ? "border-amber-500/30 bg-amber-500/10 text-amber-200"
-          : "border-red-500/30 bg-red-500/10 text-red-200"
+          ? "border-amber-500/20 bg-amber-500/5 text-amber-200"
+          : "border-rose-500/20 bg-rose-500/5 text-rose-200"
       }`}
     >
       <div className="flex items-center gap-3">
         <span
-          className={`inline-block h-2 w-2 rounded-full ${
-            online ? "bg-amber-400 animate-pulse" : "bg-red-400 animate-pulse"
+          className={`inline-block h-2 w-2 animate-pulse rounded-full ${
+            online ? "bg-amber-400" : "bg-rose-400"
           }`}
         />
-        <span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.22em]">
           {online ? "Pending sync" : "Offline"}
           {counts.queued > 0 && ` · ${counts.queued} queued`}
           {counts.conflict > 0 &&
@@ -63,19 +63,12 @@ export function OfflineBanner({ onOpenConflicts }: Props) {
       </div>
       <div className="flex items-center gap-2">
         {counts.conflict + counts.failed > 0 && (
-          <button
-            onClick={onOpenConflicts}
-            className="rounded border border-current/40 px-2 py-0.5 text-xs hover:bg-current/10"
-          >
+          <button onClick={onOpenConflicts} className="btn-ghost btn-sm">
             Review
           </button>
         )}
         {online && counts.queued > 0 && (
-          <button
-            onClick={syncNow}
-            disabled={draining}
-            className="rounded bg-blue-500 px-2 py-0.5 text-xs font-medium text-white hover:bg-blue-400 disabled:opacity-50"
-          >
+          <button onClick={syncNow} disabled={draining} className="btn-primary btn-sm">
             {draining ? "Syncing…" : "Sync now"}
           </button>
         )}

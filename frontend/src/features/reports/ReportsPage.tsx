@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { PageHeader } from "../../components/PageHeader";
 import { ErrorState, LoadingState } from "../../components/States";
 import { formatRelative } from "../../lib/format";
 import { downloadUrl } from "./api";
@@ -114,22 +115,20 @@ export function ReportsPage() {
 
   return (
     <div className="p-4 sm:p-8 space-y-6">
-      <header className="flex flex-wrap items-baseline justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-100">Reports</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Canned reports across assets, work orders, and inspections. Run in-browser, or download
-            as CSV / PDF.
-          </p>
-        </div>
-        <input
-          type="search"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder="Filter reports…"
-          className="rounded border border-slate-700 px-3 py-1.5 text-sm bg-slate-900 w-64"
-        />
-      </header>
+      <PageHeader
+        eyebrow="Analysis"
+        title="Reports"
+        caption="Canned reports across assets, work orders, and inspections. Run in-browser, or download as CSV / PDF."
+        trailing={
+          <input
+            type="search"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Filter reports…"
+            className="rounded border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm w-64"
+          />
+        }
+      />
 
       {query.isLoading && <LoadingState />}
       {query.isError && (
@@ -157,7 +156,7 @@ export function ReportsPage() {
         <PinnedSection
           label="Recently used"
           icon="⏱"
-          accent="text-blue-300"
+          accent="text-cyan-100"
           description="Reports you've opened from this device."
         >
           {recentReports.map((r) => (
@@ -319,7 +318,7 @@ type ReportIconKey = "asset" | "ops" | "ins";
 
 function ReportIcon({ kind }: { kind: ReportIconKey }) {
   const props = {
-    asset: { color: "text-blue-300", path: "M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4" },
+    asset: { color: "text-cyan-100", path: "M3 7l9-4 9 4-9 4-9-4zM3 12l9 4 9-4M3 17l9 4 9-4" },
     ops: { color: "text-amber-300", path: "M4 6h16M4 12h16M4 18h10" },
     ins: { color: "text-purple-300", path: "M9 12l2 2 4-4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" },
   }[kind];

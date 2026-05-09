@@ -50,7 +50,7 @@ export function LiveFeed({ activity, slug, tab }: Props) {
   return (
     <aside
       aria-label="Live activity feed"
-      className="relative flex flex-col overflow-hidden rounded-md border border-slate-800/80 bg-slate-950/40"
+      className="relative flex flex-col console-panel"
     >
       <header className="flex items-center justify-between border-b border-dashed border-slate-800 px-4 py-3">
         <div className="flex items-center gap-2">
@@ -58,11 +58,11 @@ export function LiveFeed({ activity, slug, tab }: Props) {
             <span className="absolute inline-flex h-full w-full animate-ping-slow rounded-full bg-signal opacity-60" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-signal" />
           </span>
-          <h2 className="font-mono text-[10px] uppercase tracking-[0.22em] text-slate-300">
+          <h2 className="section-label-strong">
             Live
           </h2>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+        <span className="section-label">
           {activity.length} {activity.length === 1 ? "event" : "events"}
         </span>
       </header>
@@ -96,7 +96,7 @@ export function LiveFeed({ activity, slug, tab }: Props) {
 
       {tab === "manager" && activity.length > 0 && (
         <div className="border-t border-dashed border-slate-800 px-4 py-2">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500">
+          <p className="section-label">
             48h rollup · {countByKind(activity, "comment")} comments ·{" "}
             {countByKind(activity, "transition")} transitions
           </p>

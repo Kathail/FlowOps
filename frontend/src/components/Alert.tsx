@@ -13,11 +13,14 @@ import type { ReactNode } from "react";
 
 export type AlertVariant = "error" | "success" | "info" | "warning";
 
+// Operations-console palette: muted backgrounds, hairline borders, no
+// chunky chrome. Rose for error (warmer than red, matches emergency
+// markers), signal-cyan for info (the primary accent).
 const VARIANT: Record<AlertVariant, string> = {
-  error: "border-red-500/40 bg-red-500/10 text-red-200",
-  success: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
-  info: "border-blue-500/40 bg-blue-500/10 text-blue-200",
-  warning: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+  error: "border-rose-500/30 bg-rose-500/5 text-rose-200",
+  success: "border-emerald-500/30 bg-emerald-500/5 text-emerald-200",
+  info: "border-signal/30 bg-signal/5 text-signal",
+  warning: "border-amber-500/30 bg-amber-500/5 text-amber-200",
 };
 
 const ASSERTIVE: ReadonlySet<AlertVariant> = new Set(["error", "warning"]);

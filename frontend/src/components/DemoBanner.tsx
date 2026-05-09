@@ -11,25 +11,28 @@ export function DemoBanner() {
     <div
       role="region"
       aria-label="Demo environment notice"
-      className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs text-emerald-100"
+      className="flex flex-wrap items-center justify-between gap-3 border-b border-emerald-500/20 bg-emerald-500/5 px-4 py-2 text-xs text-emerald-100"
     >
       <p className="flex items-center gap-2">
         <span
           aria-hidden="true"
-          className="inline-flex items-center rounded bg-emerald-500/30 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-100"
+          className="font-mono text-[10px] uppercase tracking-[0.22em] text-emerald-300"
         >
           Demo
         </span>
-        <span>
-          You're exploring a sandbox tenant pre-populated with simulated work. Changes are real but
-          the data resets periodically.
+        <span aria-hidden className="text-emerald-500/40">
+          ·
+        </span>
+        <span className="text-emerald-200/90">
+          Sandbox tenant pre-populated with simulated work. Changes are real but the data resets
+          periodically.
         </span>
       </p>
-      <p className="flex items-center gap-3 text-xs">
-        <span className="text-emerald-200/70">Questions?</span>
+      <p className="flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.18em]">
+        <span className="text-emerald-300/60">Questions</span>
         <a
           href="mailto:contact@citywater.ca"
-          className="font-medium text-emerald-100 underline-offset-2 hover:text-white hover:underline"
+          className="text-emerald-200 hover:text-emerald-100"
         >
           contact@citywater.ca
         </a>
@@ -38,9 +41,9 @@ export function DemoBanner() {
         </span>
         <a
           href="https://citywater.ca"
-          className="font-medium text-emerald-100 underline-offset-2 hover:text-white hover:underline"
+          className="text-emerald-200 hover:text-emerald-100"
         >
-          ← Back to citywater.ca
+          ← citywater.ca
         </a>
       </p>
     </div>

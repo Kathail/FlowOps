@@ -301,7 +301,7 @@ function TaskSection({
         </div>
         <Link
           to={`/${slug}/admin/task-definitions`}
-          className="font-mono text-xs text-slate-400 hover:text-blue-300 hover:underline"
+          className="font-mono text-xs text-slate-400 hover:text-cyan-100 hover:underline"
         >
           {task.code} · v{task.version}
         </Link>
@@ -475,7 +475,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
                   onClick={() => setDay(d)}
                   className={`min-h-11 rounded-full px-4 py-2 text-sm capitalize transition-colors ${
                     day === d
-                      ? "bg-blue-500/15 text-blue-200 ring-1 ring-blue-500/40"
+                      ? "bg-signal/15 text-cyan-100 ring-1 ring-signal/40"
                       : "bg-slate-900 text-slate-300 ring-1 ring-slate-700 hover:bg-slate-800"
                   }`}
                 >
@@ -488,7 +488,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
           <div>
             <div className="flex items-baseline justify-between mb-2">
               <p className="text-xs uppercase tracking-wider text-slate-500">Duration</p>
-              <p className="text-sm tabular-nums text-blue-300">{formatDuration(durationMins)}</p>
+              <p className="text-sm tabular-nums text-cyan-100">{formatDuration(durationMins)}</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {[15, 30, 60, 120, 240, 480].map((m) => (
@@ -496,7 +496,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
                   key={m}
                   type="button"
                   onClick={() => setDurationMins((d) => d + m)}
-                  className="min-h-11 rounded-full bg-slate-900 px-4 py-2 text-sm text-slate-200 ring-1 ring-slate-700 transition-colors hover:bg-slate-800 hover:ring-blue-500/40 active:bg-blue-500/15 active:ring-blue-500/60"
+                  className="min-h-11 rounded-full bg-slate-900 px-4 py-2 text-sm text-slate-200 ring-1 ring-slate-700 transition-colors hover:bg-slate-800 hover:ring-signal/40 active:bg-signal/15 active:ring-signal/40"
                 >
                   +{m < 60 ? `${m}m` : `${m / 60}h`}
                 </button>
@@ -517,7 +517,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
             <button
               type="button"
               onClick={() => setManualMode(true)}
-              className="text-xs text-slate-400 hover:text-blue-300 hover:underline"
+              className="text-xs text-slate-400 hover:text-cyan-100 hover:underline"
             >
               Manual range…
             </button>
@@ -590,7 +590,7 @@ function TimeSection({ wo }: { wo: WorkOrderDetail }) {
             <button
               type="button"
               onClick={() => setManualMode(false)}
-              className="text-xs text-slate-400 hover:text-blue-300 hover:underline"
+              className="text-xs text-slate-400 hover:text-cyan-100 hover:underline"
             >
               ← Quick log
             </button>

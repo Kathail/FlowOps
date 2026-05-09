@@ -83,13 +83,13 @@ export function ProcedureRunner({ task, taskData, onChange }: Props) {
                     onClick={() => toggleManual(step)}
                     className={`flex w-full items-start gap-3 rounded-md border p-3 text-left transition-colors ${
                       checked
-                        ? "border-blue-500/40 bg-blue-500/10 hover:border-blue-400"
+                        ? "border-signal/40 bg-signal/10 hover:border-signal"
                         : "border-slate-800 bg-slate-900/60 hover:border-slate-700"
                     }`}
                   >
                     <span
                       className={`mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded ${
-                        checked ? "bg-blue-500 text-white" : "border border-slate-600"
+                        checked ? "bg-signal/20 text-white" : "border border-slate-600"
                       }`}
                       aria-hidden
                     >

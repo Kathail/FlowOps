@@ -135,7 +135,7 @@ export function LayerPanel({
                   aria-label="Toggle open work orders"
                 />
                 <span
-                  className="inline-block h-3 w-3 rounded-full border-2 border-blue-400"
+                  className="inline-block h-3 w-3 rounded-full border-2 border-signal"
                   aria-hidden="true"
                 />
                 <span className="text-slate-200">Open work orders</span>

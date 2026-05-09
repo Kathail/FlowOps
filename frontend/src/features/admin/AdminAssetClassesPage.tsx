@@ -70,7 +70,7 @@ export function AdminAssetClassesPage() {
                 onClick={() => setSelected(ac.code)}
                 className={`w-full px-3 py-2 text-left transition-colors ${
                   selected === ac.code
-                    ? "bg-blue-500/15 font-medium ring-1 ring-blue-500/30"
+                    ? "bg-signal/15 font-medium ring-1 ring-signal/30"
                     : "hover:bg-slate-800/60"
                 }`}
               >

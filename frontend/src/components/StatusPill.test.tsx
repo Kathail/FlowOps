@@ -10,10 +10,10 @@ describe("StatusPill", () => {
 
   it.each([
     ["neutral", "bg-slate-500/15"],
-    ["info", "bg-blue-500/15"],
+    ["info", "bg-signal/15"],
     ["success", "bg-emerald-500/15"],
     ["warning", "bg-amber-500/15"],
-    ["danger", "bg-red-500/15"],
+    ["danger", "bg-rose-500/15"],
     ["muted", "bg-slate-700/30"],
   ] as const)("tone=%s applies %s", (tone, klass) => {
     render(<StatusPill tone={tone}>x</StatusPill>);
