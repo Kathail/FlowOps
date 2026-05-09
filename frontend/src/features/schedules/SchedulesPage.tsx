@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { Alert } from "../../components/Alert";
 import { Button } from "../../components/Button";
 import { ConfirmDialog } from "../../components/ConfirmDialog";
@@ -168,6 +169,7 @@ export function SchedulesPage() {
 }
 
 function Row({ schedule }: { schedule: ScheduleRead }) {
+  const { slug } = useParams<{ slug: string }>();
   const update = useUpdateSchedule(schedule.id);
   const remove = useDeleteSchedule();
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -187,8 +189,17 @@ function Row({ schedule }: { schedule: ScheduleRead }) {
           </StatusPill>
         </td>
         <td className="px-3 py-2 font-mono text-xs text-slate-300">{schedule.rrule}</td>
-        <td className="px-3 py-2 font-mono text-xs text-slate-400">
-          {schedule.asset_uid ?? <Dash />}
+        <td className="px-3 py-2 font-mono text-xs">
+          {schedule.asset_uid && slug ? (
+            <Link
+              to={`/${slug}/assets/${schedule.asset_uid}`}
+              className="text-slate-300 hover:text-cyan-200 hover:underline"
+            >
+              {schedule.asset_uid}
+            </Link>
+          ) : (
+            <Dash />
+          )}
         </td>
         <td className="px-3 py-2 text-xs text-slate-300">
           {formatDateTime(schedule.next_run_at) || <Dash />}
