@@ -31,15 +31,39 @@ export interface InvitationListResponse {
 }
 
 export interface UserRead {
+  id: number;
   user_uid: string;
   email: string;
   full_name: string;
   phone: string | null;
+  employee_number: string | null;
+  title: string | null;
+  default_area_id: number | null;
+  notify_on_assignment: boolean;
   is_active: boolean;
   last_login_at: string | null;
   created_at: string;
   updated_at: string;
   roles: { code: string; name: string }[];
+}
+
+export interface UserSelfUpdateInput {
+  full_name?: string;
+  phone?: string | null;
+  title?: string | null;
+  default_area_id?: number | null;
+  notify_on_assignment?: boolean;
+}
+
+export function getMe(): Promise<UserRead> {
+  return apiJson<UserRead>("/api/v1/users/me");
+}
+
+export function updateMe(input: UserSelfUpdateInput): Promise<UserRead> {
+  return apiJson<UserRead>("/api/v1/users/me", {
+    method: "PATCH",
+    body: JSON.stringify(input),
+  });
 }
 
 export interface UserListResponse {
@@ -104,6 +128,18 @@ export function acceptInvitation(input: {
 
 export function listUsers(): Promise<UserListResponse> {
   return apiJson<UserListResponse>("/api/v1/users?page_size=200");
+}
+
+/** Look up a single user by their tenant-unique employee number. The
+ * dispatch + WO-detail "assign by number" flows use this to resolve a
+ * typed-in code (e.g. "1437") to a user.id without exposing every
+ * profile to a non-admin role. */
+export function lookupUserByEmployeeNumber(
+  employeeNumber: string,
+): Promise<UserListResponse> {
+  return apiJson<UserListResponse>(
+    `/api/v1/users?employee_number=${encodeURIComponent(employeeNumber)}`,
+  );
 }
 
 export function updateUserRoles(user_uid: string, role_codes: string[]): Promise<UserRead> {

@@ -182,6 +182,14 @@ def list_service_requests():
     if domain:
         stmt = stmt.where(ServiceRequest.domain == domain)
 
+    asset_uid = request.args.get("asset_uid")
+    if asset_uid:
+        target = db.session.scalar(select(Asset).where(Asset.asset_uid == asset_uid))
+        if target is None:
+            stmt = stmt.where(ServiceRequest.id == -1)
+        else:
+            stmt = stmt.where(ServiceRequest.asset_id == target.id)
+
     since = request.args.get("since")
     if since:
         try:
@@ -518,6 +526,36 @@ def dispatch_service_request(sr_number: str):
 
     priority = wo_payload.priority or sr.priority
 
+    # Territory auto-routing — same fallback as the create-WO endpoint.
+    # When the dispatcher hasn't picked an operator, look up today's
+    # primary for the SR's location (or its asset's geom). The
+    # dispatcher always wins if they specified one.
+    assigned_to = wo_payload.assigned_to
+    if assigned_to is not None:
+        # Tenant guard — same reason as create_work_order: a cross-tenant
+        # assigned_to would leak the WO into another tenant's queue and
+        # email the recipient via the notification service.
+        from app.models import User as _User
+
+        found = db.session.scalar(
+            select(_User.id).where(
+                _User.id == assigned_to,
+                _User.tenant_id == current_user.tenant_id,
+            )
+        )
+        if not found:
+            raise ValidationError(
+                f"user {assigned_to} not found", code="unknown_assignee"
+            )
+    if assigned_to is None:
+        from app.services.territory import primary_operator_for
+
+        assigned_to = primary_operator_for(
+            tenant_id=current_user.tenant_id,
+            location=sr.location,
+            asset_id=asset_id,
+        )
+
     wo_number = next_wo_number(current_user.tenant_id)
     last_error: IntegrityError | None = None
     wo: WorkOrder | None = None
@@ -536,7 +574,7 @@ def dispatch_service_request(sr_number: str):
             scheduled_for=wo_payload.scheduled_for,
             due_by=wo_payload.due_by,
             reported_by=current_user.id,
-            assigned_to=wo_payload.assigned_to,
+            assigned_to=assigned_to,
             crew_id=wo_payload.crew_id,
             service_request_id=sr.id,
         )
@@ -572,4 +610,10 @@ def dispatch_service_request(sr_number: str):
 
     db.session.commit()
     db.session.refresh(sr)
+
+    if wo.assigned_to is not None:
+        from app.services.notifications import notify_work_order_assigned
+
+        notify_work_order_assigned(work_order=wo, assignee_id=wo.assigned_to)
+
     return jsonify(_payload(sr))

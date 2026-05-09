@@ -25,6 +25,9 @@ import { InspectionDetailPage } from "./features/inspections/InspectionDetailPag
 import { InspectionListPage } from "./features/inspections/InspectionListPage";
 import { ReportDetailPage } from "./features/reports/ReportDetailPage";
 import { ReportsPage } from "./features/reports/ReportsPage";
+import { OperatorsPage } from "./features/operators/OperatorsPage";
+import { PlanningPage } from "./features/planning/PlanningPage";
+import { ProfilePage } from "./features/profile/ProfilePage";
 import { SchedulesPage } from "./features/schedules/SchedulesPage";
 import { TaskCatalog } from "./features/tasks/TaskCatalog";
 import { ServiceRequestDetailPage } from "./features/service-requests/ServiceRequestDetailPage";
@@ -85,6 +88,9 @@ const router = createBrowserRouter(
         <Route path="reports" element={<ReportsPage />} />
         <Route path="reports/:reportSlug" element={<ReportDetailPage />} />
         <Route path="schedules" element={<SchedulesPage />} />
+        <Route path="planning" element={<PlanningPage />} />
+        <Route path="operators" element={<OperatorsPage />} />
+        <Route path="profile" element={<ProfilePage />} />
         <Route path="admin" element={<AdminLayout />}>
           <Route index element={<AdminUsersPage />} />
           <Route path="users" element={<AdminUsersPage />} />

@@ -16,6 +16,7 @@ from app.api.assets import assets_bp
 from app.api.auth import auth_bp
 from app.api.comments import comments_bp
 from app.api.crews import crews_bp
+from app.api.daily_assignments import daily_assignments_bp
 from app.api.dashboard import dashboard_bp
 from app.api.health import health_bp
 from app.api.history import history_bp
@@ -24,6 +25,7 @@ from app.api.invitations import invitations_bp
 from app.api.links import links_bp
 from app.api.map_overlays import map_overlays_bp
 from app.api.openapi import openapi_bp
+from app.api.operators import operators_bp
 from app.api.pacp_codes import pacp_codes_bp
 from app.api.reports import reports_bp
 from app.api.resolved import resolved_bp
@@ -138,6 +140,8 @@ def create_app(settings: Settings | None = None) -> Flask:
     app.register_blueprint(assets_bp)
     app.register_blueprint(tiles_bp)
     app.register_blueprint(crews_bp)
+    app.register_blueprint(daily_assignments_bp)
+    app.register_blueprint(operators_bp)
     app.register_blueprint(work_orders_bp)
     app.register_blueprint(wo_templates_bp)
     app.register_blueprint(inspections_bp)

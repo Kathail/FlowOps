@@ -5,6 +5,7 @@ from app.models.audit import AuditLog
 from app.models.comment import ENTITY_TYPES as COMMENT_ENTITY_TYPES
 from app.models.comment import Comment
 from app.models.crew import Crew, CrewMember
+from app.models.daily_assignment import DailyAssignment
 from app.models.entity_link import (
     ENTITY_TYPES as LINK_ENTITY_TYPES,
 )
@@ -66,6 +67,7 @@ __all__ = [
     "Comment",
     "Crew",
     "CrewMember",
+    "DailyAssignment",
     "EntityLink",
     "GeocodeQueue",
     "Inspection",

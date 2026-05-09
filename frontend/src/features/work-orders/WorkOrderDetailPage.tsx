@@ -27,7 +27,9 @@ import {
   type WorkOrderDetail,
 } from "./api";
 import { useWorkOrder } from "./hooks";
-import { WO_STATUS_TONE, WO_TRANSITIONS as TRANSITIONS } from "./tones";
+import { isReopen, WO_STATUS_TONE, WO_TRANSITIONS as TRANSITIONS } from "./tones";
+import { AssignByEmployeeNumber } from "./AssignByEmployeeNumber";
+import { useAuth } from "../auth/useAuth";
 
 /** Single-letter hotkey per destination status. Letters are stable so
  * a returning operator's muscle memory works across WOs. Avoid
@@ -46,6 +48,9 @@ export function WorkOrderDetailPage() {
   const { slug, wo: woNumber } = useParams<{ slug: string; wo: string }>();
   const queryClient = useQueryClient();
   const woQuery = useWorkOrder(woNumber);
+  const { user } = useAuth();
+  const isAdmin = !!user?.roles.some((r) => r.code === "admin");
+  const isSupervisor = !!user?.roles.some((r) => r.code === "supervisor");
 
   // Per-stop entries the operator just ticked complete in this session.
   // `comment` is the rendered narrative (from the task definition's
@@ -134,6 +139,10 @@ export function WorkOrderDetailPage() {
             <div className="flex flex-wrap justify-end gap-1">
               {TRANSITIONS[wo.status].map((to) => {
                 const hotkey = WO_HOTKEY[to];
+                const reopen = isReopen(wo.status, to);
+                // Reopen is admin-only at the API; hide the button for
+                // non-admins so we don't dangle a click that 409s.
+                if (reopen && !isAdmin) return null;
                 return (
                   <Button
                     key={to}
@@ -141,11 +150,21 @@ export function WorkOrderDetailPage() {
                     size="sm"
                     onClick={() => transition.mutate(to)}
                     disabled={transition.isPending}
-                    aria-label={`Transition to ${to.replace("_", " ")} (shortcut ${hotkey?.toUpperCase()})`}
-                    title={hotkey ? `Shortcut: ${hotkey.toUpperCase()}` : undefined}
+                    aria-label={
+                      reopen
+                        ? `Re-open work order (admin)`
+                        : `Transition to ${to.replace("_", " ")} (shortcut ${hotkey?.toUpperCase()})`
+                    }
+                    title={
+                      reopen
+                        ? "Re-open this work order — admin only. Clears completed_at."
+                        : hotkey
+                          ? `Shortcut: ${hotkey.toUpperCase()}`
+                          : undefined
+                    }
                   >
-                    → {to.replace("_", " ")}
-                    {hotkey && (
+                    {reopen ? "↻ re-open" : `→ ${to.replace("_", " ")}`}
+                    {!reopen && hotkey && (
                       <kbd className="ml-2 rounded bg-slate-800 px-1 text-[10px] font-mono text-slate-400">
                         {hotkey.toUpperCase()}
                       </kbd>
@@ -157,6 +176,14 @@ export function WorkOrderDetailPage() {
           </div>
         </div>
       </header>
+
+      <AssignByEmployeeNumber
+        woNumber={wo.wo_number}
+        assignedTo={wo.assigned_to}
+        assigneeFullName={wo.assignee_full_name}
+        assigneeEmployeeNumber={wo.assignee_employee_number}
+        canAssign={isAdmin || isSupervisor}
+      />
 
       <Section title="Details">
         <dl className="grid grid-cols-2 gap-y-1 text-sm">

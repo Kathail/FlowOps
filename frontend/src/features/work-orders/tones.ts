@@ -38,9 +38,19 @@ export const WO_TRANSITIONS: Record<WoStatus, WoStatus[]> = {
   assigned: ["in_progress", "on_hold", "cancelled"],
   in_progress: ["completed", "on_hold"],
   on_hold: ["open", "assigned", "in_progress", "cancelled"],
-  completed: [],
-  cancelled: [],
+  // Admin-only at the backend; UI surfaces the button and lets the API
+  // enforce the role gate (returns reopen_requires_admin if not allowed).
+  completed: ["open"],
+  cancelled: ["open"],
 };
+
+/** Edges that need admin role server-side. UI hides the button for non-
+ * admins so we don't dangle a click that always 409s. */
+const REOPEN_EDGES: ReadonlySet<string> = new Set(["completed→open", "cancelled→open"]);
+
+export function isReopen(from: WoStatus, to: WoStatus): boolean {
+  return REOPEN_EDGES.has(`${from}→${to}`);
+}
 
 export function canTransition(from: WoStatus, to: WoStatus): boolean {
   return WO_TRANSITIONS[from]?.includes(to) ?? false;

@@ -38,6 +38,14 @@ export interface WorkOrderListItem {
   created_at: string;
 }
 
+export interface WorkOrderDetailExtras {
+  /** Display name + employee number for the current assignee. Server-
+   * resolved so the detail page doesn't fan out a /users round-trip on
+   * every page load. Both null when unassigned. */
+  assignee_full_name: string | null;
+  assignee_employee_number: string | null;
+}
+
 export interface WorkOrderListResponse {
   items: WorkOrderListItem[];
   page: number;
@@ -99,7 +107,7 @@ export interface WoAsset {
   task_data: Record<string, unknown>;
 }
 
-export interface WorkOrderDetail extends WorkOrderListItem {
+export interface WorkOrderDetail extends WorkOrderListItem, WorkOrderDetailExtras {
   id: number;
   description: string | null;
   location: Record<string, unknown> | null;
@@ -187,9 +195,12 @@ export function createWorkOrder(input: WorkOrderCreateInput): Promise<WorkOrderD
 
 export function updateWorkOrder(
   wo_number: string,
-  input: Partial<WorkOrderCreateInput> & {
+  input: Partial<Omit<WorkOrderCreateInput, "assigned_to">> & {
     resolution?: string | null;
     task_data?: Record<string, unknown>;
+    /** Null clears an existing assignment; intersection here so the
+     * widened type wins over the non-nullable create input. */
+    assigned_to?: number | null;
   },
 ): Promise<WorkOrderDetail> {
   return apiJson<WorkOrderDetail>(`/api/v1/work-orders/${encodeURIComponent(wo_number)}`, {

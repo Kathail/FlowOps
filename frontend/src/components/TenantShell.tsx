@@ -92,6 +92,10 @@ export function TenantShell() {
     return <Navigate to={`/${slug}/`} replace />;
   }
   const isAdmin = user.roles.some((r) => r.code === "admin");
+  // Supervisors + admins see the planning surface (Operators, Day
+  // roster). Tech/intake/readonly hit a 403 on the backend if they
+  // open those pages, so we hide them from the nav.
+  const canPlan = isAdmin || user.roles.some((r) => r.code === "supervisor");
 
   const woOpen = dash.data?.wo_kpis.open ?? null;
   const srNew = dash.data?.sr_kpis.new ?? null;
@@ -171,9 +175,14 @@ export function TenantShell() {
 
       <p className="section-label mb-1.5 mt-4 px-3">Plan</p>
       <nav className="flex flex-col gap-0">
+        {canPlan && navLink(`/${slug}/operators`, "Operators")}
+        {canPlan && navLink(`/${slug}/planning`, "Day roster")}
         {navLink(`/${slug}/schedules`, "Schedules")}
         {navLink(`/${slug}/reports`, "Reports")}
       </nav>
+
+      <p className="section-label mb-1.5 mt-4 px-3">You</p>
+      <nav className="flex flex-col gap-0">{navLink(`/${slug}/profile`, "Profile")}</nav>
 
       {isAdmin && (
         <>

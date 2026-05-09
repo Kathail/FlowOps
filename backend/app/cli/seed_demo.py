@@ -174,13 +174,19 @@ def _seed() -> None:
     db.session.flush()
 
     # Users
-    def _make_user(email: str, full_name: str, role_codes: list[str]) -> User:
+    def _make_user(
+        email: str,
+        full_name: str,
+        role_codes: list[str],
+        employee_number: str | None = None,
+    ) -> User:
         u = User(
             tenant_id=tenant.id,
             user_uid=generate_user_uid(),
             email=email,
             password_hash=hash_password(ADMIN_PASSWORD),
             full_name=full_name,
+            employee_number=employee_number,
             is_active=True,
         )
         db.session.add(u)
@@ -189,10 +195,10 @@ def _seed() -> None:
             db.session.add(UserRole(user_id=u.id, role_id=role_objs[code].id))
         return u
 
-    admin = _make_user(ADMIN_EMAIL, "Admin Pearson", ["admin"])
-    supervisor = _make_user(SUP_EMAIL, "Sara Vega", ["supervisor"])
-    tech = _make_user(TECH_EMAIL, "Tom Fields", ["tech"])
-    intake = _make_user(INTAKE_EMAIL, "Iris Park", ["intake"])
+    admin = _make_user(ADMIN_EMAIL, "Admin Pearson", ["admin"], "1001")
+    supervisor = _make_user(SUP_EMAIL, "Sara Vega", ["supervisor"], "1100")
+    tech = _make_user(TECH_EMAIL, "Tom Fields", ["tech"], "1437")
+    intake = _make_user(INTAKE_EMAIL, "Iris Park", ["intake"], "1500")
     db.session.flush()
 
     # Crew

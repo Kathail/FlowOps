@@ -8,6 +8,7 @@ import { ErrorState, LoadingState } from "../../components/States";
 import { UnsavedChangesGuard } from "../../components/UnsavedChangesGuard";
 import { formatDateTime } from "../../lib/format";
 import { translateApiError } from "../../lib/translateApiError";
+import { useAuth } from "../auth/useAuth";
 import { ActivityTimeline } from "../activity/ActivityTimeline";
 import { LinkedItems } from "../links/LinkedItems";
 import { AreaChips } from "../tasks/AreaChips";
@@ -36,6 +37,8 @@ export function ServiceRequestDetailPage() {
   const [closeReason, setCloseReason] = useState<SrClosureReason>("resolved");
   const [closeNotes, setCloseNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { user } = useAuth();
+  const isAdmin = !!user?.roles.some((r) => r.code === "admin");
 
   const taskCode = query.data?.task_definition_code ?? null;
   const taskQuery = useQuery<TaskDefinitionRead, Error>({
@@ -92,7 +95,7 @@ export function ServiceRequestDetailPage() {
     }, 600);
   }
 
-  async function transition(status: "triaged" | "closed") {
+  async function transition(status: "triaged" | "closed" | "new") {
     setErrorMessage(null);
     try {
       if (status === "closed") {
@@ -102,6 +105,14 @@ export function ServiceRequestDetailPage() {
           closure_notes: closeNotes || null,
         });
         setCloseOpen(false);
+      } else if (status === "new") {
+        // Reopen path: clear closure metadata so the SR doesn't show
+        // "closed: resolved" on a triaged ticket.
+        await update.mutateAsync({
+          status: "new",
+          closure_reason: null,
+          closure_notes: null,
+        });
       } else {
         await update.mutateAsync({ status });
       }
@@ -149,6 +160,18 @@ export function ServiceRequestDetailPage() {
                 Close
               </Button>
             )}
+            {/* Reopen path — admin-only, surfaced when the SR is in a
+                terminal state (closed/duplicate). Mirrors WO reopen. */}
+            {["closed", "duplicate"].includes(data.status) && isAdmin && (
+              <Button
+                variant="ghost"
+                onClick={() => transition("new")}
+                disabled={update.isPending}
+                title="Re-open this service request — admin only. Clears closure metadata."
+              >
+                ↻ Re-open
+              </Button>
+            )}
           </div>
         }
       />
@@ -169,6 +192,17 @@ export function ServiceRequestDetailPage() {
           {data.location && (
             <p className="text-sm text-slate-200">
               {data.location.coordinates[0].toFixed(5)}, {data.location.coordinates[1].toFixed(5)}
+            </p>
+          )}
+          {data.asset_uid && (
+            <p className="text-sm">
+              <span className="text-slate-400">Asset: </span>
+              <Link
+                to={`/${slug}/assets/${data.asset_uid}`}
+                className="font-mono text-slate-100 hover:text-cyan-200 hover:underline"
+              >
+                {data.asset_uid}
+              </Link>
             </p>
           )}
           {data.work_order_number && (

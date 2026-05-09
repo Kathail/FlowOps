@@ -139,13 +139,37 @@ def test_illegal_transition_409(admin_client):
     assert resp.get_json()["error"]["code"] == "invalid_transition"
 
 
-def test_completed_terminal(admin_client):
+def test_reopen_rejected_for_supervisor(admin_client, supervisor_client):
+    """Reopen is admin-only — a supervisor can drive a WO to completed
+    but cannot un-close it."""
     wo = _create_wo(admin_client)
     n = wo["wo_number"]
     for to in ("open", "assigned", "in_progress", "completed"):
         admin_client.post(f"/api/v1/work-orders/{n}/transition", json={"to": to})
-    resp = admin_client.post(f"/api/v1/work-orders/{n}/transition", json={"to": "open"})
+    resp = supervisor_client.post(
+        f"/api/v1/work-orders/{n}/transition",
+        json={"to": "open"},
+    )
     assert resp.status_code == 409
+    assert resp.get_json()["error"]["code"] == "reopen_requires_admin"
+
+
+def test_completed_reopen_admin_only(admin_client):
+    """Admin can reopen completed → open; clears completed_at and the
+    other terminal targets (assigned/in_progress/...) still 409."""
+    wo = _create_wo(admin_client)
+    n = wo["wo_number"]
+    for to in ("open", "assigned", "in_progress", "completed"):
+        admin_client.post(f"/api/v1/work-orders/{n}/transition", json={"to": to})
+    # Non-open terminal target → still illegal (only open is reopenable).
+    resp = admin_client.post(f"/api/v1/work-orders/{n}/transition", json={"to": "assigned"})
+    assert resp.status_code == 409
+    # Admin reopen succeeds.
+    resp = admin_client.post(f"/api/v1/work-orders/{n}/transition", json={"to": "open"})
+    assert resp.status_code == 200, resp.get_json()
+    body = resp.get_json()
+    assert body["status"] == "open"
+    assert body["completed_at"] is None
 
 
 def test_in_progress_sets_started_at(admin_client):

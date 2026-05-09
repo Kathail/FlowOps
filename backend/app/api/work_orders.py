@@ -14,6 +14,7 @@ from app.errors import ConflictError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models import (
     Asset,
+    User,
     WorkOrder,
     WorkOrderAsset,
     WorkOrderAttachment,
@@ -45,7 +46,7 @@ from app.services.geometry import wkb_to_geojson
 from app.services.permissions import require_roles
 from app.services.storage import upload_attachment
 from app.services.wo_number import next_wo_number
-from app.services.wo_state import validate_transition
+from app.services.wo_state import is_reopen, validate_transition
 
 work_orders_bp = Blueprint("work_orders", __name__, url_prefix="/api/v1/work-orders")
 
@@ -127,6 +128,23 @@ def _user_roles() -> set[str]:
 
 def _is_supervisor_or_admin() -> bool:
     return bool(_user_roles() & {"admin", "supervisor"})
+
+
+def _require_user_in_tenant(user_id: int) -> None:
+    """Reject a client-supplied user_id that doesn't belong to the
+    caller's tenant. Without this, an admin (or a buggy frontend) can
+    assign a WO to someone in another tenant — and the notification
+    service would email them with the WO number + title + tenant name."""
+    found = db.session.scalar(
+        select(User.id).where(
+            User.id == user_id,
+            User.tenant_id == current_user.tenant_id,
+        )
+    )
+    if not found:
+        raise ValidationError(
+            f"user {user_id} not found", code="unknown_assignee"
+        )
 
 
 def _can_view_wo(wo: WorkOrder) -> bool:
@@ -211,6 +229,17 @@ def _wo_payload(wo: WorkOrder) -> dict[str, Any]:
 
         td = db.session.scalar(select(TaskDefinition).where(TaskDefinition.id == wo.task_definition_id))
         task_definition_code = td.code if td else None
+    # Resolve the assignee's display name + employee number so the WO
+    # detail page can render "Assigned to Tom Fields · 1437" without a
+    # follow-up /users/<id> round-trip per page load. Single SELECT,
+    # only when assigned_to is set.
+    assignee_full_name: str | None = None
+    assignee_employee_number: str | None = None
+    if wo.assigned_to is not None:
+        assignee = db.session.scalar(select(User).where(User.id == wo.assigned_to))
+        if assignee is not None:
+            assignee_full_name = assignee.full_name
+            assignee_employee_number = assignee.employee_number
     payload = {
         "id": wo.id,
         "wo_number": wo.wo_number,
@@ -231,6 +260,8 @@ def _wo_payload(wo: WorkOrder) -> dict[str, Any]:
         "completed_at": wo.completed_at.isoformat() if wo.completed_at else None,
         "reported_by": wo.reported_by,
         "assigned_to": wo.assigned_to,
+        "assignee_full_name": assignee_full_name,
+        "assignee_employee_number": assignee_employee_number,
         "crew_id": wo.crew_id,
         "resolution": wo.resolution,
         "attrs": wo.attrs or {},
@@ -409,6 +440,25 @@ def create_work_order():
         if data.priority == "normal":
             priority = template.default_priority
 
+    # Territory auto-routing — when the caller didn't specify an assignee,
+    # default to today's primary operator for the WO's location/asset.
+    # `data.assigned_to is None` is the explicit "let the system pick"
+    # signal; if the caller passes an id, we validate it belongs to this
+    # tenant before honouring (a cross-tenant id would otherwise leak the
+    # WO into the assignee's queue and email them about it via the
+    # notification service).
+    assigned_to = data.assigned_to
+    if assigned_to is not None:
+        _require_user_in_tenant(assigned_to)
+    if assigned_to is None:
+        from app.services.territory import primary_operator_for
+
+        assigned_to = primary_operator_for(
+            tenant_id=current_user.tenant_id,
+            location=location,
+            asset_id=asset_id,
+        )
+
     wo_number = next_wo_number(current_user.tenant_id)
     last_error: IntegrityError | None = None
     for _attempt in range(3):
@@ -427,7 +477,7 @@ def create_work_order():
             scheduled_for=data.scheduled_for,
             due_by=data.due_by,
             reported_by=current_user.id,
-            assigned_to=data.assigned_to,
+            assigned_to=assigned_to,
             crew_id=data.crew_id,
             attrs=data.attrs,
         )
@@ -473,6 +523,12 @@ def create_work_order():
 
         db.session.commit()
         db.session.refresh(wo)
+
+        if wo.assigned_to is not None:
+            from app.services.notifications import notify_work_order_assigned
+
+            notify_work_order_assigned(work_order=wo, assignee_id=wo.assigned_to)
+
         return jsonify(_wo_payload(wo)), 201
 
     raise ConflictError("could not generate unique wo_number after retries", code="wo_number_collision") from last_error
@@ -502,6 +558,17 @@ def update_work_order(wo_number: str):
                 code="forbidden_fields",
             )
 
+    # Capture the prior assignee so we can decide whether to notify *after*
+    # the commit lands. We notify only when the assignment actually changes
+    # to a different non-null user — re-saving the same value (which the
+    # frontend does on any "save" click) must not re-trigger the email.
+    prev_assigned_to = wo.assigned_to
+
+    # Reject a cross-tenant assigned_to before mutating; same reason as
+    # in create_work_order — the notification path would email them.
+    if data.assigned_to is not None:
+        _require_user_in_tenant(data.assigned_to)
+
     for field in (
         "category",
         "priority",
@@ -521,6 +588,15 @@ def update_work_order(wo_number: str):
 
     db.session.commit()
     db.session.refresh(wo)
+
+    if (
+        wo.assigned_to is not None
+        and wo.assigned_to != prev_assigned_to
+    ):
+        from app.services.notifications import notify_work_order_assigned
+
+        notify_work_order_assigned(work_order=wo, assignee_id=wo.assigned_to)
+
     return jsonify(_wo_payload(wo))
 
 
@@ -532,12 +608,29 @@ def transition_work_order(wo_number: str):
     wo = _get_wo(wo_number)
     validate_transition(wo.status, data.to)
 
+    # Reopening from a terminal state (completed/cancelled → open) is
+    # admin-only — supervisors/techs can't "un-close" a WO they signed
+    # off on; that's a deliberate review step. The state machine permits
+    # the edge so the audit log/UI can render it; the role check here is
+    # the actual gate.
+    if is_reopen(wo.status, data.to):
+        roles = {r.code for r in current_user._get_current_object().roles}
+        if "admin" not in roles:
+            raise ConflictError(
+                "reopening a closed work order requires the admin role",
+                code="reopen_requires_admin",
+            )
+
     prev_status = wo.status
     wo.status = data.to
     if data.to == "in_progress" and wo.started_at is None:
         wo.started_at = datetime.now(UTC)
     if data.to == "completed" and wo.completed_at is None:
         wo.completed_at = datetime.now(UTC)
+    # Reopen path: clear completed_at so future "completed-this-week"
+    # KPIs and throughput sparklines don't double-count the WO.
+    if is_reopen(prev_status, data.to):
+        wo.completed_at = None
 
     emit_event(
         action="wo_transition",
