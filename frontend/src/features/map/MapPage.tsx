@@ -185,12 +185,21 @@ export function MapPage() {
     }
   }, [tileLayersQuery.data, setVisibleClasses]);
 
+  // Track the applied basemap so the swap effect below can skip its
+  // first run — the map was created with this style already, and a
+  // redundant setStyle while the initial load is in flight provokes
+  // maplibre's "rebuilding the style from scratch" warning and can
+  // leave layers in an inconsistent state.
+  const appliedBasemap = useRef<BasemapId>(basemap);
+
   // Initialize map
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: BASEMAP_STYLES.osm,
+      // Use the persisted basemap as the initial style so we don't
+      // need to immediately setStyle over a still-loading style.
+      style: BASEMAP_STYLES[appliedBasemap.current],
       // Initial view from `?ll=&z=` if present, otherwise our default
       // center/zoom. Captured at mount via useRef so panning the map
       // afterwards doesn't reset on re-renders.
@@ -298,10 +307,15 @@ export function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
-  // Switch basemap style; re-add the assets source/layers after style loads
+  // Switch basemap style; re-add the assets source/layers after style loads.
+  // Skip the first run — the map was already created with this style
+  // (see init effect) so calling setStyle here would just kick off a
+  // rebuild over the in-flight initial load.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+    if (appliedBasemap.current === basemap) return;
+    appliedBasemap.current = basemap;
     map.setStyle(BASEMAP_STYLES[basemap]);
   }, [basemap]);
 
@@ -670,7 +684,13 @@ export function MapPage() {
         onMobileClose={() => setLayersOpen(false)}
       />
       <div className="relative flex-1">
-        <div ref={containerRef} className="absolute inset-0" data-testid="map-container" />
+        {/* h-full w-full (not absolute inset-0): maplibre-gl.css sets
+            `.maplibregl-map { position: relative }` once the map mounts,
+            which would override `absolute` and collapse the container
+            to 0 height (the canvas inside is itself absolute, so the
+            container has no in-flow content). With h-full w-full the
+            container fills its flex-1 parent regardless of position. */}
+        <div ref={containerRef} className="h-full w-full" data-testid="map-container" />
         {/* Mobile-only hamburger to reveal the layers drawer. The
             desktop sidebar is always visible so this never renders
             on >=md. */}
