@@ -51,7 +51,7 @@ def get_dashboard():
         "recent_activity": _recent_activity(now - timedelta(days=2)),
         "wo_by_category_30d": _wo_by_category(month_ago),
         "sr_by_priority_30d": _sr_by_priority(month_ago),
-        "throughput_7d": _throughput_7d(week_ago, now),
+        "throughput_14d": _throughput_14d(now),
         "by_area": _by_area(now),
     }
     return jsonify(payload)
@@ -488,17 +488,16 @@ def _by_area(now: datetime) -> list[dict[str, Any]]:
     ]
 
 
-def _throughput_7d(week_ago: datetime, now: datetime) -> list[dict[str, Any]]:
-    """7-day completion bucket for the sparkline-like trend in the KPI
-    strip. One bucket per day, oldest first.
+def _throughput_14d(now: datetime) -> list[dict[str, Any]]:
+    """14-day completion buckets for the sparkline + week-over-week
+    comparison in the KPI strip. One bucket per day, oldest first.
 
-    DASH-P1-6: was 7 separate count queries; now one date_trunc GROUP BY
-    that returns at most 7 rows. Days with zero completions are filled
-    in by the Python-side bucket walk so the sparkline always has 7
-    bars regardless of activity.
+    The first 7 buckets are "last week", the last 7 are "this week" — the
+    frontend slices the trailing 7 for the bars and uses the leading 7's
+    sum as a reference. Single date_trunc GROUP BY for both halves.
     """
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    seven_days_ago = today_start - timedelta(days=6)
+    fourteen_days_ago = today_start - timedelta(days=13)
     rows = db.session.execute(
         select(
             func.date_trunc("day", WorkOrder.completed_at).label("day"),
@@ -506,7 +505,7 @@ def _throughput_7d(week_ago: datetime, now: datetime) -> list[dict[str, Any]]:
         )
         .where(
             WorkOrder.status == "completed",
-            WorkOrder.completed_at >= seven_days_ago,
+            WorkOrder.completed_at >= fourteen_days_ago,
             WorkOrder.completed_at < today_start + timedelta(days=1),
         )
         .group_by("day")
@@ -516,7 +515,7 @@ def _throughput_7d(week_ago: datetime, now: datetime) -> list[dict[str, Any]]:
         counts[day.date().isoformat()] = int(n)
 
     out: list[dict[str, Any]] = []
-    for i in range(6, -1, -1):
+    for i in range(13, -1, -1):
         day_start = today_start - timedelta(days=i)
         key = day_start.date().isoformat()
         out.append({"date": key, "completed": counts.get(key, 0)})

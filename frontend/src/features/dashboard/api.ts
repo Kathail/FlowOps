@@ -77,7 +77,7 @@ export interface DashboardResponse {
   recent_activity: DashboardActivityItem[];
   wo_by_category_30d: DashboardCategoryBucket[];
   sr_by_priority_30d: DashboardPriorityBucket[];
-  throughput_7d: DashboardThroughputDay[];
+  throughput_14d: DashboardThroughputDay[];
   by_area: DashboardAreaRow[];
 }
 

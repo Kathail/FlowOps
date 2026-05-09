@@ -244,7 +244,9 @@ function useGauges(data: DashboardResponse, slug: string, tab: DashTab): Gauge[]
   // manager
   const completionPct =
     wo.completion_rate_30d == null ? 0 : Math.round(wo.completion_rate_30d * 100);
-  const throughput = data.throughput_7d.reduce((s, d) => s + d.completed, 0);
+  // Sum the trailing 7 days only — the array is 14 days oldest-first so
+  // the last 7 entries are "this week".
+  const throughput = data.throughput_14d.slice(-7).reduce((s, d) => s + d.completed, 0);
   return [
     {
       label: "Completion 30d",

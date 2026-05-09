@@ -28,7 +28,7 @@ export function SystemPulseStrip({ data, slug, tab }: Props) {
       className="grid grid-cols-1 gap-4 console-panel lg:grid-cols-[1fr_1fr_1fr]"
     >
       <Spark
-        throughput={data.throughput_7d}
+        throughput={data.throughput_14d}
         closedThisWeek={data.wo_kpis.completed_this_week}
         slug={slug}
       />
@@ -43,29 +43,61 @@ function Spark({
   closedThisWeek,
   slug,
 }: {
-  throughput: DashboardResponse["throughput_7d"];
+  throughput: DashboardResponse["throughput_14d"];
   closedThisWeek: number;
   slug: string;
 }) {
-  const max = Math.max(1, ...throughput.map((d) => d.completed));
+  // Backend ships 14 days oldest-first. Trailing 7 are "this week" bars;
+  // the leading 7 are last week's reference for the WoW caption + the
+  // ghost reference line drawn behind today's bars.
+  const lastWeek = throughput.slice(0, 7);
+  const thisWeek = throughput.slice(-7);
+  const lastWeekTotal = lastWeek.reduce((s, d) => s + d.completed, 0);
+  const delta = closedThisWeek - lastWeekTotal;
+  const max = Math.max(
+    1,
+    ...thisWeek.map((d) => d.completed),
+    ...lastWeek.map((d) => d.completed),
+  );
   return (
     <div className="border-b border-dashed border-slate-800 p-4 lg:border-b-0 lg:border-r">
       <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="section-label-strong">
-          Throughput
-        </h3>
+        <h3 className="section-label-strong">Throughput</h3>
         <span className="section-label">
-          7d · <span className="tabular-nums text-slate-200">{closedThisWeek}</span> this week
+          7d ·{" "}
+          <span className="tabular-nums text-slate-200">{closedThisWeek}</span> this wk
         </span>
       </div>
+      {/* Week-over-week caption — operator's first read of this panel.
+          A bare "6 this week" doesn't tell them whether the team is
+          ahead, behind, or holding steady; the comparison does. */}
+      <div className="mb-2 flex items-baseline gap-1.5 font-mono text-[10px] uppercase tracking-wider">
+        <span className={`tabular-nums ${
+          delta > 0 ? "text-emerald-300" : delta < 0 ? "text-rose-300" : "text-slate-500"
+        }`}>
+          {delta > 0 ? "▲" : delta < 0 ? "▼" : "·"} {Math.abs(delta)}
+        </span>
+        <span className="text-slate-500">vs last wk ({lastWeekTotal})</span>
+      </div>
       <div
-        className="flex h-20 items-end gap-1"
+        className="relative flex h-20 items-end gap-1"
         role="img"
-        aria-label="Daily completed work for the past 7 days"
+        aria-label={`Daily completed work for the past 7 days. ${closedThisWeek} this week, ${lastWeekTotal} last week.`}
       >
-        {throughput.map((d, i) => {
+        {/* Ghost reference line at last week's daily average — gives
+            today's bars something to be measured against without
+            cluttering with 14 actual bars. */}
+        {lastWeekTotal > 0 && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 border-t border-dashed border-slate-700/70"
+            style={{ bottom: `${((lastWeekTotal / 7) / max) * 100}%` }}
+            title={`Last week's daily average: ${(lastWeekTotal / 7).toFixed(1)}`}
+          />
+        )}
+        {thisWeek.map((d, i) => {
           const ratio = max === 0 ? 0 : d.completed / max;
-          const isToday = i === throughput.length - 1;
+          const isToday = i === thisWeek.length - 1;
           const dayLabel = new Date(d.date).toLocaleDateString(undefined, { weekday: "short" });
           // Each bar links to the WO list filtered to that day's
           // completed work — reduces "I see throughput on Wed dropped,
@@ -76,7 +108,7 @@ function Spark({
             <Link
               key={d.date}
               to={`/${slug}/work-orders?status=completed&completed_on=${d.date}`}
-              className="group/bar flex flex-1 flex-col items-stretch gap-1"
+              className="group/bar relative flex flex-1 flex-col items-stretch gap-1"
               title={`${dayLabel}: ${d.completed} completed`}
               aria-label={`${dayLabel}: ${d.completed} completed work orders — open list`}
             >

@@ -252,6 +252,17 @@ export function MapPreview({ slug, tab }: Props) {
     overlaysQuery.data?.active_srs.features.filter(
       (f) => f.properties.priority === "emergency",
     ).length ?? 0;
+  const areaFeatures = overlaysQuery.data?.service_areas.features ?? [];
+  // Caption the dashed polygon that bounds the cluster — without a label
+  // operators read it as "selection / filter / drilldown" and hesitate.
+  // Single-area deployments name it; multi-area deployments call out the
+  // count.
+  const areaLabel: string | null =
+    areaFeatures.length === 0
+      ? null
+      : areaFeatures.length === 1
+        ? areaFeatures[0].properties.name
+        : `${areaFeatures.length} service zones`;
 
   return (
     <section
@@ -262,15 +273,26 @@ export function MapPreview({ slug, tab }: Props) {
           frame so the data is the only thing competing for attention
           inside the canvas. */}
       <header className="flex items-baseline justify-between border-b border-dashed border-slate-800 px-4 py-2.5">
-        <h2 className="section-label-strong">
-          Field
-        </h2>
+        <h2 className="section-label-strong">Field</h2>
         <div className="flex items-baseline gap-3 section-label">
+          {/* Emergency chip — heavier visual weight than the adjacent WO/SR
+              counts. Pulsing dot + ring + bordered chip makes a single
+              emergency unmissable on the periphery, where a once-a-week
+              supervisor read needs to grab them. Click drills into the
+              SR list filtered to active emergencies. */}
           {emergencies > 0 && (
-            <span className="flex items-baseline gap-1 text-rose-300">
-              <span aria-hidden className="inline-block h-1.5 w-1.5 translate-y-[1px] rounded-full bg-rose-400" />
-              {emergencies} emergency
-            </span>
+            <Link
+              to={`/${slug}/service-requests?priority=emergency&scope=all`}
+              className="group/em relative inline-flex items-center gap-1.5 rounded border border-rose-500/60 bg-rose-500/15 px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.18em] text-rose-100 hover:bg-rose-500/25"
+              title={`${emergencies} active emergency service request${emergencies === 1 ? "" : "s"}`}
+            >
+              <span aria-hidden className="relative inline-flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping-slow rounded-full bg-rose-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
+              </span>
+              <span className="tabular-nums">{emergencies}</span>
+              <span>emergency</span>
+            </Link>
           )}
           <span>
             <span className="tabular-nums text-slate-200">{wos}</span> wo
@@ -283,6 +305,18 @@ export function MapPreview({ slug, tab }: Props) {
 
       <div className="relative aspect-[16/9] w-full">
         <div ref={containerRef} className="absolute inset-0" />
+        {/* Service-area legend — the dashed polygon outline bounding the
+            cluster otherwise reads as a filter/selection rectangle. The
+            label tells the operator what scope they're looking at. */}
+        {areaLabel && (
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-3 top-3 z-10 flex items-baseline gap-1.5 rounded border border-slate-700/60 bg-slate-950/80 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-slate-300 backdrop-blur"
+          >
+            <span aria-hidden className="inline-block h-px w-3 border-b border-dashed border-slate-400" />
+            <span>{areaLabel}</span>
+          </div>
+        )}
         {/* Small "Open map" pill at the top right — sits on top of the
             map so the operator can jump to the full /map page even
             when hovering a marker (markers handle their own click).

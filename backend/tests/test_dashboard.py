@@ -77,7 +77,7 @@ def test_dashboard_returns_full_envelope(admin_client, seeded):
         "today_queue",
         "wo_by_category_30d",
         "sr_by_priority_30d",
-        "throughput_7d",
+        "throughput_14d",
         "by_area",
         "recent_activity",
     ):
