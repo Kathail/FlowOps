@@ -114,11 +114,11 @@ export function MapSearchBar({ onPick }: { onPick: (hit: MapSearchHit) => void }
           onFocus={() => hits.length && setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Search assets, work orders, service requests…"
-          className="w-full rounded-md border border-slate-700 bg-slate-900/95 px-3 py-2 text-sm text-slate-100 shadow-lg backdrop-blur placeholder:text-slate-500 focus:border-signal focus:outline-none"
+          className="w-full rounded border border-slate-800 bg-slate-950/80 px-3 py-2 text-sm text-slate-100 backdrop-blur placeholder:text-slate-600 focus:border-signal focus:outline-none focus:ring-1 focus:ring-signal/40"
         />
         {open && hits.length > 0 && (
           <ul
-            className="absolute left-0 right-0 mt-1 max-h-80 overflow-y-auto rounded-md border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40"
+            className="absolute left-0 right-0 mt-1 max-h-80 overflow-y-auto rounded border border-slate-800 bg-slate-950/95 shadow-2xl shadow-black/60 backdrop-blur"
             role="listbox"
           >
             {hits.map((h, i) => (

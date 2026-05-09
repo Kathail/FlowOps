@@ -13,17 +13,54 @@ import { MapSearchBar, type MapSearchHit } from "./MapSearchBar";
 import { CreateWorkOrderDialog } from "../work-orders/CreateWorkOrderDialog";
 import { IntakeDialog } from "../service-requests/IntakeDialog";
 import { setSerde, usePersistedState } from "../../lib/persistedState";
+import { DEFAULT_BASEMAP } from "./basemap";
 
 const SATELLITE_TILE_URL = (import.meta as { env: { VITE_SATELLITE_TILE_URL?: string } }).env
   .VITE_SATELLITE_TILE_URL;
 
+const OSM_TILES = ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"];
+
 const BASEMAP_STYLES: Record<BasemapId, maplibregl.StyleSpecification> = {
+  // Dark — desaturated brightness-clamped OSM with a deep slate tint
+  // overlay so labels smear to a near-uniform dark grey while streets
+  // and waterways still ghost through enough to ground the markers.
+  // Same approach as the dashboard mini-map; tuned slightly less
+  // aggressive here so a full-screen view still has wayfinding cues.
+  dark: {
+    version: 8,
+    sources: {
+      osm: {
+        type: "raster",
+        tiles: OSM_TILES,
+        tileSize: 256,
+        attribution: "© OpenStreetMap contributors",
+      },
+    },
+    layers: [
+      {
+        id: "osm",
+        type: "raster",
+        source: "osm",
+        paint: {
+          "raster-saturation": -1,
+          "raster-contrast": -0.4,
+          "raster-brightness-min": 0.08,
+          "raster-brightness-max": 0.32,
+        },
+      },
+      {
+        id: "tint",
+        type: "background",
+        paint: { "background-color": "rgba(2, 6, 23, 0.5)" },
+      },
+    ],
+  },
   osm: {
     version: 8,
     sources: {
       osm: {
         type: "raster",
-        tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+        tiles: OSM_TILES,
         tileSize: 256,
         attribution: "© OpenStreetMap contributors",
       },
@@ -37,7 +74,7 @@ const BASEMAP_STYLES: Record<BasemapId, maplibregl.StyleSpecification> = {
       {
         id: "background",
         type: "background",
-        paint: { "background-color": "#f8fafc" },
+        paint: { "background-color": "#0f172a" },
       },
     ],
   },
@@ -149,6 +186,11 @@ export function MapPage() {
   // on every render because the listener writes back to the URL
   // continuously and that would create a feedback loop.
   const initialView = useRef(readCenterZoom(search));
+  // Was a `?ll=` provided in the URL? If not, we'll auto-fit the map
+  // to the tenant's service-area bounds once overlays load — saves the
+  // operator the manual pan-and-zoom on first visit, which has been
+  // the "I don't see any assets" complaint forever.
+  const hadInitialLL = useRef(search.has("ll"));
   const initialFocus = useRef(search.get("focus"));
   // `?area=<code>` deep-links from the dashboard's "By area" panel.
   // Resolved against the loaded service_areas overlay; the map fits to
@@ -163,7 +205,7 @@ export function MapPage() {
   // Layer toggles persist across refresh — operators routinely turn off
   // entire domains (e.g. only show storm assets while triaging a flood)
   // and shouldn't have to redo that every page load.
-  const [basemap, setBasemap] = usePersistedState<BasemapId>("map.basemap", "osm");
+  const [basemap, setBasemap] = usePersistedState<BasemapId>("map.basemap", DEFAULT_BASEMAP);
   const [visibleClasses, setVisibleClasses] = usePersistedState<Set<string>>(
     "map.visibleClasses",
     new Set(),
@@ -177,6 +219,39 @@ export function MapPage() {
     setSerde,
   );
   const areaKindsInited = useRef(false);
+
+  // Bumped each time ensureLayers finishes adding the asset+overlay
+  // layers to the style. Visibility effects depend on this so they
+  // re-run AFTER layers exist — covers the race where the visibility
+  // state was set before the layer was added (effect ran but the
+  // getLayer guard bailed) and the ref-based fallback inside
+  // ensureLayers happened to read a stale ref because state hadn't
+  // committed yet. Belt-and-suspenders.
+  const [layersAddedTick, setLayersAddedTick] = useState(0);
+
+  // Live refs to the toggle state. ensureLayers (deferred via
+  // map.once("styledata")) runs LATER than the visibility effect
+  // checks `getLayer(...)` and bails if the layer isn't there yet.
+  // Without these refs, the layer would be added with maplibre's
+  // default visibility (visible), and the persisted "off" state would
+  // never apply until the user toggled — exactly the SR-on-by-default
+  // bug the operator hit.
+  const showWosRef = useRef(showWos);
+  const showSrsRef = useRef(showSrs);
+  const visibleClassesRef = useRef(visibleClasses);
+  const areaKindsVisibleRef = useRef(areaKindsVisible);
+  useEffect(() => {
+    showWosRef.current = showWos;
+  }, [showWos]);
+  useEffect(() => {
+    showSrsRef.current = showSrs;
+  }, [showSrs]);
+  useEffect(() => {
+    visibleClassesRef.current = visibleClasses;
+  }, [visibleClasses]);
+  useEffect(() => {
+    areaKindsVisibleRef.current = areaKindsVisible;
+  }, [areaKindsVisible]);
   const [selected, setSelected] = useState<ClickedFeature | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     pixel: [number, number];
@@ -188,11 +263,12 @@ export function MapPage() {
   // informational; SR pre-fills lon/lat from the click.
   const [newWoOpen, setNewWoOpen] = useState(false);
   const [newSrCoords, setNewSrCoords] = useState<[number, number] | null>(null);
-  // MAP-P1-15: layers panel slides over the map on mobile (<md). On
-  // desktop it's always visible in the left rail and this state is
-  // ignored. Closes on backdrop tap, on every escape, and after
-  // any toggle so the operator can see what they just changed.
-  const [layersOpen, setLayersOpen] = useState(false);
+  // Layers-drawer state — used on mobile (<md) and as a hide-toggle
+  // on desktop. On mobile, the panel slides over the map; on desktop,
+  // it's the left rail. Persisted so an operator who hides it stays
+  // hidden across sessions. Default `true` (visible) so the first-
+  // visit experience still surfaces the layer controls.
+  const [layersOpen, setLayersOpen] = usePersistedState("map.layersOpen", true);
   useEffect(() => {
     if (!layersOpen) return;
     function onKey(e: KeyboardEvent) {
@@ -200,19 +276,28 @@ export function MapPage() {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [layersOpen]);
+  }, [layersOpen, setLayersOpen]);
 
   // Initialize layer visibility once classes load — but ONLY on the
-  // first ever visit (no localStorage record yet). Once a user has
-  // interacted with the layer panel, their saved set wins, even if
-  // they hid everything intentionally.
+  // first ever visit. Once the user has interacted with the layer
+  // panel, their saved set wins, even if they hid everything
+  // intentionally.
+  //
+  // Uses a dedicated `map.classesInitialized` sentinel rather than
+  // checking whether `map.visibleClasses` is set: under React
+  // StrictMode dev, usePersistedState's mount effect runs twice, and
+  // the second run writes the initial empty Set back to localStorage
+  // before this effect can read it — so a fresh visitor would see all
+  // layers OFF instead of all ON.
   const layerInitRan = useRef(false);
   useEffect(() => {
     if (layerInitRan.current) return;
     if (!tileLayersQuery.data) return;
     layerInitRan.current = true;
-    if (window.localStorage.getItem("map.visibleClasses") === null) {
+    const SENTINEL = "map.classesInitialized";
+    if (window.localStorage.getItem(SENTINEL) === null) {
       setVisibleClasses(new Set(tileLayersQuery.data.map((l) => l.class_code)));
+      window.localStorage.setItem(SENTINEL, "1");
     }
   }, [tileLayersQuery.data, setVisibleClasses]);
 
@@ -319,6 +404,46 @@ export function MapPage() {
       cancelled = true;
     };
   }, []);
+
+  // No `?ll=` in the URL on first load → fit the map to the union of
+  // the tenant's service-area bounds. Keeps the operator from landing
+  // on a default center that's nowhere near their assets. Only runs
+  // when the user didn't deep-link to a specific spot, didn't deep-
+  // link to a focused asset, and didn't deep-link to an area.
+  const autoFitRan = useRef(false);
+  useEffect(() => {
+    if (autoFitRan.current) return;
+    if (hadInitialLL.current) return;
+    if (initialFocus.current) return;
+    if (initialArea.current) return;
+    const map = mapRef.current;
+    const overlays = overlaysQuery.data;
+    if (!map || !overlays) return;
+    const features = overlays.service_areas.features;
+    if (features.length === 0) return;
+    autoFitRan.current = true;
+    let west = Infinity;
+    let south = Infinity;
+    let east = -Infinity;
+    let north = -Infinity;
+    for (const f of features) {
+      const bbox = polygonBbox(f.geometry);
+      if (!bbox) continue;
+      if (bbox[0][0] < west) west = bbox[0][0];
+      if (bbox[0][1] < south) south = bbox[0][1];
+      if (bbox[1][0] > east) east = bbox[1][0];
+      if (bbox[1][1] > north) north = bbox[1][1];
+    }
+    if (!Number.isFinite(west)) return;
+    suppressUrlWrite.current = true;
+    map.fitBounds(
+      [
+        [west, south],
+        [east, north],
+      ],
+      { padding: 60, duration: 0, maxZoom: 14 },
+    );
+  }, [overlaysQuery.data]);
 
   // ?area=<code> — fit the map to the matching service area's bounds
   // and ensure that area-kind's layer is visible. Runs once when the
@@ -520,16 +645,80 @@ export function MapPage() {
           "circle-stroke-color": "#0f172a",
         },
       });
+
+      // Apply the persisted toggle state to the freshly-added layers.
+      // Without this, the layer is created with maplibre's default
+      // visibility (visible), and the visibility effect doesn't catch
+      // up until the user toggles the checkbox — so a user who had
+      // SRs hidden last session sees them re-appear until they toggle.
+      // Read from refs so a state change between the effect setup and
+      // styledata firing still wins.
+      for (const l of layers) {
+        if (map.getLayer(l.id)) {
+          map.setLayoutProperty(
+            l.id,
+            "visibility",
+            visibleClassesRef.current.has(l.class_code) ? "visible" : "none",
+          );
+        }
+      }
+      map.setLayoutProperty(
+        "op-wos-layer",
+        "visibility",
+        showWosRef.current ? "visible" : "none",
+      );
+      map.setLayoutProperty(
+        "op-srs-layer",
+        "visibility",
+        showSrsRef.current ? "visible" : "none",
+      );
+
+      // Service-area filter — empty Set means "show no areas" (the
+      // explicit __NONE__ filter the area-kinds effect uses below).
+      // Without this, the layer is added with no filter and every
+      // service area polygon paints, which the operator sees as
+      // "service areas on by default" even though the checkboxes
+      // are off.
+      const areaKinds = Array.from(areaKindsVisibleRef.current);
+      const areaFilter: maplibregl.FilterSpecification = areaKinds.length
+        ? ["in", ["get", "area_kind"], ["literal", areaKinds]]
+        : ["==", ["get", "area_kind"], "__NONE__"];
+      if (map.getLayer("op-areas-fill")) map.setFilter("op-areas-fill", areaFilter);
+      if (map.getLayer("op-areas-line")) map.setFilter("op-areas-line", areaFilter);
+
+      // Tell the visibility effects below that layers are present
+      // and they should re-apply the latest state.
+      setLayersAddedTick((n) => n + 1);
     }
 
-    if (map.isStyleLoaded()) {
+    // The original `map.once("styledata", ensureLayers)` was racy —
+    // styledata can fire BEFORE the React effect attaches the
+    // listener, leaving the listener never invoked and the layers
+    // never added. Using `map.loaded()` + `on("load")` is the
+    // canonical maplibre pattern for "do this once the map's style
+    // is ready." Cleanup removes the listener so subsequent re-runs
+    // (basemap change) don't stack listeners.
+    function maybeRun() {
+      if (map && map.isStyleLoaded()) ensureLayers();
+    }
+    if (map.loaded() || map.isStyleLoaded()) {
       ensureLayers();
     } else {
-      map.once("styledata", ensureLayers);
+      map.on("load", maybeRun);
+      // styledata fires multiple times during loading; the maybeRun
+      // guard means we only attach layers once the style is ready.
+      map.on("styledata", maybeRun);
     }
+    return () => {
+      map.off("load", maybeRun);
+      map.off("styledata", maybeRun);
+    };
   }, [tileLayersQuery.data, basemap]);
 
-  // Sync layer visibility
+  // Sync layer visibility. `layersAddedTick` ensures this runs once
+  // ensureLayers has actually added the layers — without that, this
+  // effect could fire before the layer existed and silently skip
+  // every iteration via the getLayer guard.
   useEffect(() => {
     const map = mapRef.current;
     const layers = tileLayersQuery.data;
@@ -542,7 +731,7 @@ export function MapPage() {
         visibleClasses.has(layer.class_code) ? "visible" : "none",
       );
     }
-  }, [visibleClasses, tileLayersQuery.data, basemap]);
+  }, [visibleClasses, tileLayersQuery.data, basemap, layersAddedTick]);
 
   // Push overlay GeoJSON into the map sources whenever the query refetches.
   useEffect(() => {
@@ -572,7 +761,8 @@ export function MapPage() {
     }
   }, [overlaysQuery.data, areaKindsVisible.size]);
 
-  // Apply area visibility (filter expression).
+  // Apply area visibility (filter expression). Same layersAddedTick
+  // dep so we re-apply once the area layers actually exist.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -582,9 +772,9 @@ export function MapPage() {
       : ["==", ["get", "area_kind"], "__NONE__"];
     if (map.getLayer("op-areas-fill")) map.setFilter("op-areas-fill", filter);
     if (map.getLayer("op-areas-line")) map.setFilter("op-areas-line", filter);
-  }, [areaKindsVisible, tileLayersQuery.data, basemap]);
+  }, [areaKindsVisible, tileLayersQuery.data, basemap, layersAddedTick]);
 
-  // WO / SR overlay visibility
+  // WO / SR overlay visibility (re-applies on layersAddedTick too).
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -594,7 +784,7 @@ export function MapPage() {
     if (map.getLayer("op-srs-layer")) {
       map.setLayoutProperty("op-srs-layer", "visibility", showSrs ? "visible" : "none");
     }
-  }, [showWos, showSrs, tileLayersQuery.data, basemap]);
+  }, [showWos, showSrs, tileLayersQuery.data, basemap, layersAddedTick]);
 
   // Bind click + contextmenu handlers
   useEffect(() => {
@@ -749,8 +939,8 @@ export function MapPage() {
             return next;
           })
         }
-        mobileOpen={layersOpen}
-        onMobileClose={() => setLayersOpen(false)}
+        open={layersOpen}
+        onClose={() => setLayersOpen(false)}
       />
       <div className="relative flex-1">
         {/* h-full w-full (not absolute inset-0): maplibre-gl.css sets
@@ -760,29 +950,32 @@ export function MapPage() {
             container has no in-flow content). With h-full w-full the
             container fills its flex-1 parent regardless of position. */}
         <div ref={containerRef} className="h-full w-full" data-testid="map-container" />
-        {/* Mobile-only hamburger to reveal the layers drawer. The
-            desktop sidebar is always visible so this never renders
-            on >=md. */}
-        <button
-          type="button"
-          onClick={() => setLayersOpen(true)}
-          aria-label="Open layers"
-          className="absolute left-3 top-3 z-10 rounded-md border border-slate-700 bg-slate-900/90 p-2 text-slate-200 shadow-lg backdrop-blur md:hidden"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="h-5 w-5"
+        {/* Reveal-layers button. Always available on mobile (the panel
+            slides over the map there); on desktop, only when the
+            operator has explicitly hidden the panel. Visually a
+            chevron-right "pull me in" affordance. */}
+        {!layersOpen && (
+          <button
+            type="button"
+            onClick={() => setLayersOpen(true)}
+            aria-label="Show layers panel"
+            className="absolute left-3 top-3 z-10 flex items-baseline gap-2 rounded border border-slate-800 bg-slate-950/80 px-3 py-1.5 backdrop-blur transition-colors hover:border-signal/40 hover:text-signal"
           >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <MapHeader />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-3.5 w-3.5 self-center text-signal"
+              aria-hidden
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
+            <span className="section-label-strong">Layers</span>
+          </button>
+        )}
+        <MapHeader layersHidden={!layersOpen} />
         <MapSearchBar onPick={flyToHit} />
         {selected && <AssetSidePanel feature={selected} onClose={() => setSelected(null)} />}
         {contextMenu && (
@@ -823,18 +1016,25 @@ export function MapPage() {
   );
 }
 
-function MapHeader() {
+function MapHeader({ layersHidden }: { layersHidden: boolean }) {
   const { slug } = useParams<{ slug: string }>();
   return (
-    // Pushed right on mobile so it doesn't overlap the hamburger
-    // toggle (which lives at left-3). Desktop has no hamburger so
-    // the breadcrumb sits flush left.
-    <div className="absolute left-16 top-3 z-10 flex items-center gap-2 rounded-md border border-slate-700 bg-slate-900/90 px-3 py-1.5 text-xs text-slate-300 shadow-lg backdrop-blur md:left-3">
-      <Link to={`/${slug}/`} className="text-slate-400 hover:text-slate-200">
+    // Sits flush left when the Layers button isn't visible; shifts
+    // right when the panel is hidden so the two pills don't collide.
+    <div
+      className={`absolute top-3 z-10 flex items-baseline gap-2 rounded border border-slate-800 bg-slate-950/80 px-3 py-1.5 backdrop-blur ${
+        layersHidden ? "left-28" : "left-3"
+      }`}
+    >
+      <Link
+        to={`/${slug}/`}
+        className="section-label hover:text-signal"
+        aria-label="Back to home"
+      >
         ← Home
       </Link>
-      <span className="text-slate-600">/</span>
-      <span className="font-medium text-slate-100">Map</span>
+      <span className="text-slate-700">/</span>
+      <span className="section-label-strong">Map</span>
     </div>
   );
 }
