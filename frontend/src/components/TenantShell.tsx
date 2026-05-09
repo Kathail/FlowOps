@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { logout } from "../features/auth/api";
 import { useAuth } from "../features/auth/useAuth";
+import { AppFooter } from "./AppFooter";
 import { ConflictDrawer } from "./ConflictDrawer";
 import { DemoBanner } from "./DemoBanner";
 import { Logo } from "./Logo";
@@ -76,15 +77,15 @@ export function TenantShell() {
   }
   const isAdmin = user.roles.some((r) => r.code === "admin");
 
-  // Operations-console nav: signal-cyan accent on active, monospace
-  // section labels in tracking-wide caps for the upper grouping.
-  // Less rounded than the old pill — squarer fits the console look.
+  // Operations-console nav: signal-cyan rail on active, monospace
+  // section labels for grouping. Tighter padding than before so more
+  // links fit without scroll on small screens.
   const navLink = (to: string, label: string) => (
     <NavLink
       to={to}
       end={to === `/${slug}/`}
       className={({ isActive }) =>
-        `relative block rounded-sm px-3 py-1.5 text-sm transition-colors ${
+        `relative block rounded-sm px-3 py-1 text-[13px] transition-colors ${
           isActive
             ? "bg-signal/10 text-signal"
             : "text-slate-300 hover:bg-slate-900 hover:text-slate-100"
@@ -106,48 +107,52 @@ export function TenantShell() {
   );
 
   // Sidebar body — the same content is mounted in two places (mobile
-  // drawer + desktop fixed sidebar) so we extract it.
+  // drawer + desktop fixed sidebar) so we extract it. Three groups:
+  //
+  //  · Operations — daily-use stuff: dashboard, the live map, the
+  //    queues that drive the day (work orders / service requests /
+  //    inspections / assets).
+  //  · Plan       — lower-frequency planning + analysis: schedules
+  //    and reports.
+  //  · Admin      — settings (role-gated).
+  //
+  // User identity + sign-out used to live at the bottom of the
+  // sidebar; both moved into <AppFooter> so the sidebar is just nav.
+  // Tenant name + slug at the top now opens a small <TenantMenu>
+  // dropdown instead of being a plain home link — keeps "switch
+  // tenant / settings / sign out" reachable without crowding the nav.
   const sidebarBody = (
     <>
-      <Link to={`/${slug}/`} className="mb-6 flex items-center gap-2.5" title={tenant.name}>
-        <Logo size={32} className="shrink-0" />
-        <div className="min-w-0">
-          <h1 className="text-sm font-semibold text-slate-100 leading-tight line-clamp-2 break-words">
-            {tenant.name}
-          </h1>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-signal">/{slug}</p>
-        </div>
-      </Link>
-      <p className="section-label mb-2 px-3">Operations</p>
-      <nav className="flex flex-col gap-0.5">
+      <TenantMenu
+        tenant={tenant}
+        slug={slug}
+        isAdmin={isAdmin}
+        signOut={() => signOut.mutate()}
+        signOutPending={signOut.isPending}
+      />
+
+      <p className="section-label mb-1.5 mt-4 px-3">Operations</p>
+      <nav className="flex flex-col gap-0">
         {navLink(`/${slug}/`, "Home")}
         {navLink(`/${slug}/map`, "Map")}
-        {navLink(`/${slug}/assets`, "Assets")}
         {navLink(`/${slug}/work-orders`, "Work orders")}
-        {navLink(`/${slug}/inspections`, "Inspections")}
         {navLink(`/${slug}/service-requests`, "Service requests")}
+        {navLink(`/${slug}/inspections`, "Inspections")}
+        {navLink(`/${slug}/assets`, "Assets")}
+      </nav>
+
+      <p className="section-label mb-1.5 mt-4 px-3">Plan</p>
+      <nav className="flex flex-col gap-0">
         {navLink(`/${slug}/schedules`, "Schedules")}
         {navLink(`/${slug}/reports`, "Reports")}
       </nav>
+
       {isAdmin && (
         <>
-          <p className="section-label mb-2 mt-4 px-3">Admin</p>
-          <nav className="flex flex-col gap-0.5">{navLink(`/${slug}/admin`, "Settings")}</nav>
+          <p className="section-label mb-1.5 mt-4 px-3">Admin</p>
+          <nav className="flex flex-col gap-0">{navLink(`/${slug}/admin`, "Settings")}</nav>
         </>
       )}
-      <div className="mt-auto border-t border-dashed border-slate-800 pt-3">
-        <p className="text-xs text-slate-200">{user.full_name}</p>
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-slate-500 truncate">
-          {user.email}
-        </p>
-        <button
-          onClick={() => signOut.mutate()}
-          disabled={signOut.isPending}
-          className="btn-ghost btn-sm mt-2 w-full"
-        >
-          {signOut.isPending ? "Signing out…" : "Sign out"}
-        </button>
-      </div>
     </>
   );
 
@@ -228,7 +233,119 @@ export function TenantShell() {
         </main>
       </div>
 
+      <AppFooter user={user} tenant={tenant} />
+
       {conflictsOpen && <ConflictDrawer onClose={() => setConflictsOpen(false)} />}
+    </div>
+  );
+}
+
+/**
+ * Tenant header at the top of the sidebar. Click → opens a small
+ * dropdown with the tenant name (read-only — multi-tenant per user
+ * isn't a feature today, so no actual switcher), a Settings link
+ * (admin only), and Sign out.
+ *
+ * This replaces the previous plain-Link header that double-acted as
+ * the home shortcut. Home moved into the Operations nav group below
+ * so it's surfaced as an explicit option.
+ */
+function TenantMenu({
+  tenant,
+  slug,
+  isAdmin,
+  signOut,
+  signOutPending,
+}: {
+  tenant: { name: string; slug: string };
+  slug: string;
+  isAdmin: boolean;
+  signOut: () => void;
+  signOutPending: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  // Close on outside click + Escape.
+  useEffect(() => {
+    if (!open) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    function onClick(e: MouseEvent) {
+      const tgt = e.target as HTMLElement | null;
+      if (!tgt?.closest?.("[data-tenant-menu]")) setOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("mousedown", onClick);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("mousedown", onClick);
+    };
+  }, [open]);
+
+  return (
+    <div className="relative" data-tenant-menu>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className={`flex w-full items-center gap-2.5 rounded border border-transparent px-2 py-2 text-left transition-colors ${
+          open ? "border-slate-800 bg-slate-900" : "hover:bg-slate-900"
+        }`}
+        title={tenant.name}
+      >
+        <Logo size={28} className="shrink-0" />
+        <div className="min-w-0 flex-1">
+          <h1 className="line-clamp-1 break-words text-[13px] font-semibold leading-tight text-slate-100">
+            {tenant.name}
+          </h1>
+          <p className="section-label-signal">/{slug}</p>
+        </div>
+        <svg
+          aria-hidden
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className={`h-3.5 w-3.5 shrink-0 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded border border-slate-800 bg-slate-950 shadow-2xl shadow-black/60"
+        >
+          <div className="border-b border-dashed border-slate-800 px-3 py-2">
+            <p className="section-label">Tenant</p>
+            <p className="text-[12px] text-slate-200 truncate">{tenant.name}</p>
+          </div>
+          {isAdmin && (
+            <Link
+              to={`/${slug}/admin`}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block px-3 py-1.5 text-[12px] text-slate-300 hover:bg-slate-900 hover:text-slate-100"
+            >
+              Settings
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              signOut();
+            }}
+            role="menuitem"
+            disabled={signOutPending}
+            className="block w-full px-3 py-1.5 text-left text-[12px] text-slate-300 hover:bg-slate-900 hover:text-rose-200 disabled:cursor-not-allowed disabled:text-slate-500"
+          >
+            {signOutPending ? "Signing out…" : "Sign out"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
