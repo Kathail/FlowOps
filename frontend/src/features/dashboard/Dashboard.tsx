@@ -1,34 +1,40 @@
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 import { ErrorState, LoadingState } from "../../components/States";
 import type { TenantOut, UserOut } from "../auth/api";
-import { ByArea } from "./ByArea";
-import { CategoryChart } from "./CategoryChart";
-import { KpiHero } from "./KpiHero";
-import { RecentActivity } from "./RecentActivity";
-import { SystemPulse } from "./SystemPulse";
-import { TodayQueue } from "./TodayQueue";
+import { CockpitGauges } from "./CockpitGauges";
+import { LiveFeed } from "./LiveFeed";
+import { MapPreview } from "./MapPreview";
+import { SystemPulseStrip } from "./SystemPulseStrip";
+import { DashboardTabs, type DashTab } from "./DashboardTabs";
 import { type DashboardResponse, getDashboard } from "./api";
 
 /**
- * Supervisor dashboard — landing page for `/{slug}`.
+ * Operations-console dashboard.
  *
- * Iteration-3 layout (right column collapsed from 3 cards into 2):
+ * Three-column desktop layout (stacks on <lg):
  *
- *   ┌────────────────────────────────────────────────┐
- *   │ Greeting + date                                 │
- *   ├────────────────────────────────────────────────┤
- *   │ KpiHero  (3 large tiles + summary strip below) │
- *   ├──────────────────────────────┬─────────────────┤
- *   │ Today's queue                │ System pulse    │
- *   │   ↓ (operational)            │   (sparkline +  │
- *   │ Service areas                │    SR snapshot +│
- *   │   ↓                          │    priority bar)│
- *   │ Work by category             ├─────────────────┤
- *   │                              │ Recent activity │
- *   └──────────────────────────────┴─────────────────┘
+ *   ┌───────────┬──────────────────────────┬──────────────┐
+ *   │ Live feed │ Map preview              │ Cockpit      │
+ *   │           │ ─────────                │ gauges       │
+ *   │ activity  │ System pulse strip       │              │
+ *   │           │                          │              │
+ *   └───────────┴──────────────────────────┴──────────────┘
  *
- * Left column = "what's happening / where" (operational + spatial).
- * Right column = "system pulse + change log" (situational + audit).
+ * Tab bar above the grid switches the active "lens":
+ *   · supervisor — default. Triage queue + ops snapshot.
+ *   · crew      — your stops, your queue, your route.
+ *   · manager   — backlog burn-down, throughput, weekly digest.
+ *
+ * Each lens reuses the same column shell and swaps its content; the
+ * gauge labels, feed filters, and pulse readouts change but the
+ * shape doesn't. The familiar shell is the point — supervisors rarely
+ * wear two hats at once, but the page should still feel like the same
+ * page when they do.
+ *
+ * Visual direction: industrial cockpit. Plex Sans body, Plex Mono for
+ * tabular reads, Instrument Serif for the gauge numerals. Single
+ * signal cyan; everything else is slate.
  */
 
 interface Props {
@@ -37,72 +43,104 @@ interface Props {
 }
 
 export function Dashboard({ user, tenant }: Props) {
+  const [search, setSearch] = useSearchParams();
+  const tab = (search.get("tab") as DashTab) ?? "supervisor";
+
   const dash = useQuery<DashboardResponse, Error>({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
-    // Poll every minute. `refetchIntervalInBackground: false` is the
-    // TanStack v5 default — explicit here so it's clear that a tab in
-    // the background won't burn cycles polling. A supervisor with the
-    // dashboard in a hidden tab gets fresh data on focus instead.
-    // DASH-P1-8.
     refetchInterval: 60_000,
     refetchIntervalInBackground: false,
   });
 
+  function setTab(next: DashTab) {
+    const nextSearch = new URLSearchParams(search);
+    if (next === "supervisor") nextSearch.delete("tab");
+    else nextSearch.set("tab", next);
+    setSearch(nextSearch, { replace: true });
+  }
+
   return (
-    <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-6">
-      <header>
-        <h1 className="text-xl font-semibold text-slate-100">
-          Welcome, {user.full_name.split(" ")[0]}
+    <div className="relative min-h-full">
+      {/* Faint dot grid behind the whole page — gives the operations-
+          console feel without becoming visual noise. ~6%-opacity dots
+          on a 32px grid; invisible to anyone not specifically looking. */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.06]"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgb(148 163 184) 1px, transparent 0)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
+        <DashboardHeader user={user} tenant={tenant} />
+        <DashboardTabs active={tab} onChange={setTab} />
+
+        {dash.isLoading && !dash.data && <LoadingState />}
+        {dash.isError && !dash.data && (
+          <ErrorState message="Dashboard unavailable." retry={() => dash.refetch()} />
+        )}
+
+        {dash.data && (
+          <DashboardGrid data={dash.data} tab={tab} slug={tenant.slug} userId={user.id} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DashboardHeader({ user, tenant }: Props) {
+  const now = new Date();
+  const date = now.toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const time = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  return (
+    <header className="flex items-baseline justify-between gap-4 border-b border-slate-800/60 pb-3">
+      <div className="flex items-baseline gap-3">
+        <h1 className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-500">
+          {tenant.name}
         </h1>
-        <p className="text-xs text-slate-400">
-          {new Date().toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}{" "}
-          · {tenant.name}
-        </p>
-      </header>
+        <span className="text-slate-700">/</span>
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-slate-400">
+          Operations
+        </span>
+      </div>
+      <div className="flex items-baseline gap-3 font-mono text-[11px] uppercase tracking-[0.18em] text-slate-500">
+        <span>{date}</span>
+        <span className="text-slate-700">·</span>
+        <span className="tabular-nums text-slate-300">{time}</span>
+        <span className="text-slate-700">·</span>
+        <span className="text-slate-300">{user.full_name.split(" ")[0]}</span>
+      </div>
+    </header>
+  );
+}
 
-      {/* Show the spinner only on first paint, and the error banner only
-          when there's no cached data to fall back to (DASH-P1-4). A
-          background refetch failure with cached data still good leaves
-          the prior render in place; a small "stale" affordance could
-          land here later but isn't worth the noise today. */}
-      {dash.isLoading && !dash.data && <LoadingState />}
-      {dash.isError && !dash.data && (
-        <ErrorState message="Failed to load dashboard." retry={() => dash.refetch()} />
-      )}
-
-      {dash.data && (
-        <>
-          <KpiHero data={dash.data} slug={tenant.slug} />
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            {/* LEFT: operational — what's on today, who has what, where. */}
-            <div className="space-y-4 lg:col-span-2">
-              <TodayQueue items={dash.data.today_queue} slug={tenant.slug} />
-              <ByArea rows={dash.data.by_area} slug={tenant.slug} />
-              <CategoryChart buckets={dash.data.wo_by_category_30d} />
-            </div>
-
-            {/* RIGHT: situational — system pulse + recent change. Two
-                cards instead of three so the rail reads as a single
-                column of summaries. */}
-            <div className="space-y-4">
-              <SystemPulse
-                srKpis={dash.data.sr_kpis}
-                srBuckets={dash.data.sr_by_priority_30d}
-                throughput={dash.data.throughput_7d}
-                completedThisWeek={dash.data.wo_kpis.completed_this_week}
-                slug={tenant.slug}
-              />
-              <RecentActivity items={dash.data.recent_activity} slug={tenant.slug} />
-            </div>
-          </div>
-        </>
-      )}
+function DashboardGrid({
+  data,
+  tab,
+  slug,
+  userId,
+}: {
+  data: DashboardResponse;
+  tab: DashTab;
+  slug: string;
+  userId: number;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,18rem)_minmax(0,1fr)_minmax(0,18rem)]">
+      <LiveFeed activity={data.recent_activity} slug={slug} tab={tab} userId={userId} />
+      <div className="space-y-4">
+        <MapPreview slug={slug} tab={tab} />
+        <SystemPulseStrip data={data} slug={slug} tab={tab} />
+      </div>
+      <CockpitGauges data={data} slug={slug} tab={tab} />
     </div>
   );
 }
