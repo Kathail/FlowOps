@@ -150,3 +150,46 @@ class WorkOrderDispatchPayload(BaseModel):
 
 class ServiceRequestDispatch(BaseModel):
     work_order: WorkOrderDispatchPayload
+
+
+class BulkDispatchDefaults(BaseModel):
+    """Shared WO defaults for a bulk-dispatch run. Each selected SR
+    gets a per-SR auto-generated title; everything else here applies
+    uniformly. Priority defaults to 'respect each SR's own' (None);
+    assigned_to=None means "auto-route per SR by territory" — pass an
+    explicit user_id to override routing for the whole batch."""
+
+    category: Literal[
+        "main_break",
+        "flushing",
+        "valve_exercise",
+        "cleaning",
+        "inspection",
+        "investigation",
+        "repair",
+        "install",
+        "other",
+    ] = "investigation"
+    priority: SrPriority | None = None
+    crew_id: int | None = None
+    assigned_to: int | None = None
+    scheduled_for: datetime | None = None
+    due_by: datetime | None = None
+
+
+class ServiceRequestBulkDispatch(BaseModel):
+    sr_numbers: list[str] = Field(min_length=1, max_length=200)
+    defaults: BulkDispatchDefaults = Field(default_factory=BulkDispatchDefaults)
+
+
+class BulkDispatchResultRow(BaseModel):
+    sr_number: str
+    wo_number: str | None = None
+    assigned_to: int | None = None
+    skipped: bool = False
+    reason: str | None = None
+
+
+class ServiceRequestBulkDispatchResponse(BaseModel):
+    dispatched: list[BulkDispatchResultRow]
+    skipped: list[BulkDispatchResultRow]

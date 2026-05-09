@@ -12,7 +12,9 @@ import { SummaryBar } from "../../components/SummaryBar";
 import { showToast } from "../../lib/toast";
 import { formatDateTime } from "../../lib/format";
 import { translateApiError } from "../../lib/translateApiError";
+import { BulkDispatchDialog } from "./BulkDispatchDialog";
 import { IntakeDialog } from "./IntakeDialog";
+import { useAuth } from "../auth/useAuth";
 import {
   updateServiceRequest,
   type ServiceRequestListParams,
@@ -178,6 +180,16 @@ export function ServiceRequestListPage() {
     });
     setSelected(new Set());
   }
+
+  const { user } = useAuth();
+  const canDispatch = !!user?.roles.some(
+    (r) => r.code === "admin" || r.code === "supervisor",
+  );
+
+  // Bulk-dispatch dialog. Only one phase of bulk action runs at a time
+  // (the deferred-mutate triage actions and the dispatch dialog are
+  // mutually exclusive — the dialog uses its own mutation, not deferBulk).
+  const [bulkDispatchOpen, setBulkDispatchOpen] = useState(false);
 
   // Bulk-select state. Cleared on filter change so the operator doesn't
   // accidentally apply an action to rows they no longer see.
@@ -349,6 +361,16 @@ export function ServiceRequestListPage() {
         <div className="flex flex-wrap items-center gap-2 rounded-md border border-signal/30 bg-signal/5 px-3 py-2 text-sm text-slate-100">
           <span className="font-medium">{selected.size} selected</span>
           <span className="flex-1" />
+          {canDispatch && (
+            <button
+              type="button"
+              onClick={() => setBulkDispatchOpen(true)}
+              className="rounded border border-signal/50 bg-signal/10 px-2 py-1 text-xs text-signal hover:border-signal hover:bg-signal/20"
+              title="Create one work order per selected SR using shared defaults"
+            >
+              Dispatch {selected.size}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => deferBulk([...selected], "triaged", "marked triaged")}
@@ -560,6 +582,30 @@ export function ServiceRequestListPage() {
       </div>
 
       {intakeOpen && <IntakeDialog onClose={() => setIntakeOpen(false)} />}
+
+      {bulkDispatchOpen && (
+        <BulkDispatchDialog
+          srNumbers={[...selected]}
+          onClose={() => setBulkDispatchOpen(false)}
+          onComplete={(result) => {
+            // Clear selection — dispatched rows have moved out of the
+            // current scope ("attention") so they won't reappear in this
+            // view; skipped rows are still relevant but the supervisor
+            // saw the reasons in the dialog.
+            if (result.dispatched.length > 0) {
+              setSelected(new Set());
+              showToast({
+                message:
+                  result.dispatched.length === 1
+                    ? `Dispatched 1 service request.`
+                    : `Dispatched ${result.dispatched.length} service requests.`,
+                tone: "success",
+                ttl: 4000,
+              });
+            }
+          }}
+        />
+      )}
 
       {errorMessage && <Alert>{errorMessage}</Alert>}
     </div>

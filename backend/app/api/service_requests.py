@@ -13,7 +13,10 @@ from app.errors import ConflictError, NotFoundError, ValidationError
 from app.extensions import db
 from app.models import Asset, ServiceRequest, WorkOrder
 from app.schemas.service_request import (
+    BulkDispatchResultRow,
     DuplicateCandidate,
+    ServiceRequestBulkDispatch,
+    ServiceRequestBulkDispatchResponse,
     ServiceRequestCreate,
     ServiceRequestCreateResponse,
     ServiceRequestDispatch,
@@ -617,3 +620,186 @@ def dispatch_service_request(sr_number: str):
         notify_work_order_assigned(work_order=wo, assignee_id=wo.assigned_to)
 
     return jsonify(_payload(sr))
+
+
+_PRIORITY_RANK = {"low": 0, "normal": 1, "high": 2, "emergency": 3}
+
+
+def _max_priority(a: str, b: str) -> str:
+    """Pick the higher-rank priority. Used so a bulk dispatch with
+    priority='normal' never downgrades an SR that came in as
+    'emergency' — the bulk default sets a *floor*, not a ceiling."""
+    return a if _PRIORITY_RANK.get(a, 0) >= _PRIORITY_RANK.get(b, 0) else b
+
+
+def _autogen_wo_title(sr: ServiceRequest) -> str:
+    """Bulk-dispatch title: SR number + a short fragment of the SR
+    description (or category/category-default fallback) so each WO is
+    individually identifiable in lists."""
+    desc = (sr.description or "").strip()
+    fragment = desc[:60].rstrip()
+    if fragment:
+        return f"{sr.sr_number}: {fragment}"
+    # No description — fall back to the SR's category as a short label.
+    return f"{sr.sr_number}: {sr.category.replace('_', ' ')}"
+
+
+@service_requests_bp.post("/bulk-dispatch")
+@login_required
+@require_roles("admin", "supervisor")
+def bulk_dispatch_service_requests():
+    """Dispatch a batch of SRs in one request. Each SR creates its own
+    WO (1:1) using the shared `defaults` block; per-SR auto-generation
+    fills in the title. Best-effort: each SR succeeds or skips with a
+    reason — no partial rollback. The whole call commits at the end so
+    the WO-number generator allocates without contention."""
+    if not _can_dispatch():
+        raise ValidationError("only admin/supervisor can dispatch", code="forbidden_role")
+
+    data = _validate(ServiceRequestBulkDispatch, request.get_json(silent=True) or {})
+    defaults = data.defaults
+
+    # Tenant-scope the explicit assignee once up front rather than per SR.
+    if defaults.assigned_to is not None:
+        from app.models import User as _User
+
+        found = db.session.scalar(
+            select(_User.id).where(
+                _User.id == defaults.assigned_to,
+                _User.tenant_id == current_user.tenant_id,
+            )
+        )
+        if not found:
+            raise ValidationError(
+                f"user {defaults.assigned_to} not found", code="unknown_assignee"
+            )
+
+    # Load all SRs in one query so we 404 the missing ones up front.
+    srs_by_number = {
+        sr.sr_number: sr
+        for sr in db.session.scalars(
+            select(ServiceRequest).where(ServiceRequest.sr_number.in_(data.sr_numbers))
+        ).all()
+    }
+
+    dispatched: list[BulkDispatchResultRow] = []
+    skipped: list[BulkDispatchResultRow] = []
+    notify_after_commit: list[WorkOrder] = []
+
+    for sr_number in data.sr_numbers:
+        sr = srs_by_number.get(sr_number)
+        if sr is None:
+            skipped.append(BulkDispatchResultRow(
+                sr_number=sr_number, skipped=True, reason="not_found"
+            ))
+            continue
+        if sr.status in {"closed", "duplicate"}:
+            skipped.append(BulkDispatchResultRow(
+                sr_number=sr_number, skipped=True, reason=f"sr_{sr.status}"
+            ))
+            continue
+        if sr.status == "dispatched":
+            skipped.append(BulkDispatchResultRow(
+                sr_number=sr_number, skipped=True, reason="already_dispatched"
+            ))
+            continue
+
+        # Priority: shared default sets a floor (never downgrade a higher-
+        # severity SR). Caller can leave it None to pass through SR's own.
+        priority = sr.priority
+        if defaults.priority is not None:
+            priority = _max_priority(sr.priority, defaults.priority)
+
+        # Assignee: explicit override beats per-SR routing.
+        if defaults.assigned_to is not None:
+            assigned_to = defaults.assigned_to
+        else:
+            from app.services.territory import primary_operator_for
+
+            assigned_to = primary_operator_for(
+                tenant_id=current_user.tenant_id,
+                location=sr.location,
+                asset_id=None,  # SR-level routing uses location only
+            )
+
+        wo_number = next_wo_number(current_user.tenant_id)
+        wo: WorkOrder | None = None
+        last_error: IntegrityError | None = None
+        for _attempt in range(3):
+            wo = WorkOrder(
+                tenant_id=current_user.tenant_id,
+                wo_number=wo_number,
+                type="reactive",
+                category=defaults.category,
+                priority=priority,
+                status="open",
+                title=_autogen_wo_title(sr),
+                description=sr.description,
+                location=sr.location,
+                scheduled_for=defaults.scheduled_for,
+                due_by=defaults.due_by,
+                reported_by=current_user.id,
+                assigned_to=assigned_to,
+                crew_id=defaults.crew_id,
+                service_request_id=sr.id,
+            )
+            db.session.add(wo)
+            try:
+                db.session.flush()
+                break
+            except IntegrityError as e:
+                db.session.rollback()
+                last_error = e
+                wo_number = next_wo_number(current_user.tenant_id)
+                wo = None
+                continue
+        if wo is None:
+            skipped.append(BulkDispatchResultRow(
+                sr_number=sr_number,
+                skipped=True,
+                reason="wo_number_collision",
+            ))
+            continue
+
+        prev_status = sr.status
+        sr.status = "dispatched"
+        sr.work_order_id = wo.id
+
+        emit_event(
+            action="sr_dispatch",
+            entity_type="ServiceRequest",
+            entity_id=str(sr.id),
+            tenant_id=sr.tenant_id,
+            before={"status": prev_status},
+            after={
+                "status": "dispatched",
+                "wo_number": wo.wo_number,
+                "via": "bulk",
+            },
+        )
+
+        dispatched.append(BulkDispatchResultRow(
+            sr_number=sr_number,
+            wo_number=wo.wo_number,
+            assigned_to=wo.assigned_to,
+        ))
+        if wo.assigned_to is not None:
+            notify_after_commit.append(wo)
+
+    db.session.commit()
+
+    # Notifications fire post-commit so a transient send error can't
+    # rollback the dispatch. Looped here rather than per-SR so the
+    # bulk action is one atomic write followed by best-effort fanout.
+    if notify_after_commit:
+        from app.services.notifications import notify_work_order_assigned
+
+        for wo in notify_after_commit:
+            notify_work_order_assigned(work_order=wo, assignee_id=wo.assigned_to)
+
+    return jsonify(
+        ServiceRequestBulkDispatchResponse(
+            dispatched=dispatched,
+            skipped=skipped,
+        ).model_dump(mode="json")
+    )

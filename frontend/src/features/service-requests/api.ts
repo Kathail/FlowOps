@@ -197,3 +197,44 @@ export function dispatchServiceRequest(
     },
   );
 }
+
+export interface BulkDispatchDefaults {
+  category?:
+    | "main_break"
+    | "flushing"
+    | "valve_exercise"
+    | "cleaning"
+    | "inspection"
+    | "investigation"
+    | "repair"
+    | "install"
+    | "other";
+  priority?: SrPriority | null;
+  crew_id?: number | null;
+  assigned_to?: number | null;
+  scheduled_for?: string | null;
+  due_by?: string | null;
+}
+
+export interface BulkDispatchResultRow {
+  sr_number: string;
+  wo_number: string | null;
+  assigned_to: number | null;
+  skipped: boolean;
+  reason: string | null;
+}
+
+export interface BulkDispatchResponse {
+  dispatched: BulkDispatchResultRow[];
+  skipped: BulkDispatchResultRow[];
+}
+
+export function bulkDispatchServiceRequests(input: {
+  sr_numbers: string[];
+  defaults: BulkDispatchDefaults;
+}): Promise<BulkDispatchResponse> {
+  return apiJson<BulkDispatchResponse>("/api/v1/service-requests/bulk-dispatch", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
