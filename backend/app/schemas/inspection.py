@@ -112,6 +112,7 @@ class InspectionRead(BaseModel):
     id: int
     inspection_number: str
     kind: InspectionKind
+    status: str = "submitted"
     asset_uid: str | None = None
     work_order_number: str | None = None
     performed_at: datetime
@@ -127,6 +128,15 @@ class InspectionRead(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class InspectionTransition(BaseModel):
+    """submitted → approved (admin/supervisor); approved → submitted
+    (admin only — the reopen edge). The same shape as the WO transition
+    schema for client consistency."""
+
+    to: str
+    note: str | None = None
 
 
 class InspectionListResponse(BaseModel):

@@ -35,6 +35,8 @@ VALID_KINDS: tuple[str, ...] = (
     "lift_station_round",
 )
 
+VALID_STATUSES: tuple[str, ...] = ("submitted", "approved")
+
 
 class Inspection(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, AuditableMixin):
     __tablename__ = "inspection"
@@ -52,11 +54,22 @@ class Inspection(Base, TenantScopedMixin, TimestampMixin, SoftDeleteMixin, Audit
             "overall_condition IS NULL OR overall_condition BETWEEN 1 AND 5",
             name="ck_inspection_overall_condition",
         ),
+        CheckConstraint(
+            "status IN (" + ", ".join(repr(s) for s in VALID_STATUSES) + ")",
+            name="ck_inspection_status",
+        ),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, Identity(always=False), primary_key=True)
     inspection_number: Mapped[str] = mapped_column(String(32), nullable=False)
     kind: Mapped[str] = mapped_column(String(32), nullable=False)
+    # Lifecycle state. `submitted` is the working state — the inspection
+    # has been recorded but not yet signed off; edits are allowed. An
+    # admin/supervisor approves to lock further edits (terminal). Admins
+    # can reopen approved → submitted to allow corrections.
+    status: Mapped[str] = mapped_column(
+        String(16), nullable=False, default="submitted", server_default="submitted"
+    )
     asset_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("asset.id", ondelete="SET NULL"), nullable=True)
     work_order_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("work_order.id", ondelete="SET NULL"), nullable=True

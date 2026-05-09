@@ -12,14 +12,33 @@ import { LinkedItems } from "../links/LinkedItems";
 import { ProcedureRunner } from "../tasks/ProcedureRunner";
 import { getTaskDefinition, type TaskDefinitionRead } from "../tasks/api";
 import { TaskFormRenderer, type TaskData } from "../tasks/TaskFormRenderer";
-import type { InspectionRead } from "./api";
+import { useAuth } from "../auth/useAuth";
+import { translateApiError } from "../../lib/translateApiError";
+import { transitionInspection, type InspectionRead } from "./api";
 import { useInspection, useUpdateInspection } from "./hooks";
+import { useMutation } from "@tanstack/react-query";
 
 export function InspectionDetailPage() {
   const { slug, n } = useParams<{ slug: string; n: string }>();
+  const { user } = useAuth();
   const insQuery = useInspection(n);
   const update = useUpdateInspection(n ?? "");
   const queryClient = useQueryClient();
+
+  const isAdmin = !!user?.roles.some((r) => r.code === "admin");
+  const isSupervisor = !!user?.roles.some((r) => r.code === "supervisor");
+  const canSignOff = isAdmin || isSupervisor;
+
+  const [transitionError, setTransitionError] = useState<string | null>(null);
+  const transition = useMutation({
+    mutationFn: ({ to }: { to: "submitted" | "approved" }) =>
+      transitionInspection(n ?? "", to),
+    onSuccess: (updated) => {
+      setTransitionError(null);
+      queryClient.setQueryData(["inspection", n], updated);
+    },
+    onError: (e: Error) => setTransitionError(translateApiError(e)),
+  });
 
   const taskCode = insQuery.data?.task_definition_code ?? null;
   const taskQuery = useQuery<TaskDefinitionRead, Error>({
@@ -89,7 +108,10 @@ export function InspectionDetailPage() {
             {ins.asset_uid && (
               <>
                 {" · "}
-                <Link to={`/${slug}/assets/${ins.asset_uid}`} className="font-mono hover:underline">
+                <Link
+                  to={`/${slug}/assets/${ins.asset_uid}`}
+                  className="font-mono text-slate-200 hover:text-cyan-200 hover:underline"
+                >
                   {ins.asset_uid}
                 </Link>
               </>
@@ -99,7 +121,7 @@ export function InspectionDetailPage() {
                 {" · "}
                 <Link
                   to={`/${slug}/work-orders/${ins.work_order_number}`}
-                  className="font-mono hover:underline"
+                  className="font-mono text-slate-200 hover:text-cyan-200 hover:underline"
                 >
                   {ins.work_order_number}
                 </Link>
@@ -108,15 +130,60 @@ export function InspectionDetailPage() {
           </>
         }
         trailing={
-          ins.pass === null ? null : ins.pass ? (
-            <StatusPill tone="success" dot>
-              Pass
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill
+              tone={ins.status === "approved" ? "success" : "info"}
+              dot
+            >
+              {ins.status}
             </StatusPill>
-          ) : (
-            <StatusPill tone="danger" dot>
-              Fail
-            </StatusPill>
-          )
+            {canSignOff && ins.status === "submitted" && (
+              <button
+                type="button"
+                onClick={() => transition.mutate({ to: "approved" })}
+                disabled={transition.isPending}
+                className="btn-ghost"
+                title="Lock this inspection — only admins can reopen after"
+              >
+                ✓ Approve
+              </button>
+            )}
+            {isAdmin && ins.status === "approved" && (
+              <button
+                type="button"
+                onClick={() => transition.mutate({ to: "submitted" })}
+                disabled={transition.isPending}
+                className="btn-ghost"
+                title="Admin only — reopens the inspection so corrections can land"
+              >
+                ↻ Reopen
+              </button>
+            )}
+            {transitionError && (
+              <span className="text-xs text-rose-300">{transitionError}</span>
+            )}
+            {ins.pass !== null && (
+              <StatusPill tone={ins.pass ? "success" : "danger"} dot>
+                {ins.pass ? "Pass" : "Fail"}
+              </StatusPill>
+            )}
+            {ins.asset_uid && (
+              <Link
+                to={
+                  `/${slug}/work-orders?new=1` +
+                  `&asset_uid=${encodeURIComponent(ins.asset_uid)}` +
+                  `&category=${ins.pass === false ? "repair" : "inspection"}` +
+                  (ins.pass === false ? "&priority=high" : "") +
+                  `&title=${encodeURIComponent(
+                    `Follow-up on ${ins.inspection_number} (${ins.kind.replace(/_/g, " ")})`,
+                  )}`
+                }
+                className="btn-ghost"
+              >
+                {ins.pass === false ? "Create follow-up WO" : "Create work order"}
+              </Link>
+            )}
+          </div>
         }
       />
 

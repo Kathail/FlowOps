@@ -22,6 +22,7 @@ from app.schemas.inspection import (
     InspectionKind,
     InspectionListResponse,
     InspectionRead,
+    InspectionTransition,
     InspectionUpdate,
 )
 from app.services.hydrant_flow import color_class, gpm_at_20psi
@@ -137,6 +138,7 @@ def _payload(ins: Inspection) -> dict[str, Any]:
         "id": ins.id,
         "inspection_number": ins.inspection_number,
         "kind": ins.kind,
+        "status": ins.status,
         "asset_uid": asset_uid,
         "work_order_number": wo_number,
         "performed_at": ins.performed_at.isoformat(),
@@ -282,6 +284,18 @@ def update_inspection(inspection_number: str):
     data = _validate(InspectionUpdate, request.get_json(silent=True) or {})
     ins = _get_inspection(inspection_number)
 
+    # Approved inspections are locked from edits unless the caller is an
+    # admin — the supervisor sign-off is meaningful and shouldn't be
+    # silently overwritten by a tech amending the data after the fact.
+    # Admins editing an approved inspection means the sign-off itself
+    # has been undone implicitly; flag that by requiring an explicit
+    # reopen before edits land.
+    if ins.status == "approved":
+        raise ConflictError(
+            "inspection is approved; reopen it first to edit",
+            code="approved_locked",
+        )
+
     # INS-P1: distinguish "field omitted" from "explicit null". The previous
     # `is not None` checks meant a tech who set pass=true by mistake had no
     # way to clear it back to "not yet recorded" — every PATCH with pass=null
@@ -309,6 +323,48 @@ def update_inspection(inspection_number: str):
     if data.task_data is not None:
         ins.task_data = data.task_data
 
+    db.session.commit()
+    db.session.refresh(ins)
+    return jsonify(_payload(ins))
+
+
+_INSPECTION_TRANSITIONS: dict[str, set[str]] = {
+    "submitted": {"approved"},
+    "approved": {"submitted"},  # admin-only reopen edge
+}
+
+
+def _is_inspection_reopen(from_status: str, to_status: str) -> bool:
+    return from_status == "approved" and to_status == "submitted"
+
+
+@inspections_bp.post("/<string:inspection_number>/transition")
+@login_required
+@require_roles("admin", "supervisor")
+def transition_inspection(inspection_number: str):
+    """submitted → approved: any supervisor/admin signs off (locks edits).
+    approved → submitted: admin only — the reopen edge that undoes a
+    sign-off so corrections can land. Same admin-gate pattern as the
+    WO reopen flow."""
+    data = _validate(InspectionTransition, request.get_json(silent=True) or {})
+    ins = _get_inspection(inspection_number)
+
+    valid = _INSPECTION_TRANSITIONS.get(ins.status, set())
+    if data.to not in valid:
+        raise ConflictError(
+            f"cannot transition inspection from {ins.status} to {data.to}",
+            code="bad_transition",
+        )
+
+    if _is_inspection_reopen(ins.status, data.to):
+        roles = {r.code for r in current_user._get_current_object().roles}
+        if "admin" not in roles:
+            raise ConflictError(
+                "reopening an approved inspection requires the admin role",
+                code="reopen_requires_admin",
+            )
+
+    ins.status = data.to
     db.session.commit()
     db.session.refresh(ins)
     return jsonify(_payload(ins))

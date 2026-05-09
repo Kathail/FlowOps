@@ -8,10 +8,13 @@ export type InspectionKind =
   | "catch_basin"
   | "lift_station_round";
 
+export type InspectionStatus = "submitted" | "approved";
+
 export interface InspectionRead {
   id: number;
   inspection_number: string;
   kind: InspectionKind;
+  status: InspectionStatus;
   asset_uid: string | null;
   work_order_number: string | null;
   performed_at: string;
@@ -89,6 +92,20 @@ export function updateInspection(
     method: "PATCH",
     body: JSON.stringify(patch),
   });
+}
+
+export function transitionInspection(
+  n: string,
+  to: InspectionStatus,
+  note?: string,
+): Promise<InspectionRead> {
+  return apiJson<InspectionRead>(
+    `/api/v1/inspections/${encodeURIComponent(n)}/transition`,
+    {
+      method: "POST",
+      body: JSON.stringify({ to, note }),
+    },
+  );
 }
 
 export function exportInspectionsUrl(kind?: InspectionKind): string {
